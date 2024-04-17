@@ -1,0 +1,1 @@
+when change switch clicked change Start button icon & change background color(Diag - Wipe)
