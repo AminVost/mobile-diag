@@ -9,11 +9,12 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import DeviceInfo from 'react-native-device-info';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import logoImage from './assets/images/logo.png';
-import { NetworkContext } from './App'
+import { NetworkContext } from './App';
+// import CustomAlert from './inc/modal/customAlert';
 
 
 export default function HomeScreen({ navigation, route }) {
-  const { isInternetConnected, websocketConnected } = useContext(NetworkContext);
+  const { isInternetConnected, websocketConnected, receivedSerialNumber } = useContext(NetworkContext);
 
   const checklistItems = [
     "Any Bluetooth Device",
@@ -57,30 +58,71 @@ export default function HomeScreen({ navigation, route }) {
     hardWare: '',
     freeStorage: '',
   });
-  const [isSwitchOn, setIsSwitchOn] = React.useState(false);
+  const [isSwitchDiag, setisSwitchDiag] = React.useState(true);
 
   const [modalVisible, setModalVisible] = React.useState(false);
 
-  const onToggleSwitch = () => setIsSwitchOn(!isSwitchOn);
+  const [isAlertVisible, setAlertVisible] = useState(false);
+
+  const onToggleSwitch = () => setisSwitchDiag(!isSwitchDiag);
 
   const paperTheme = {
 
   };
 
+  const toggleAlert = () => {
+    setAlertVisible(!isAlertVisible);
+  };
+
+  const CustomAlert = () => {
+    return (
+      <Modal
+        visible={isAlertVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => {
+          setAlertVisible(!isAlertVisible);
+        }}
+      >
+        <View style={styles.modalBackground}>
+          <View style={styles.customModalContent}>
+            <Text style={styles.customModalTitle}>Connection Status Guide</Text>
+
+            <View style={styles.customModalRow}>
+              <Icon name="wifi-remove" size={30} color="#e84118" />
+              <Text style={styles.customModalText}>The device is not connected to the Internet</Text>
+            </View>
+            <View style={styles.customModalRow}>
+              <Icon name="wifi-alert" size={30} color="#F79F1F" />
+              <Text style={styles.customModalText}>The device is connected to the Internet, but the connection with the PC system is not established</Text>
+            </View>
+            <View style={styles.customModalRow}>
+              <Icon name="wifi-check" size={30} color="#44bd32" />
+              <Text style={styles.customModalText}>The connection is established correctly</Text>
+            </View>
+
+            <TouchableOpacity style={styles.closeButtonCon} onPress={toggleAlert}>
+              <Text style={styles.closeButton}>Okay</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    );
+  };
+
   React.useEffect(() => {
     Promise.all([
       DeviceInfo.getDevice(),
-      DeviceInfo.getSerialNumber(),
       DeviceInfo.supportedAbis(),
       DeviceInfo.getTotalMemory(),
       DeviceInfo.getHardware(),
       DeviceInfo.getFreeDiskStorageOld(),
       DeviceInfo.getFreeDiskStorage(),
-    ]).then(([device, serialNumber, abis, memory, hardWare, storage, free]) => {
+    ]).then(([device, abis, memory, hardWare, storage, free]) => {
       setDeviceDetails({
         ...deviceDetails,
         deviceName: device,
-        serialNumber: serialNumber,
+        serialNumber: receivedSerialNumber,
         cpu: abis,
         memory: (memory / (1024 ** 3)).toFixed(2),
         hardWare: hardWare,
@@ -94,17 +136,17 @@ export default function HomeScreen({ navigation, route }) {
   return (
     <PaperProvider theme={paperTheme}>
       <View style={styles.container}>
+        <CustomAlert visible={isAlertVisible} onClose={toggleAlert} />
         <TouchableOpacity onPress={() => navigation.openDrawer()} style={styles.menuButton}>
-          <Icon name="forwardburger" size={40} color="#4908b0" />
+          <Icon name="forwardburger" size={40} color={isSwitchDiag ? "#4908b0" : "#E74C3C"} />
         </TouchableOpacity>
         {/* <Tooltip title="Pre-Test Requirements" enterTouchDelay={100} leaveTouchDelay={1000}>
           <TouchableOpacity style={styles.preTestButton} onPress={() => setModalVisible(!modalVisible)}>
             <Icon name="progress-question" size={40} color="#4908b0" />
           </TouchableOpacity>
         </Tooltip> */}
-        <TouchableOpacity style={[styles.wifiButton]}> 
+        <TouchableOpacity style={[styles.wifiButton]} onPress={toggleAlert}>
           {
-
             !isInternetConnected ?
               <Icon name="wifi-remove" size={40} style={[isInternetConnected]} color="#e84118" />
               : !websocketConnected ?
@@ -115,55 +157,63 @@ export default function HomeScreen({ navigation, route }) {
           }
         </TouchableOpacity>
         <View style={styles.upperPart}>
-          <TouchableOpacity style={isSwitchOn ? styles.startButtonWipe : styles.startButtonDiag}>
+          <TouchableOpacity style={isSwitchDiag ? styles.startButtonDiag : styles.startButtonWipe}>
             {
-              isSwitchOn ?
-                <Icon name={'cellphone-remove'} style={styles.startIconWipe} />
-                :
+              isSwitchDiag ?
                 <Icon name={'cog-play-outline'} style={styles.startIconDiag} />
+                :
+                <Icon name={'cellphone-remove'} style={styles.startIconWipe} />
             }
             {
-              isSwitchOn ?
-                <Text style={styles.startButtonTextWipe}>
-                  Click To Wipe
-                </Text>
-                :
+              isSwitchDiag ?
                 <Text style={styles.startButtonTextDiag}>
                   Click To Diag
+                </Text>
+                :
+                <Text style={styles.startButtonTextWipe}>
+                  Click To Wipe
                 </Text>
             }
           </TouchableOpacity>
           <View style={styles.switchContainer}>
             <Text style={[styles.switchText]}>
-              Diag
-            </Text>
-            <Switch value={isSwitchOn} style={styles.switchBtn} onValueChange={onToggleSwitch} trackColor={{ false: '#4908b099', true: '#e74c3cb8' }} thumbColor={isSwitchOn ? '#E74C3C' : '#4908b0'} />
-            <Text style={[styles.switchText]}>
               Wipe
+            </Text>
+            <Switch value={isSwitchDiag} style={styles.switchBtn} onValueChange={onToggleSwitch} trackColor={{ false: '#E74C3Cb8', true: '#4908b099' }} thumbColor={isSwitchDiag ? '#4908b0' : '#E74C3C'} />
+            <Text style={[styles.switchText]}>
+              Diag
             </Text>
           </View>
         </View>
 
-        <View style={styles.middlePart}>
-          <View style={styles.middlePartBtnsCon}>
-            <Button textColor='white' icon="rocket-launch" mode="outlined" style={styles.preTestBtn} onPress={() => console.log('Pressed')}>
-              Diag Report
-            </Button>
-            <View style={styles.middlePartBtns}>
-              <Button textColor='white' icon="rocket-launch" mode="outlined" style={{ borderColor: 'white' }} onPress={() => console.log('Pressed')}>
-                Check List
+        <View style={[styles.middlePart, { backgroundColor: isSwitchDiag ? '#4908b0' : '#E74C3C' }]}>
+          {
+            isSwitchDiag &&
+
+            <View style={styles.middlePartBtnsCon}>
+              <Button textColor='white' icon="rocket-launch" mode="outlined" style={styles.preTestBtn} onPress={() => console.log('Pressed')}>
+                Diag Report
               </Button>
-              <Button textColor='white' icon="progress-question" mode="outlined" style={{ borderColor: 'white' }} onPress={() => setModalVisible(!modalVisible)}>
-                Requirements
-              </Button>
+              <View style={styles.middlePartBtns}>
+                <Button textColor='white' icon="rocket-launch" mode="outlined" style={{ borderColor: 'white' }} onPress={() => console.log('Pressed')}>
+                  Check List
+                </Button>
+                <Button textColor='white' icon="progress-question" mode="outlined" style={{ borderColor: 'white' }} onPress={() => setModalVisible(!modalVisible)}>
+                  Requirements
+                </Button>
+              </View>
             </View>
-          </View>
+          }
           <View style={styles.middlePartDeviceInfo}>
             <Text style={styles.deviceDetailsTitle}>Device Info</Text>
             <View style={styles.deviceContainer}>
               <View style={styles.detailsItem}>
                 <Text style={styles.detailsTextLabel}>Device:</Text>
                 <Text style={styles.detailsTextValue}>{deviceDetails.brand} {deviceDetails.deviceName}</Text>
+              </View>
+              <View style={styles.detailsItem}>
+                <Text style={styles.detailsTextLabel}>Serial Number:</Text>
+                <Text style={styles.detailsTextValue}>{deviceDetails.serialNumber}</Text>
               </View>
               <View style={styles.detailsItem}>
                 <Text style={styles.detailsTextLabel}>OS:</Text>
@@ -174,20 +224,12 @@ export default function HomeScreen({ navigation, route }) {
                 <Text style={styles.detailsTextValue}>{deviceDetails.cpu}</Text>
               </View>
               <View style={styles.detailsItem}>
-                <Text style={styles.detailsTextLabel}>RAM:</Text>
-                <Text style={styles.detailsTextValue}>{(deviceDetails.memory)} GB</Text>
-              </View>
-              <View style={styles.detailsItem}>
-                <Text style={styles.detailsTextLabel}>free Storage:</Text>
-                <Text style={styles.detailsTextValue}>{deviceDetails.freeStorage}</Text>
-              </View>
-              <View style={styles.detailsItem}>
                 <Text style={styles.detailsTextLabel}>HardWare:</Text>
                 <Text style={styles.detailsTextValue}>{deviceDetails.hardWare}</Text>
               </View>
               <View style={styles.detailsItem}>
-                <Text style={styles.detailsTextLabel}>Serial Number:</Text>
-                <Text style={styles.detailsTextValue}>{deviceDetails.serialNumber}</Text>
+                <Text style={styles.detailsTextLabel}>RAM:</Text>
+                <Text style={styles.detailsTextValue}>{(deviceDetails.memory)} GB</Text>
               </View>
             </View>
           </View>
@@ -260,7 +302,7 @@ const styles = StyleSheet.create({
   middlePart: {
     display: 'flex',
     flex: 4,
-    backgroundColor: '#4908b0',
+    // backgroundColor: '#4908b0',
     borderTopLeftRadius: 100,
     borderTopRightRadius: 100,
     width: '100%',
@@ -532,10 +574,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
-  modalText: {
-    marginBottom: 15,
-    textAlign: 'center',
-  },
   buttonModalClose: {
     position: 'absolute',
     top: 10,
@@ -545,4 +583,49 @@ const styles = StyleSheet.create({
     color: 'rgba(0, 0, 0, 0.35)',
     fontSize: 35
   },
+  modalBackground: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  customModalContent: {
+    backgroundColor: 'white',
+    padding: 20,
+    paddingTop: 15,
+    borderRadius: 10,
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  customModalTitle: {
+    width: 'auto',
+    borderColor: '#0000002e',
+    textAlign: 'center',
+    paddingBottom: 5,
+    color: 'black',
+    fontWeight: '600',
+    fontFamily: 'Quicksand-Bold',
+    fontSize: 16,
+    marginBottom: 10
+  },
+  customModalRow: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 20
+  },
+  customModalText: {
+    fontSize: 13,
+  },
+  closeButton: {
+    color: 'blue',
+    marginTop: 20,
+    fontSize: 16,
+  },
+  closeButtonCon: {
+    display: 'flex',
+    alignContent: 'center',
+    alignItems: 'center',
+  }
 });

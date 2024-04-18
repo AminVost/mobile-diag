@@ -1,315 +1,293 @@
-.container {
-    flex: 1;
-    background-color: #ECF0F1;
-}
-
-.preview {
-    flex: 1;
-    justify-content: flex-end;
-    align-items: center;
-}
-
-.scannerBoxContainer {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    aspect-ratio: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.scanScreenMessage {
-    font-size: 18px;
-    color: black;
-    text-align: center;
-    font-weight: 700;
-}
-
-.upperPart {
-    flex: 3;
-    justify-content: center;
-    align-items: center;
-}
-
-.middlePart {
-    display: flex;
-    flex: 4;
-    background-color: #4908b0;
-    border-top-left-radius: 100px;
-    border-top-right-radius: 100px;
-    width: 100%;
-}
-
-.deviceDetailsTitle {
-    font-weight: bold;
-    margin-bottom: 10px;
-    font-size: 15px;
-    color: white;
-    text-align: center;
-}
-
-.detailsItem {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-evenly;
-}
-
-.detailsTextLabel {
-    flex: 1;
-    font-weight: 600;
-    color: white;
-    font-size: 14px;
-}
-
-.detailsTextValue {
-    flex: 2;
-    font-size: 13px;
-    text-align: right;
-    color: white;
-}
-
-.preTestTitle {
-    font-weight: bold;
-    margin-bottom: 10px;
-    margin-top: 15px;
-    font-size: 23px;
-    color: black;
-    font-family: 'Quicksand-Regular';
-}
-
-.preTestText {
-    font-weight: 600;
-    margin-bottom: 15px;
-    margin-top: 15px;
-    font-size: 16px;
-    color: black;
-    font-family: 'Quicksand-Regular';
-    padding-horizontal: 15px;
-    border-bottom-width: 1px;
-    width: 100%;
-    border-bottom-color: #00000026;
-    padding-bottom: 7px;
-}
-
-.startButtonDiag {
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-    border-radius: 100px;
-    width: 200px;
-    height: 200px;
-    display: flex;
-    border-width: 2px;
-    border-color: #40079a75;
-    background-color: white;
-}
-
-.startButtonWipe {
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-    border-radius: 100px;
-    width: 200px;
-    height: 200px;
-    display: flex;
-    border-width: 2px;
-    border-color: #cf433566;
-    background-color: white;
-}
-
-.startIconDiag {
-    color: #4908b0;
-    font-size: 120px;
-}
-
-.startIconWipe {
-    color: #E74C3C;
-    font-size: 120px;
-}
-
-.startButtonTextWipe {
-    font-size: 18px;
-    color: #E74C3C;
-    font-family: 'Quicksand-Bold';
-}
-
-.startButtonTextDiag {
-    font-size: 18px;
-    color: #4908b0;
-    font-family: 'Quicksand-Bold';
-}
-
-.checklistItems {
-    flex: 1;
-    font-weight: 600;
-    font-size: 15px;
-    margin-vertical: 5px;
-}
-
-.checkListScroll {
-    flex: 1;
-    width: 300px;
-}
-
-.scannerBox {
-    border-width: 6px;
-    border-color: black;
-    width: 350px;
-    aspect-ratio: 1;
-    background-color: #ffffff54;
-    border-radius: 50px;
-}
-
-.overlay {
-    position: absolute;
-    right: 0;
-    left: 0;
-    background-color: white;
-    flex: 1;
-    height: 50px;
-    max-height: 50px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow: visible;
-}
-
-.scanText {
-    width: 250px;
-    text-align: center;
-    font-size: 18px;
-    color: white;
-    font-weight: 700;
-    background-color: black;
-    padding: 5px;
-    border-top-left-radius: 10px;
-    border-top-right-radius: 10px;
-}
-
-.logo {
-    width: 240px;
-    object-fit: cover;
-}
-
-.menuButton {
-    margin-left: 10px;
-    margin-top: 10px;
-    position: absolute;
-    top: 0;
-    left: 10px;
-}
-
-.preTestButton {
-    margin-left: 10px;
-    margin-top: 10px;
-    position: absolute;
-    top: 0;
-    right: 10px;
-}
-
-.content {
-    flex: 1;
-    justify-content: center;
-    align-items: center;
-}
-
-.middleBtnContainer {
-    padding: 50px;
-    background-color: red;
-}
-
-.middlePartBtns {
-    display: flex;
-    flex-direction: row;
-    margin-top: 10%;
-    align-items: center;
-    justify-content: center;
-    column-gap: 20px;
-}
-
-.middlePartDeviceInfo {
-    display: flex;
-    border-radius: 10px;
-    padding: 12px;
-    width: 90%;
-    align-self: center;
-    margin-top: 10%;
-}
-
-.deviceContainer {
-    display: flex;
-    row-gap: 10px;
-}
-
-.switchBtn {
-    transform: scaleX(1.6) scaleY(1.6);
-}
-
-.switchContainer {
-    display: flex;
-    flex-direction: row;
-    column-gap: 30px;
-    margin-top: 5%;
-    align-items: center;
-    justify-content: center;
-}
-
-.switchText {
-    font-family: 'Quicksand-Bold';
-    color: black;
-    font-size: 18px;
-}
-
-.versionText {
-    position: absolute;
-    bottom: 0;
-    color: rgba(255, 255, 255, 0.36);
-    text-align: center;
-    width: 100%;
-    margin-bottom: 1%;
-}
-
-.centeredView {
-    flex: 1;
-    justify-content: center;
-    align-items: center;
-    background-color: white;
-}
-
-.modalView {
-    margin: 20px;
-    background-color: white;
-    border-radius: 20px;
-    padding: 35px;
-    align-items: center;
-    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
-}
-
-.button {
-    border-radius: 20px;
-    padding: 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.textStyle {
-    color: white;
-    font-weight: bold;
-    text-align: center;
-}
-
-.modalText {
-    margin-bottom: 15px;
-    text-align: center;
-}
-
-.buttonModalClose {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-}
-
-.closeIcon {
-    color: rgba(0, 0, 0, 0.35);
-    font-size: 35px;
-}
+const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: '#ECF0F1'
+    },
+    preview: {
+      flex: 1,
+      justifyContent: 'flex-end',
+      alignItems: 'center'
+    },
+    scannerBoxContainer: {
+      position: 'absolute',
+      width: '100%',
+      height: '100%',
+      aspectRatio: 1,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    scanScreenMessage: {
+      fontSize: 18,
+      color: 'black',
+      textAlign: 'center',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontWeight: '700'
+    },
+    upperPart: {
+      flex: 3,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    middlePart: {
+      display: 'flex',
+      flex: 4,
+      backgroundColor: '#4908b0',
+      borderTopLeftRadius: 100,
+      borderTopRightRadius: 100,
+      width: '100%',
+  
+    },
+    deviceDetailsTitle: {
+      fontWeight: 'bold',
+      marginBottom: 10,
+      fontSize: 15,
+      color: 'white',
+      textAlign: 'center'
+    },
+    detailsItem: {
+      display: 'flex',
+      flexDirection: 'row',
+      justifyContent: 'space-evenly',
+    },
+    detailsTextLabel: {
+      flex: 1,
+      fontWeight: '600',
+      color: 'white',
+      fontSize: 14
+    },
+    detailsTextValue: {
+      flex: 2,
+      fontSize: 13,
+      textAlign: 'right',
+      color: 'white'
+    },
+    preTestTitle: {
+      fontWeight: 'bold',
+      marginBottom: 10,
+      marginTop: 15,
+      fontSize: 23,
+      color: 'black',
+      fontFamily: 'Quicksand-Regular',
+    },
+    preTestText: {
+      fontWeight: '600',
+      marginBottom: 15,
+      marginTop: 15,
+      fontSize: 16,
+      color: 'black',
+      fontFamily: 'Quicksand-Regular',
+      paddingHorizontal: 15,
+      borderBottomWidth: 1,
+      width: '100%',
+      borderBottomColor: '#00000026',
+      paddingBottom: 7
+    },
+    startButtonDiag: {
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 20,
+      borderRadius: 100,
+      width: 200,
+      height: 200,
+      display: 'flex',
+      borderWidth: 2,
+      borderColor: '#40079a75',
+      backgroundColor: 'white',
+    },
+    startButtonWipe: {
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 20,
+      borderRadius: 100,
+      width: 200,
+      height: 200,
+      display: 'flex',
+      borderWidth: 2,
+      borderColor: '#cf433566',
+      backgroundColor: 'white',
+    },
+    startIconDiag: {
+      color: '#4908b0',
+      fontSize: 120,
+    },
+    startIconWipe: {
+      color: '#E74C3C',
+      fontSize: 120,
+    },
+    startButtonTextWipe: {
+      fontSize: 18,
+      color: '#E74C3C',
+      fontFamily: 'Quicksand-Bold',
+    },
+    startButtonTextDiag: {
+      fontSize: 18,
+      color: '#4908b0',
+      fontFamily: 'Quicksand-Bold',
+    },
+    checklistItems: {
+      flex: 1,
+      fontWeight: '600',
+      fontSize: 15,
+      marginVertical: 5
+  
+    },
+    checkListScroll: {
+      flex: 1,
+      width: 300
+    },
+    scannerBox: {
+      borderWidth: 6,
+      borderColor: 'black',
+      width: 350,
+      aspectRatio: 1,
+      backgroundColor: '#ffffff54',
+      borderRadius: 50
+    },
+    overlay: {
+      position: 'absolute',
+      right: 0,
+      left: 0,
+      backgroundColor: 'white',
+      flex: 1,
+      height: 50,
+      maxHeight: 50,
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      overflow: 'visible',
+    },
+    scanText: {
+      width: '100%',
+      width: 250,
+      textAlign: 'center',
+      fontSize: 18,
+      color: 'white',
+      textAlign: 'center',
+      fontWeight: '700',
+      backgroundColor: 'black',
+      padding: 5,
+      borderTopLeftRadius: 10,
+      borderTopRightRadius: 10,
+    },
+    logo: {
+      width: 240,
+      resizeMode: 'stretch',
+    },
+    menuButton: {
+      marginLeft: 10,
+      marginTop: 10,
+      position: 'absolute',
+      top: 0,
+      left: 10
+    },
+    preTestButton: {
+      marginLeft: 10,
+      marginTop: 10,
+      position: 'absolute',
+      top: 0,
+      right: 10
+    },
+    content: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    middleBtnContainer: {
+      padding: 50,
+      backgroundColor: 'red'
+    },
+    middlePartBtns: {
+      display: 'flex',
+      flexDirection: 'row',
+      marginTop: '10%',
+      alignItems: 'center',
+      justifyContent: 'center',
+      columnGap: 20
+    },
+    middlePartDeviceInfo: {
+      display: 'flex',
+      // borderWidth: 1,
+      // borderColor: 'white',
+      borderRadius: 10,
+      padding: 12,
+      width: '90%',
+      alignSelf: 'center',
+      // backgroundColor: '#ffffff21',
+      marginTop: '10%'
+    },
+    deviceContainer: {
+      display: 'flex',
+      rowGap: 10
+    },
+    switchBtn: {
+      transform: [{ scaleX: 1.6 }, { scaleY: 1.6 }],
+    },
+    switchContainer: {
+      display: 'flex',
+      flexDirection: 'row',
+      columnGap: 30,
+      marginTop: '5%',
+      alignItems: 'center',
+      justifyContent: 'center'
+    },
+    switchText: {
+      fontFamily: 'Quicksand-Bold',
+      color: 'black',
+      fontSize: 18
+    },
+    versionText: {
+      position: 'absolute',
+      bottom: 0,
+      color: '#ffffff5c',
+      textAlign: 'center',
+      width: '100%',
+      marginBottom: '1%',
+    },
+    centeredView: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      // marginTop: 22,,
+      backgroundColor: 'white'
+    },
+    modalView: {
+      margin: 20,
+      backgroundColor: 'white',
+      borderRadius: 20,
+      padding: 35,
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 10,
+        height: 5,
+      },
+      shadowOpacity: 0.95,
+      shadowRadius: 4,
+      elevation: 5,
+    },
+    button: {
+      borderRadius: 20,
+      padding: 10,
+      elevation: 2,
+    },
+    textStyle: {
+      color: 'white',
+      fontWeight: 'bold',
+      textAlign: 'center',
+    },
+    modalText: {
+      marginBottom: 15,
+      textAlign: 'center',
+    },
+    buttonModalClose: {
+      position: 'absolute',
+      top: 10,
+      right: 10,
+    },
+    closeIcon: {
+      color: 'rgba(0, 0, 0, 0.35)',
+      fontSize: 35
+    },
+  });
