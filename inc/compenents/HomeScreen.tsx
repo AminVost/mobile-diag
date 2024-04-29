@@ -8,12 +8,11 @@ import { Button, PaperProvider, Switch, Tooltip } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import DeviceInfo from 'react-native-device-info';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import logoImage from './assets/images/logo.png';
-import { NetworkContext } from './App';
-// import CustomAlert from './inc/modal/customAlert';
+import { NetworkContext } from '../../App';
+import TestsScreen from './TestsScreen';
+const Stack = createNativeStackNavigator();
 
-
-export default function HomeScreen({ navigation, route }) {
+function HomeScreen({ navigation, route }) {
   const { isInternetConnected, websocketConnected, receivedSerialNumber } = useContext(NetworkContext);
 
   const checklistItems = [
@@ -79,7 +78,8 @@ export default function HomeScreen({ navigation, route }) {
       <Modal
         visible={isAlertVisible}
         transparent={true}
-        animationType="slide"
+        animationType="fade"
+        hardwareAccelerated={true}
         onRequestClose={() => {
           setAlertVisible(!isAlertVisible);
         }}
@@ -140,11 +140,6 @@ export default function HomeScreen({ navigation, route }) {
         <TouchableOpacity onPress={() => navigation.openDrawer()} style={styles.menuButton}>
           <Icon name="forwardburger" size={40} color={isSwitchDiag ? "#4908b0" : "#E74C3C"} />
         </TouchableOpacity>
-        {/* <Tooltip title="Pre-Test Requirements" enterTouchDelay={100} leaveTouchDelay={1000}>
-          <TouchableOpacity style={styles.preTestButton} onPress={() => setModalVisible(!modalVisible)}>
-            <Icon name="progress-question" size={40} color="#4908b0" />
-          </TouchableOpacity>
-        </Tooltip> */}
         <TouchableOpacity style={[styles.wifiButton]} onPress={toggleAlert}>
           {
             !isInternetConnected ?
@@ -157,7 +152,7 @@ export default function HomeScreen({ navigation, route }) {
           }
         </TouchableOpacity>
         <View style={styles.upperPart}>
-          <TouchableOpacity style={isSwitchDiag ? styles.startButtonDiag : styles.startButtonWipe}>
+          <TouchableOpacity style={isSwitchDiag ? styles.startButtonDiag : styles.startButtonWipe} onPress={() => isSwitchDiag ? navigation.navigate('TestsScreen') : ''}>
             {
               isSwitchDiag ?
                 <Icon name={'cog-play-outline'} style={styles.startIconDiag} />
@@ -266,6 +261,16 @@ export default function HomeScreen({ navigation, route }) {
   );
 }
 
+const Dashboard = ({ navigation, route }) => {
+  return (
+    <Stack.Navigator >
+      <Stack.Screen name="HomeScreen" component={HomeScreen} options={{ title: 'Home Screen', headerShown: false }} />
+      <Stack.Screen name="TestsScreen" component={TestsScreen} options={{ title: 'Tests Screen', headerShown: false }} />
+    </Stack.Navigator>
+  );
+};
+
+export default Dashboard;
 
 const styles = StyleSheet.create({
   container: {
