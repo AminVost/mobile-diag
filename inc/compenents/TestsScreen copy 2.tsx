@@ -8,7 +8,6 @@ import { Button, PaperProvider, Switch, Tooltip, Avatar, Card, IconButton, Check
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import DeviceInfo from 'react-native-device-info';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { executeSpecificationTests } from '../testComponents/executeSpecificationTests'; 
 
 const TestDeviceScreen = ({ navigation, route }) => {
   const [elapsedTime, setElapsedTime] = useState(0);
@@ -22,11 +21,8 @@ const TestDeviceScreen = ({ navigation, route }) => {
       icon: 'cellphone-cog',
       subset: [
         { title: 'Model', value: null },
-        { title: 'Device Name', value: null },
-        { title: 'Brand', value: null },
-        { title: 'Device', value: null },
-        { title: 'OS', value: null },
-        { title: 'Manufacturer', value: null },
+        { title: 'Resolution', value: null },
+        { title: 'Android OS Version', value: null },
       ],
       priority: 1,
     },
@@ -50,7 +46,7 @@ const TestDeviceScreen = ({ navigation, route }) => {
     return () => clearInterval(timer);
   }, []);
 
-  const formatTime = (seconds: number) => {
+  const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes < 10 ? '0' : ''}${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
@@ -59,10 +55,10 @@ const TestDeviceScreen = ({ navigation, route }) => {
   const performTestStep = async () => {
     switch (testStep) {
       case 0:
-        executeSpecificationTests(testStep, testSteps, setTestsStep)        
-          .then(() => {
-            console.log('in case 0');
-            // setTestStep(prevStep => prevStep + 1);
+        await executeSpecificationTests()
+          .then(specificationResults => {
+            console.log('in case 0', specificationResults);
+            setTestStep(prevStep => prevStep + 1);
           })
           .catch(error => {
             console.error('Error executing specification tests:', error);
@@ -129,7 +125,7 @@ const TestDeviceScreen = ({ navigation, route }) => {
             All tests were done
           </Text>
         }
-        <Icon name={testSteps[testStep] ? testSteps[testStep].icon : 'done'} style={styles.testIcon} />
+        <Icon name={testSteps[testStep] ? testSteps[testStep].icon : ''} style={styles.testIcon} />
       </View>
 
       <View style={[styles.middlePart]}>
@@ -194,6 +190,20 @@ const TestDeviceScreen = ({ navigation, route }) => {
 
     </View>
   );
+};
+
+const executeSpecificationTests = () => {
+  // Return a Promise that resolves after 5000 milliseconds
+  return new Promise(resolve => {
+    setTimeout(() => {
+      // Resolve the Promise with the test results
+      resolve({
+        'Model': 'Placeholder Value',
+        'Resolution': 'Placeholder Value',
+        'Android OS Version': 'Placeholder Value'
+      });
+    }, 5000);
+  });
 };
 
 const executeCallFunctionTests = async () => {

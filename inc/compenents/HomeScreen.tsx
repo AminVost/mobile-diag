@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useRef, useContext } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableHighlight, Alert, ScrollView, TouchableOpacity, Platform, Image, Modal, Pressable, Linking } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableHighlight, Alert, ScrollView, TouchableOpacity, Platform, Image, Modal, Pressable, Linking, PermissionsAndroid } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -56,6 +56,7 @@ function HomeScreen({ navigation, route }) {
     memory: '',
     hardWare: '',
     freeStorage: '',
+    phoneNumber: '',
   });
   const [isSwitchDiag, setisSwitchDiag] = React.useState(true);
 
@@ -72,6 +73,42 @@ function HomeScreen({ navigation, route }) {
   const toggleAlert = () => {
     setAlertVisible(!isAlertVisible);
   };
+
+
+
+  const sendPhoneNumber = async () => {
+    const hasPhoneStatePermission = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.READ_PHONE_STATE,
+    );
+
+    console.log('hasPhoneStatePermission', hasPhoneStatePermission)
+
+    const hasReadSMSPermission = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.READ_SMS,
+    );
+    console.log('hasReadSMSPermission', hasReadSMSPermission)
+
+    if (
+      hasPhoneStatePermission === PermissionsAndroid.RESULTS.GRANTED &&
+      hasReadSMSPermission === PermissionsAndroid.RESULTS.GRANTED
+    ) {
+      const phoneNumber = await DeviceInfo.getPhoneNumber();
+      console.log('phoneNumber' , phoneNumber)
+
+      if (phoneNumber) {
+        DeviceInfo.getPhoneNumber().then((phoneNumber) => {
+          // Android: null return: no permission, empty string: unprogrammed or empty SIM1, e.g. "+15555215558": normal return value
+          console.log('phoneNumber', phoneNumber)
+        });
+      }
+    }
+  };
+
+  // return {
+  //   sendPhoneNumber,
+  // };
+
+
 
   const CustomAlert = () => {
     return (
@@ -118,7 +155,8 @@ function HomeScreen({ navigation, route }) {
       DeviceInfo.getHardware(),
       DeviceInfo.getFreeDiskStorageOld(),
       DeviceInfo.getFreeDiskStorage(),
-    ]).then(([device, abis, memory, hardWare, storage, free]) => {
+      DeviceInfo.getPhoneNumber(),
+    ]).then(([device, abis, memory, hardWare, storage, free, phoneNumber]) => {
       setDeviceDetails({
         ...deviceDetails,
         deviceName: device,
@@ -127,10 +165,12 @@ function HomeScreen({ navigation, route }) {
         memory: (memory / (1024 ** 3)).toFixed(2),
         hardWare: hardWare,
         freeStorage: (free / (1024 ** 3)).toFixed(2),
+        phoneNumber: phoneNumber,
       });
     }).catch(error => {
       console.error('Error retrieving device information:', error);
     });
+    sendPhoneNumber();
   }, [])
 
   return (
