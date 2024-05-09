@@ -70,9 +70,9 @@ const TestDeviceScreen = ({ navigation, route }) => {
         break;
       case 1:
         await executeCallFunctionTests()
-          .then(specificationResults => {
+          .then(() => {
             console.log('in case 1', specificationResults);
-            setTestStep(prevStep => prevStep + 1);
+            // setTestStep(prevStep => prevStep + 1);
           })
           .catch(error => {
             console.error('Error executing executeCallFunctionTests tests:', error);
@@ -191,7 +191,6 @@ const TestDeviceScreen = ({ navigation, route }) => {
           }
         </View>
       </View>
-
     </View>
   );
 };
