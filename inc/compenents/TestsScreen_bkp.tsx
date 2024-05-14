@@ -8,57 +8,66 @@ import { Button, PaperProvider, Switch, Tooltip, Avatar, Card, IconButton, Check
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import DeviceInfo from 'react-native-device-info';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import PerformanceStats from "react-native-performance-stats";
+import { getSpecifications } from './tests/getSpecifications';
+import { getStorage } from './tests/getStorage';
+import { getCpu } from './tests/getCpu';
+import { getMemory } from './tests/getMemory';
 
 const TestDeviceScreen = ({ navigation, route }) => {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [loading, setLoading] = useState(false);
   const [currentTestIndex, setCurrentTestIndex] = useState(0);
   const [testData, setTestData] = useState([]);
-  const [tests, setTests] = useState([
+  const [testStep, setTestStep] = useState(0);
+  const [testSteps, setTestsSteps] = useState([
     {
       title: 'Specification',
       icon: 'cellphone-cog',
       subset: [
-        { title: 'Model', value: '' },
-        { title: 'Resolution', value: '' },
-        { title: 'Android OS Version', value: '' },
+        { title: 'Model', value: null },
+        { title: 'Device Name', value: null },
+        { title: 'Brand', value: null },
+        { title: 'Device', value: null },
+        { title: 'Device Type', value: null },
+        { title: 'OS', value: null },
+        { title: 'OS Version', value: null },
+        { title: 'Manufacturer', value: null },
       ],
       priority: 1,
     },
     {
-      title: 'CPU',
-      icon: 'cpu-64-bit',
+      title: 'ُStorage',
+      icon: 'harddisk',
       subset: [
-        { title: 'CPU Model', value: '' },
-        { title: 'Core Quantity', value: '' },
-        { title: 'CPU Architecture', value: '' },
+        { title: 'Total', value: null },
+        { title: 'Used', value: null },
+        { title: 'Free', value: null },
       ],
       priority: 2,
     },
+    {
+      title: 'Cpu',
+      icon: 'cpu-64-bit',
+      subset: [
+        { title: 'CPU Model', value: null },
+        { title: 'supportedAbis', value: null },
+        { title: 'supported32BitAbis', value: null },
+        { title: 'supported64BitAbis', value: null },
+      ],
+      priority: 3,
+    },
+    {
+      title: 'RAM',
+      icon: 'memory',
+      subset: [
+        { title: 'getTotalMemory', value: null },
+        { title: 'getMaxMemory', value: null },
+        { title: 'getUsedMemory', value: null },
+      ],
+      priority: 4,
+    },
   ]);
-
-  // const tests = [
-  //   {
-  //     title: 'Specification',
-  //     icon: 'cellphone-cog',
-  //     subset: [
-  //       { title: 'Model' },
-  //       { title: 'Resolution' },
-  //       { title: 'Android OS Version' },
-  //     ],
-  //     priority: 1,
-  //   },
-  //   {
-  //     title: 'CPU',
-  //     icon: 'cpu-64-bit',
-  //     subset: [
-  //       { title: 'CPU Model' },
-  //       { title: 'Core Quantity' },
-  //       { title: 'CPU Architecture' },
-  //     ],
-  //     priority: 2,
-  //   },
-  // ];
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -68,20 +77,78 @@ const TestDeviceScreen = ({ navigation, route }) => {
     return () => clearInterval(timer);
   }, []);
 
-  const formatTime = (seconds) => {
+  const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes < 10 ? '0' : ''}${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
   };
 
-
-  const handlePass = () => {
-    if (currentTestIndex < tests.length - 1) {
-      setCurrentTestIndex(currentTestIndex + 1);
-    } else {
-      console.log('All tests completed');
+  const performTestStep = async () => {
+    switch (testSteps[testStep].title) {
+      case 'Specification':
+        getSpecifications(testStep, testSteps)
+          .then(() => {
+            console.log('in case getSpecifications');
+            // setTestStep(prevStep => prevStep + 1);
+          })
+          .catch((error: any) => {
+            console.error('Error specification tests:', error);
+          });
+        break;
+      case 'ُStorage':
+        await getStorage(testStep, testSteps)
+          .then(() => {
+            console.log('in case getStorage');
+            // setTestStep(prevStep => prevStep + 1);
+          })
+          .catch(error => {
+            console.error('Error getStorage tests:', error);
+          });
+        break;
+      case 'Cpu':
+        await getCpu(testStep, testSteps)
+          .then(() => {
+            console.log('in case  getCpu');
+            // setTestStep(prevStep => prevStep + 1);
+          })
+          .catch(error => {
+            console.error('Error getCpu tests:', error);
+          });
+        break;
+      case 'RAM':
+        await getMemory(testStep, testSteps)
+          .then(() => {
+            console.log('in case  getMemory');
+            // setTestStep(prevStep => prevStep + 1);
+          })
+          .catch(error => {
+            console.error('Error getMemory tests:', error);
+          });
+        break;
+      default:
+        break;
     }
   };
+
+  const sendTestResults = async () => {
+    try {
+      // await sendTestDataToAPI(testResults);
+      console.log('Test data sent successfully!');
+    } catch (error) {
+      console.error('Error sending test data:', error);
+    } finally {
+      console.log('Finally sending test data');
+    }
+  };
+
+  useEffect(() => {
+    console.log('run useEffect testStep')
+    if (testStep < testSteps.length) {
+      performTestStep();
+    } else {
+      sendTestResults();
+    }
+  }, [testStep]);
 
   return (
     <View style={styles.container}>
@@ -90,46 +157,86 @@ const TestDeviceScreen = ({ navigation, route }) => {
         <View>
           <Text style={styles.timerText}>{formatTime(elapsedTime)}</Text>
         </View>
-        <Text style={styles.testsStage}>{currentTestIndex + 1} / {tests.length}</Text>
+        {testSteps[testStep] ?
+          <Text style={styles.testsStage}>{testStep + 1} / {testSteps.length}</Text>
+          :
+          <Text style={styles.testsStage}>{testSteps.length} / {testSteps.length}</Text>
+        }
         <Icon name={'close-circle-outline'} style={styles.closeIcon} onPress={() => navigation.navigate('HomeScreen')} />
       </View>
 
       <View style={styles.upperPart}>
-        <Text style={styles.stepTitle}>
-          Testing the device {tests[currentTestIndex].title}
-        </Text>
-        <Icon name={tests[currentTestIndex].icon} style={styles.testIcon} />
+        {testSteps[testStep] ?
+          <>
+            <Text style={styles.stepTitle}>
+              Testing the device {testSteps[testStep].title}
+            </Text>
+          </>
+          :
+          <Text style={styles.stepTitle}>
+            All tests were done
+          </Text>
+        }
+        <Icon name={testSteps[testStep] ? testSteps[testStep].icon : 'done'} style={styles.testIcon} />
       </View>
 
       <View style={[styles.middlePart]}>
-        <ScrollView style={[styles.middlePartTestsList]}>
-          {tests[currentTestIndex].subset.map((subsetItem, index) => (
-            <View key={index} style={[styles.testCard]}>
-              <Text style={styles.testTitle}>{subsetItem.title}:</Text>
-              <Text style={styles.testValue}>Placeholder Value</Text>
-              <View style={styles.cardRight}>
-                {!loading ? (
-                  <ActivityIndicator size={32} color="#4908b0" />
-                ) : (
-                  <Avatar.Icon icon="folder" size={32} />
-                )}
-              </View>
-            </View>
-          ))}
-        </ScrollView>
+        {testSteps[testStep] ?
+          <>
+            <ScrollView style={[styles.middlePartTestsList]}>
+              {testSteps[testStep].subset.map((subtopic, index) => (
+                <View key={index} style={styles.testCard}>
+                  <Text style={styles.testTitle}>{subtopic.title}:</Text>
+                  {subtopic.value ?
+                    <Text style={styles.testValue}>{subtopic.value}</Text>
+                    :
+                    <ActivityIndicator size={20} color="#4908b0" />
+                  }
+                </View>
+              ))}
+            </ScrollView>
+          </>
+          :
+          <View style={[styles.middlePartTestsList]}>
+            <Text>
+              Share Report
+            </Text>
+          </View>
+        }
         <View style={styles.buttonsSection}>
-          <Button mode="outlined" style={styles.stepTestBtn} onPress={() => console.log('Pressed')}>
-            N/A
-          </Button>
-          <Button mode="outlined" style={styles.stepTestBtn} onPress={() => console.log('Pressed')}>
-            Fail
-          </Button>
-          <Button mode="outlined" style={styles.stepTestBtn} onPress={() => console.log('Pressed')}>
-            Skip
-          </Button>
-          <Button mode="outlined" style={styles.stepTestBtn} onPress={handlePass}>
-            Pass
-          </Button>
+          {testSteps[testStep] ?
+            <>
+              <Button mode="outlined" style={styles.stepTestBtn} onPress={() => console.log('Pressed')}>
+                N/A
+              </Button>
+              <Button mode="outlined" style={styles.stepTestBtn} onPress={() => console.log('Pressed')}>
+                Skip
+              </Button>
+              <Button mode="outlined" style={styles.stepTestBtn} onPress={() => setTestStep((prevStep) => prevStep - 1)}>
+                Back
+              </Button>
+              <Button
+                mode="outlined"
+                style={styles.stepTestBtn}
+                onPress={() => testStep === testSteps.length - 1 ? '' : setTestStep(prevStep => prevStep + 1)}
+                disabled={testStep === testSteps.length - 1}
+              >
+                {testStep === testSteps.length - 1 ? 'Finish' : 'Next'}
+              </Button>
+            </>
+            :
+            <>
+              <Button mode="outlined" style={styles.stepTestBtn} onPress={() => console.log('Pressed')}>
+                Send Data
+              </Button>
+              <Button mode="outlined" style={styles.stepTestBtn} onPress={() => console.log('Pressed')}>
+                Report
+              </Button>
+              <Button mode="outlined" style={styles.stepTestBtn} onPress={() => setTestStep((prevStep) => prevStep - 1)}>
+                re-Test
+              </Button>
+            </>
+          }
         </View>
       </View>
     </View>
@@ -414,7 +521,7 @@ const styles = StyleSheet.create({
     width: '90%',
     alignSelf: 'center',
     marginTop: '5%',
-    height: '90%',
+    height: '85%',
     flexDirection: 'column',
   },
   buttonsSection: {
@@ -562,4 +669,3 @@ const styles = StyleSheet.create({
     marginTop: 25
   }
 });
-

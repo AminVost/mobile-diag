@@ -1,16 +1,23 @@
 import React, { createContext, useState, useEffect, useRef, useContext } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableHighlight, Alert, ActivityIndicator, useWindowDimensions, ScrollView, TouchableOpacity, Platform, Image, Modal, Pressable, Linking } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableHighlight, Alert, ActivityIndicator, SafeAreaView, useWindowDimensions, ScrollView, TouchableOpacity, Platform, Image, Modal, Pressable, Linking, StatusBar } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createDrawerNavigator, DrawerContentScrollView, DrawerItemList, DrawerItem } from '@react-navigation/drawer';
 import NetInfo from '@react-native-community/netinfo';
 import { LaunchArguments } from "react-native-launch-arguments";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DeviceInfo from 'react-native-device-info';
+import { hideNavigationBar, showNavigationBar } from 'react-native-navigation-bar-color';
+import {
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import { storeData } from './storageUtils';
 import HomeScreen from './inc/compenents/HomeScreen';
 import DeviceInfoScreen from './inc/compenents/DeviceInfoScreen';
 import SettingScreen from './inc/compenents/SettingScreen';
 import ReportScreen from './inc/compenents/ReportScreen';
+import CheckList from './inc/compenents/CheckList';
+import Requirements from './inc/compenents/Requirements';
 import HelpScreen from './inc/compenents/HelpScreen';
 import TestsScreen from './inc/compenents/TestsScreen';
 
@@ -18,6 +25,7 @@ export const NetworkContext = createContext(false);
 const Drawer = createDrawerNavigator();
 
 export default function App() {
+  // hideNavigationBar();
   const [isInternetConnected, setIsNetConnected] = useState(false);
   const [websocketConnected, setWebsocketConnected] = React.useState(false);
   const [receivedSerialNumber, setReceivedSerialNumber] = React.useState(null);
@@ -140,33 +148,41 @@ export default function App() {
   }
 
   return (
-    <NetworkContext.Provider value={{ isInternetConnected, setIsNetConnected, websocketConnected, setWebsocketConnected, receivedSerialNumber }}>
-      <NavigationContainer>
-        <Drawer.Navigator
-          initialRouteName="Home"
-          drawerContent={(props) => <CustomDrawerContent {...props} />}
-          screenOptions={{
-            drawerActiveBackgroundColor: '#4908b0',
-            drawerActiveTintColor: "white",
-            drawerType: 'back',
-            drawerStyle: { width: '70%' },
-            overlayColor: 'transparent',
-          }}
-        >
-          {/* <Drawer.Screen name="ScanQrCode" component={ScanQrCode} options={{ headerShown: false }} /> */}
-          <Drawer.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
-          <Drawer.Screen name="DeviceInfo" component={DeviceInfoScreen} />
-          <Drawer.Screen name="Setting" component={SettingScreen} />
-          <Drawer.Screen name="Report" component={ReportScreen} />
-          <Drawer.Screen name="Help" component={HelpScreen} />
-          <Drawer.Screen name="TestsScreen" component={TestsScreen} options={{
-            unmountOnBlur: true,
-            drawerLabel: () => null
-          }} />
-        </Drawer.Navigator>
 
-      </NavigationContainer>
+    <NetworkContext.Provider value={{ isInternetConnected, setIsNetConnected, websocketConnected, setWebsocketConnected, receivedSerialNumber }}>
+      <SafeAreaProvider>
+        <NavigationContainer>
+          <Drawer.Navigator
+            initialRouteName="Home"
+            drawerContent={(props) => <CustomDrawerContent {...props} />}
+            screenOptions={{
+              drawerActiveBackgroundColor: '#4908b0',
+              drawerActiveTintColor: "white",
+              drawerType: 'back',
+              drawerStyle: { width: '70%' },
+              overlayColor: 'transparent',
+            }}
+          >
+            {/* <Drawer.Screen name="ScanQrCode" component={ScanQrCode} options={{ headerShown: false }} /> */}
+            <Drawer.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
+            <Drawer.Screen name="DeviceInfo" component={DeviceInfoScreen} />
+            <Drawer.Screen name="Setting" component={SettingScreen} />
+            <Drawer.Screen name="Report" component={ReportScreen} />
+            <Drawer.Screen name="CheckList" component={CheckList} />
+            <Drawer.Screen name="Requirements" component={Requirements} />
+            <Drawer.Screen name="Help" component={HelpScreen} />
+            <Drawer.Screen name="TestsScreen" component={TestsScreen} options={{
+              unmountOnBlur: true,
+              drawerLabel: () => null,
+              headerShown: false
+            }} />
+          </Drawer.Navigator>
+
+        </NavigationContainer>
+      </SafeAreaProvider>
     </NetworkContext.Provider>
+
+
   );
 }
 
