@@ -9,12 +9,20 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import DeviceInfo from 'react-native-device-info';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import PerformanceStats from "react-native-performance-stats";
-import { getSpecifications } from './tests/getSpecifications';
-import { getStorage } from './tests/getStorage';
-import { getCpu } from './tests/getCpu';
-import { getMemory } from './tests/getMemory';
+import {
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
+import { hideNavigationBar, showNavigationBar } from 'react-native-navigation-bar-color';
+import TouchScreen from './tests/TouchScreen';
 
-const TestDeviceScreen = ({ navigation, route }) => {
+
+const Stack = createNativeStackNavigator();
+
+const TestsWizard = ({ navigation, route }) => {
+  const insets = useSafeAreaInsets();
+  // showNavigationBar();
+
   const [elapsedTime, setElapsedTime] = useState(0);
   const [loading, setLoading] = useState(false);
   const [currentTestIndex, setCurrentTestIndex] = useState(0);
@@ -22,53 +30,15 @@ const TestDeviceScreen = ({ navigation, route }) => {
   const [testStep, setTestStep] = useState(0);
   const [testSteps, setTestsSteps] = useState([
     {
-      title: 'Specification',
-      icon: 'cellphone-cog',
-      subset: [
-        { title: 'Model', value: null },
-        { title: 'Device Name', value: null },
-        { title: 'Brand', value: null },
-        { title: 'Device', value: null },
-        { title: 'Device Type', value: null },
-        { title: 'OS', value: null },
-        { title: 'OS Version', value: null },
-        { title: 'Manufacturer', value: null },
-      ],
+      title: 'TouchScreen',
+      icon: 'cellphone-screenshot',
+      text: '',
+      result: null,
+      startBtn: true,
       priority: 1,
     },
-    {
-      title: 'ُStorage',
-      icon: 'harddisk',
-      subset: [
-        { title: 'Total', value: null },
-        { title: 'Used', value: null },
-        { title: 'Free', value: null },
-      ],
-      priority: 2,
-    },
-    {
-      title: 'Cpu',
-      icon: 'cpu-64-bit',
-      subset: [
-        { title: 'CPU Model', value: null },
-        { title: 'supportedAbis', value: null },
-        { title: 'supported32BitAbis', value: null },
-        { title: 'supported64BitAbis', value: null },
-      ],
-      priority: 3,
-    },
-    {
-      title: 'RAM',
-      icon: 'memory',
-      subset: [
-        { title: 'getTotalMemory', value: null },
-        { title: 'getMaxMemory', value: null },
-        { title: 'getUsedMemory', value: null },
-      ],
-      priority: 4,
-    },
   ]);
-
+  // showNavigationBar();
   useEffect(() => {
     const timer = setInterval(() => {
       setElapsedTime((prevElapsedTime) => prevElapsedTime + 1);
@@ -85,45 +55,12 @@ const TestDeviceScreen = ({ navigation, route }) => {
 
   const performTestStep = async () => {
     switch (testSteps[testStep].title) {
-      case 'Specification':
-        getSpecifications(testStep, testSteps)
-          .then(() => {
-            console.log('in case getSpecifications');
-            // setTestStep(prevStep => prevStep + 1);
-          })
-          .catch((error: any) => {
-            console.error('Error specification tests:', error);
-          });
-        break;
-      case 'ُStorage':
-        await getStorage(testStep, testSteps)
-          .then(() => {
-            console.log('in case getStorage');
-            // setTestStep(prevStep => prevStep + 1);
-          })
-          .catch(error => {
-            console.error('Error getStorage tests:', error);
-          });
-        break;
-      case 'Cpu':
-        await getCpu(testStep, testSteps)
-          .then(() => {
-            console.log('in case  getCpu');
-            // setTestStep(prevStep => prevStep + 1);
-          })
-          .catch(error => {
-            console.error('Error getCpu tests:', error);
-          });
-        break;
-      case 'RAM':
-        await getMemory(testStep, testSteps)
-          .then(() => {
-            console.log('in case  getMemory');
-            // setTestStep(prevStep => prevStep + 1);
-          })
-          .catch(error => {
-            console.error('Error getMemory tests:', error);
-          });
+      case 'TouchScreen':
+        setTimeout(() => {
+          if (!testSteps[testStep].startBtn) {
+            navigation.navigate('TouchScreen', { testStep, testSteps, setTestsSteps })
+          }
+        }, 500);
         break;
       default:
         break;
@@ -142,7 +79,6 @@ const TestDeviceScreen = ({ navigation, route }) => {
   };
 
   useEffect(() => {
-    console.log('run useEffect testStep')
     if (testStep < testSteps.length) {
       performTestStep();
     } else {
@@ -151,7 +87,16 @@ const TestDeviceScreen = ({ navigation, route }) => {
   }, [testStep]);
 
   return (
-    <View style={styles.container}>
+    <View style={{
+      flex: 1,
+      backgroundColor: '#4908b0',
+      // Paddings to handle safe area
+      marginTop: insets.top,
+      paddingTop: insets.top,
+      paddingBottom: insets.bottom,
+      paddingLeft: insets.left,
+      paddingRight: insets.right,
+    }}>
 
       <View style={styles.testTopBar}>
         <View>
@@ -162,7 +107,7 @@ const TestDeviceScreen = ({ navigation, route }) => {
           :
           <Text style={styles.testsStage}>{testSteps.length} / {testSteps.length}</Text>
         }
-        <Icon name={'close-circle-outline'} style={styles.closeIcon} onPress={() => navigation.navigate('HomeScreen')} />
+        <Icon name={'close-circle-outline'} style={styles.closeIcon} onPress={() => navigation.navigate('Home')} />
       </View>
 
       <View style={styles.upperPart}>
@@ -177,27 +122,25 @@ const TestDeviceScreen = ({ navigation, route }) => {
             All tests were done
           </Text>
         }
-        <Icon name={testSteps[testStep] ? testSteps[testStep].icon : 'done'} style={styles.testIcon} />
       </View>
 
       <View style={[styles.middlePart]}>
         {testSteps[testStep] ?
           <>
-            <ScrollView style={[styles.middlePartTestsList]}>
-              {testSteps[testStep].subset.map((subtopic, index) => (
-                <View key={index} style={styles.testCard}>
-                  <Text style={styles.testTitle}>{subtopic.title}:</Text>
-                  {subtopic.value ?
-                    <Text style={styles.testValue}>{subtopic.value}</Text>
-                    :
-                    <ActivityIndicator size={20} color="#4908b0" />
-                  }
-                </View>
-              ))}
-            </ScrollView>
+            <View style={[styles.testContent]}>
+              <Icon name={testSteps[testStep] ? testSteps[testStep].icon : 'done'} size={300} color="#4908b0" />
+              <Text style={[styles.testText]}>
+                Fill the blocks to pass the touch screen test
+              </Text>
+              {testSteps[testStep].startBtn &&
+                <Button mode="contained" style={styles.testStart} onPress={() => navigation.navigate(testSteps[testStep].title)}>
+                  Start
+                </Button>
+              }
+            </View>
           </>
           :
-          <View style={[styles.middlePartTestsList]}>
+          <View style={[styles.testContent]}>
             <Text>
               Share Report
             </Text>
@@ -206,14 +149,14 @@ const TestDeviceScreen = ({ navigation, route }) => {
         <View style={styles.buttonsSection}>
           {testSteps[testStep] ?
             <>
-              <Button mode="outlined" style={styles.stepTestBtn} onPress={() => console.log('Pressed')}>
-                N/A
-              </Button>
-              <Button mode="outlined" style={styles.stepTestBtn} onPress={() => console.log('Pressed')}>
-                Skip
-              </Button>
               <Button mode="outlined" style={styles.stepTestBtn} onPress={() => setTestStep((prevStep) => prevStep - 1)}>
                 Back
+              </Button>
+              <Button mode="outlined" style={styles.stepTestBtn} onPress={() => console.log('Skip')}>
+                Skip
+              </Button>
+              <Button mode="outlined" style={styles.stepTestBtn} onPress={() => console.log('Failed')}>
+                Failed
               </Button>
               <Button
                 mode="outlined"
@@ -221,7 +164,7 @@ const TestDeviceScreen = ({ navigation, route }) => {
                 onPress={() => testStep === testSteps.length - 1 ? '' : setTestStep(prevStep => prevStep + 1)}
                 disabled={testStep === testSteps.length - 1}
               >
-                {testStep === testSteps.length - 1 ? 'Finish' : 'Next'}
+                {testStep === testSteps.length - 1 ? 'Finish' : 'Pass'}
               </Button>
             </>
             :
@@ -243,7 +186,16 @@ const TestDeviceScreen = ({ navigation, route }) => {
   );
 };
 
-export default TestDeviceScreen;
+const TestsScreens = ({ navigation, route }) => {
+  return (
+    <Stack.Navigator >
+      <Stack.Screen name="TestsWizard" component={TestsWizard} options={{ title: 'Tests Wizard', headerShown: false }} />
+      <Stack.Screen name="TouchScreen" component={TouchScreen} options={{ title: 'Touch Screen', headerShown: false }} />
+    </Stack.Navigator>
+  );
+};
+
+export default TestsScreens;
 
 const styles = StyleSheet.create({
   container: {
@@ -296,13 +248,13 @@ const styles = StyleSheet.create({
   },
   stepTitle: {
     width: '100%',
-    fontSize: 20,
+    fontSize: 18,
     fontFamily: 'Quicksand-Bold',
     color: 'white',
     textAlign: 'center'
   },
   upperPart: {
-    flex: 3,
+    flex: 2,
     // justifyContent: 'center',,
     top: '8%',
     alignItems: 'center',
@@ -316,6 +268,8 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 70,
     width: '100%',
     backgroundColor: '#ECF0F1',
+    justifyContent: 'center',
+    alignItems: 'center'
   },
 
   deviceDetailsTitle: {
@@ -515,7 +469,10 @@ const styles = StyleSheet.create({
     color: '#4908b0',
     paddingHorizontal: 5
   },
-  middlePartTestsList: {
+  testStart: {
+    marginTop: 15
+  },
+  testContent: {
     display: 'flex',
     padding: 5,
     width: '90%',
@@ -523,6 +480,14 @@ const styles = StyleSheet.create({
     marginTop: '5%',
     height: '85%',
     flexDirection: 'column',
+    alignItems: 'center',
+    // justifyContent: 'space-between'
+  },
+  testText: {
+    marginTop: 10,
+    fontFamily: 'Quicksand-Medium',
+    color: 'black',
+    fontSize: 16
   },
   buttonsSection: {
     display: 'flex',

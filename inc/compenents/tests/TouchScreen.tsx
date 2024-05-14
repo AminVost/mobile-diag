@@ -4,12 +4,17 @@ import { hideNavigationBar, showNavigationBar } from 'react-native-navigation-ba
 import LinearGradient from 'react-native-linear-gradient';
 
 const TouchScreenTest = ({ navigation, route }) => {
+    // console.log(route.params);return;
+    const { testStep, setTestStep, testSteps, setTestsSteps } = route.params;
+    
+
     useEffect(() => {
         hideNavigationBar();
+        generateSquares();
         return () => {
             showNavigationBar()
         };
-    }, []); 
+    }, []);
 
     const heightBar = StatusBar.currentHeight;
     const [squares, setSquares] = useState([]);
@@ -24,9 +29,19 @@ const TouchScreenTest = ({ navigation, route }) => {
     const squareWidth = screenWidth / numCols;
     const squareHeight = screenHeight / numRows;
 
+    // useEffect(() => {
+    //     generateSquares();
+    // }, []);
+
     useEffect(() => {
-        generateSquares();
-    }, []);
+        if (completed) {
+            // Update the result for the current test step
+            const updatedTestSteps = [...testSteps];
+            updatedTestSteps[testStep].result = 'pass'; // or whatever your result is
+            setTestsSteps(updatedTestSteps);
+            setTestStep((prevStep) => prevStep + 1);
+        }
+    }, [completed]);
 
     const generateSquares = () => {
         const newSquares = [];
@@ -100,7 +115,7 @@ const styles = StyleSheet.create({
         flex: 1,
         position: 'relative',
         display: 'flex',
-        alignItems:'center',
+        alignItems: 'center',
         justifyContent: 'center'
     },
     square: {

@@ -27,7 +27,7 @@ const TestsWizard = ({ navigation, route }) => {
   const [loading, setLoading] = useState(false);
   const [currentTestIndex, setCurrentTestIndex] = useState(0);
   const [testData, setTestData] = useState([]);
-  const [testStep, setTestStep] = useState(0);
+  const [testStep, setTestStep] = useState(1);
   const [testSteps, setTestsSteps] = useState([
     {
       title: 'TouchScreen',
@@ -36,6 +36,30 @@ const TestsWizard = ({ navigation, route }) => {
       result: null,
       startBtn: true,
       priority: 1,
+    },
+    {
+      title: 'multitouch',
+      icon: 'cellphone-screenshot',
+      text: '',
+      result: null,
+      startBtn: true,
+      priority: 2,
+    },
+    {
+      title: 'display',
+      icon: 'cellphone-screenshot',
+      text: '',
+      result: null,
+      startBtn: true,
+      priority: 3,
+    },
+    {
+      title: 'battrey',
+      icon: 'cellphone-screenshot',
+      text: '',
+      result: null,
+      startBtn: true,
+      priority: 4,
     },
   ]);
   // showNavigationBar();
@@ -54,16 +78,24 @@ const TestsWizard = ({ navigation, route }) => {
   };
 
   const performTestStep = async () => {
-    switch (testSteps[testStep].title) {
-      case 'TouchScreen':
-        setTimeout(() => {
-          if (!testSteps[testStep].startBtn) {
-            navigation.navigate('TouchScreen', { testStep, testSteps, setTestsSteps })
-          }
-        }, 500);
-        break;
-      default:
-        break;
+    const sortedTestSteps = [...testSteps].sort((a, b) => a.priority - b.priority);
+    console.log(sortedTestSteps);
+    setTestsSteps(sortedTestSteps);
+    if (testStep < sortedTestSteps.length) {
+      const currentTest = sortedTestSteps[testStep - 1];
+      console.log(currentTest);
+      switch (currentTest.title) {
+        case 'TouchScreen':
+          console.log("Props before navigation:", testStep, setTestStep, testSteps, setTestsSteps);
+          navigation.navigate('TouchScreen', { testStep, setTestStep, testSteps, setTestsSteps });
+          break;
+        case 'MultiTouch':
+          console.log("Props before MultiTouch:", testStep, setTestStep, testSteps, setTestsSteps);
+          navigation.navigate('TouchScreen', { testStep, setTestStep, testSteps, setTestsSteps });
+          break;
+      }
+    } else {
+      console.log('step not found')
     }
   };
 
@@ -86,104 +118,12 @@ const TestsWizard = ({ navigation, route }) => {
     }
   }, [testStep]);
 
-  return (
-    <View style={{
-      flex: 1,
-      backgroundColor: '#4908b0',
-      // Paddings to handle safe area
-      marginTop: insets.top,
-      paddingTop: insets.top,
-      paddingBottom: insets.bottom,
-      paddingLeft: insets.left,
-      paddingRight: insets.right,
-    }}>
 
-      <View style={styles.testTopBar}>
-        <View>
-          <Text style={styles.timerText}>{formatTime(elapsedTime)}</Text>
-        </View>
-        {testSteps[testStep] ?
-          <Text style={styles.testsStage}>{testStep + 1} / {testSteps.length}</Text>
-          :
-          <Text style={styles.testsStage}>{testSteps.length} / {testSteps.length}</Text>
-        }
-        <Icon name={'close-circle-outline'} style={styles.closeIcon} onPress={() => navigation.navigate('Home')} />
-      </View>
-
-      <View style={styles.upperPart}>
-        {testSteps[testStep] ?
-          <>
-            <Text style={styles.stepTitle}>
-              Testing the device {testSteps[testStep].title}
-            </Text>
-          </>
-          :
-          <Text style={styles.stepTitle}>
-            All tests were done
-          </Text>
-        }
-      </View>
-
-      <View style={[styles.middlePart]}>
-        {testSteps[testStep] ?
-          <>
-            <View style={[styles.testContent]}>
-              <Icon name={testSteps[testStep] ? testSteps[testStep].icon : 'done'} size={300} color="#4908b0" />
-              <Text style={[styles.testText]}>
-                Fill the blocks to pass the touch screen test
-              </Text>
-              {testSteps[testStep].startBtn &&
-                <Button mode="contained" style={styles.testStart} onPress={() => navigation.navigate(testSteps[testStep].title)}>
-                  Start
-                </Button>
-              }
-            </View>
-          </>
-          :
-          <View style={[styles.testContent]}>
-            <Text>
-              Share Report
-            </Text>
-          </View>
-        }
-        <View style={styles.buttonsSection}>
-          {testSteps[testStep] ?
-            <>
-              <Button mode="outlined" style={styles.stepTestBtn} onPress={() => setTestStep((prevStep) => prevStep - 1)}>
-                Back
-              </Button>
-              <Button mode="outlined" style={styles.stepTestBtn} onPress={() => console.log('Skip')}>
-                Skip
-              </Button>
-              <Button mode="outlined" style={styles.stepTestBtn} onPress={() => console.log('Failed')}>
-                Failed
-              </Button>
-              <Button
-                mode="outlined"
-                style={styles.stepTestBtn}
-                onPress={() => testStep === testSteps.length - 1 ? '' : setTestStep(prevStep => prevStep + 1)}
-                disabled={testStep === testSteps.length - 1}
-              >
-                {testStep === testSteps.length - 1 ? 'Finish' : 'Pass'}
-              </Button>
-            </>
-            :
-            <>
-              <Button mode="outlined" style={styles.stepTestBtn} onPress={() => console.log('Pressed')}>
-                Send Data
-              </Button>
-              <Button mode="outlined" style={styles.stepTestBtn} onPress={() => console.log('Pressed')}>
-                Report
-              </Button>
-              <Button mode="outlined" style={styles.stepTestBtn} onPress={() => setTestStep((prevStep) => prevStep - 1)}>
-                re-Test
-              </Button>
-            </>
-          }
-        </View>
-      </View>
-    </View>
-  );
+  // return (
+  //   <Stack.Navigator >
+  //     <Stack.Screen name="TouchScreen" component={TouchScreen} options={{ title: 'Touch Screen', headerShown: false }} />
+  //   </Stack.Navigator>
+  // );
 };
 
 const TestsScreens = ({ navigation, route }) => {
