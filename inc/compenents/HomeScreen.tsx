@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useRef, useContext } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableHighlight, Alert, ScrollView, TouchableOpacity, Platform, Image, Modal, Pressable, Linking, PermissionsAndroid } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableHighlight, Alert, Dimensions, SafeAreaView, StatusBar, ScrollView, TouchableOpacity, Platform, Image, Modal, Pressable, Linking, PermissionsAndroid } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -8,11 +8,18 @@ import { Button, PaperProvider, Switch, Tooltip } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import DeviceInfo from 'react-native-device-info';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import { NetworkContext } from '../../App';
 import TestsScreen from './TestsScreen';
+
 const Stack = createNativeStackNavigator();
 
 function HomeScreen({ navigation, route }) {
+  const insets = useSafeAreaInsets();
+
   const { isInternetConnected, websocketConnected, receivedSerialNumber } = useContext(NetworkContext);
 
   const checklistItems = [
@@ -47,14 +54,18 @@ function HomeScreen({ navigation, route }) {
   ];
   const [deviceDetails, setDeviceDetails] = React.useState({
     deviceName: '',
+    model: '',
     brand: DeviceInfo.getBrand(),
     oS: '',
+    osVersion: '',
     imei: '',
     meid: '',
     serialNumber: '',
     cpu: '',
-    memory: '',
     hardWare: '',
+    storage: '',
+    memory: '',
+    usedMemory: '',
     freeStorage: '',
     phoneNumber: '',
   });
@@ -66,9 +77,6 @@ function HomeScreen({ navigation, route }) {
 
   const onToggleSwitch = () => setisSwitchDiag(!isSwitchDiag);
 
-  const paperTheme = {
-
-  };
 
   const toggleAlert = () => {
     setAlertVisible(!isAlertVisible);
@@ -93,7 +101,7 @@ function HomeScreen({ navigation, route }) {
       hasReadSMSPermission === PermissionsAndroid.RESULTS.GRANTED
     ) {
       const phoneNumber = await DeviceInfo.getPhoneNumber();
-      console.log('phoneNumber' , phoneNumber)
+      console.log('phoneNumber', phoneNumber)
 
       if (phoneNumber) {
         DeviceInfo.getPhoneNumber().then((phoneNumber) => {
@@ -150,22 +158,29 @@ function HomeScreen({ navigation, route }) {
   React.useEffect(() => {
     Promise.all([
       DeviceInfo.getDevice(),
+      DeviceInfo.getModel(),
       DeviceInfo.supportedAbis(),
       DeviceInfo.getTotalMemory(),
+      DeviceInfo.getUsedMemory(),
       DeviceInfo.getHardware(),
-      DeviceInfo.getFreeDiskStorageOld(),
+      DeviceInfo.getTotalDiskCapacity(),
       DeviceInfo.getFreeDiskStorage(),
       DeviceInfo.getPhoneNumber(),
-    ]).then(([device, abis, memory, hardWare, storage, free, phoneNumber]) => {
+      DeviceInfo.getSystemVersion(),
+    ]).then(([device, model, abis, memory, usedMemory, hardWare, storage, free, phoneNumber, osVersion]) => {
       setDeviceDetails({
         ...deviceDetails,
         deviceName: device,
+        model: model,
         serialNumber: receivedSerialNumber,
         cpu: abis,
         memory: (memory / (1024 ** 3)).toFixed(2),
+        usedMemory: (usedMemory / (1024 ** 3)).toFixed(2),
         hardWare: hardWare,
         freeStorage: (free / (1024 ** 3)).toFixed(2),
         phoneNumber: phoneNumber,
+        osVersion: osVersion,
+        storage: (storage / (1024 ** 3)).toFixed(2),
       });
     }).catch(error => {
       console.error('Error retrieving device information:', error);
@@ -174,41 +189,54 @@ function HomeScreen({ navigation, route }) {
   }, [])
 
   return (
-    <PaperProvider theme={paperTheme}>
-      <View style={styles.container}>
+    <>
+      <StatusBar backgroundColor="#ECF0F1" barStyle="dark-content" />
+      <View style={{
+        flex: 1,
+        // Paddings to handle safe area
+        paddingTop: insets.top,
+        paddingBottom: insets.bottom,
+        paddingLeft: insets.left,
+        paddingRight: insets.right,
+      }}>
         <CustomAlert visible={isAlertVisible} onClose={toggleAlert} />
-        <TouchableOpacity onPress={() => navigation.openDrawer()} style={styles.menuButton}>
+        <TouchableOpacity onPress={() => navigation.openDrawer()} style={{
+          marginLeft: 10,
+          marginTop: 10,
+          position: 'absolute',
+          top: insets.top,
+          left: 10
+        }}>
           <Icon name="forwardburger" size={40} color={isSwitchDiag ? "#4908b0" : "#E74C3C"} />
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.wifiButton]} onPress={toggleAlert}>
-          {
-            !isInternetConnected ?
-              <Icon name="wifi-remove" size={40} style={[isInternetConnected]} color="#e84118" />
-              : !websocketConnected ?
-                <Icon name="wifi-alert" size={40} style={[isInternetConnected]} color="#F79F1F" />
-                :
-                <Icon name="wifi-check" size={40} style={[isInternetConnected]} color="#44bd32" />
-
-          }
+        <TouchableOpacity style={{
+          marginLeft: 10,
+          marginTop: 10,
+          position: 'absolute',
+          top: insets.top,
+          right: 10
+        }} onPress={toggleAlert}>
+          {!isInternetConnected ?
+            <Icon name="wifi-remove" size={40} style={[isInternetConnected]} color="#e84118" />
+            : !websocketConnected ?
+              <Icon name="wifi-alert" size={40} style={[isInternetConnected]} color="#F79F1F" />
+              :
+              <Icon name="wifi-check" size={40} style={[isInternetConnected]} color="#44bd32" />}
         </TouchableOpacity>
         <View style={styles.upperPart}>
           <TouchableOpacity style={isSwitchDiag ? styles.startButtonDiag : styles.startButtonWipe} onPress={() => isSwitchDiag ? navigation.navigate('TestsScreen') : ''}>
-            {
-              isSwitchDiag ?
-                <Icon name={'cog-play-outline'} style={styles.startIconDiag} />
-                :
-                <Icon name={'cellphone-remove'} style={styles.startIconWipe} />
-            }
-            {
-              isSwitchDiag ?
-                <Text style={styles.startButtonTextDiag}>
-                  Click To Diag
-                </Text>
-                :
-                <Text style={styles.startButtonTextWipe}>
-                  Click To Wipe
-                </Text>
-            }
+            {isSwitchDiag ?
+              <Icon name={'cog-play-outline'} style={styles.startIconDiag} />
+              :
+              <Icon name={'cellphone-remove'} style={styles.startIconWipe} />}
+            {isSwitchDiag ?
+              <Text style={styles.startButtonTextDiag}>
+                Click To Diag
+              </Text>
+              :
+              <Text style={styles.startButtonTextWipe}>
+                Click To Wipe
+              </Text>}
           </TouchableOpacity>
           <View style={styles.switchContainer}>
             <Text style={[styles.switchText]}>
@@ -222,29 +250,19 @@ function HomeScreen({ navigation, route }) {
         </View>
 
         <View style={[styles.middlePart, { backgroundColor: isSwitchDiag ? '#4908b0' : '#E74C3C' }]}>
-          {
-            isSwitchDiag &&
+          {isSwitchDiag &&
 
             <View style={styles.middlePartBtnsCon}>
-              <Button textColor='white' icon="rocket-launch" mode="outlined" style={styles.preTestBtn} onPress={() => console.log('Pressed')}>
+              <Button textColor='white' icon="clipboard-pulse-outline" mode="outlined" style={styles.preTestBtn} onPress={() => navigation.navigate('Report')}>
                 Diag Report
               </Button>
-              <View style={styles.middlePartBtns}>
-                <Button textColor='white' icon="rocket-launch" mode="outlined" style={{ borderColor: 'white' }} onPress={() => console.log('Pressed')}>
-                  Check List
-                </Button>
-                <Button textColor='white' icon="progress-question" mode="outlined" style={{ borderColor: 'white' }} onPress={() => setModalVisible(!modalVisible)}>
-                  Requirements
-                </Button>
-              </View>
-            </View>
-          }
+            </View>}
           <View style={styles.middlePartDeviceInfo}>
             <Text style={styles.deviceDetailsTitle}>Device Info</Text>
             <View style={styles.deviceContainer}>
               <View style={styles.detailsItem}>
                 <Text style={styles.detailsTextLabel}>Device:</Text>
-                <Text style={styles.detailsTextValue}>{deviceDetails.brand} {deviceDetails.deviceName}</Text>
+                <Text style={styles.detailsTextValue}>{deviceDetails.brand} {deviceDetails.deviceName}  ({deviceDetails.model})</Text>
               </View>
               <View style={styles.detailsItem}>
                 <Text style={styles.detailsTextLabel}>Serial Number:</Text>
@@ -252,19 +270,23 @@ function HomeScreen({ navigation, route }) {
               </View>
               <View style={styles.detailsItem}>
                 <Text style={styles.detailsTextLabel}>OS:</Text>
-                <Text style={styles.detailsTextValue}>{Platform.OS}</Text>
+                <Text style={styles.detailsTextValue}>{Platform.OS}  (v{deviceDetails.osVersion})</Text>
               </View>
               <View style={styles.detailsItem}>
-                <Text style={styles.detailsTextLabel}>CPU:</Text>
-                <Text style={styles.detailsTextValue}>{deviceDetails.cpu}</Text>
-              </View>
-              <View style={styles.detailsItem}>
-                <Text style={styles.detailsTextLabel}>HardWare:</Text>
+                <Text style={styles.detailsTextLabel}>CPU Model:</Text>
                 <Text style={styles.detailsTextValue}>{deviceDetails.hardWare}</Text>
               </View>
               <View style={styles.detailsItem}>
+                <Text style={styles.detailsTextLabel}>CPU Architectures:</Text>
+                <Text style={styles.detailsTextValue}>{deviceDetails.cpu}</Text>
+              </View>
+              <View style={styles.detailsItem}>
+                <Text style={styles.detailsTextLabel}>Storage:</Text>
+                <Text style={styles.detailsTextValue}>{(deviceDetails.storage)} GB</Text>
+              </View>
+              <View style={styles.detailsItem}>
                 <Text style={styles.detailsTextLabel}>RAM:</Text>
-                <Text style={styles.detailsTextValue}>{(deviceDetails.memory)} GB</Text>
+                <Text style={styles.detailsTextValue}>{(deviceDetails.memory)} GB  (used {deviceDetails.usedMemory} GB)</Text>
               </View>
             </View>
           </View>
@@ -296,26 +318,25 @@ function HomeScreen({ navigation, route }) {
             </Pressable>
           </View>
         </Modal>
-      </View>
-    </PaperProvider>
+      </View></>
   );
 }
 
-const Dashboard = ({ navigation, route }) => {
-  return (
-    <Stack.Navigator >
-      <Stack.Screen name="HomeScreen" component={HomeScreen} options={{ title: 'Home Screen', headerShown: false }} />
-      <Stack.Screen name="TestsScreen" component={TestsScreen} options={{ title: 'Tests Screen', headerShown: false }} />
-    </Stack.Navigator>
-  );
-};
+// const Dashboard = ({ navigation, route }) => {
+//   return (
+//     <Stack.Navigator >
+//       <Stack.Screen name="HomeScreen" component={HomeScreen} options={{ title: 'Home Screen', headerShown: false }} />
+//       <Stack.Screen name="TestsScreen" component={TestsScreen} options={{ title: 'Tests Screen', headerShown: false }} />
+//     </Stack.Navigator>
+//   );
+// };
 
-export default Dashboard;
+export default HomeScreen;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ECF0F1'
+    backgroundColor: '#ECF0F1',
   },
   preview: {
     flex: 1,
@@ -354,11 +375,12 @@ const styles = StyleSheet.create({
 
   },
   deviceDetailsTitle: {
-    fontWeight: 'bold',
-    marginBottom: 10,
+    // fontWeight: 'bold',
+    marginBottom: 12,
     fontSize: 15,
     color: 'white',
-    textAlign: 'center'
+    textAlign: 'center',
+    fontFamily: 'Quicksand-Bold'
   },
   detailsItem: {
     display: 'flex',
@@ -511,7 +533,7 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     marginTop: 10,
     position: 'absolute',
-    top: 0,
+    top: StatusBar.currentHeight,
     right: 10,
   },
   connectWifi: {
@@ -546,7 +568,8 @@ const styles = StyleSheet.create({
   },
   preTestBtn: {
     marginTop: '5%',
-    borderColor: 'white'
+    borderColor: 'white',
+    width: 'auto'
   },
   middlePartDeviceInfo: {
     display: 'flex',
@@ -554,7 +577,7 @@ const styles = StyleSheet.create({
     // borderColor: 'white',
     borderRadius: 10,
     padding: 12,
-    width: '90%',
+    width: '96%',
     alignSelf: 'center',
     // backgroundColor: '#ffffff21',
     marginTop: '5%'

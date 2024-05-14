@@ -8,40 +8,37 @@ import { Button, PaperProvider, Switch, Tooltip, Avatar, Card, IconButton, Check
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import DeviceInfo from 'react-native-device-info';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { executeSpecificationTests } from '../testComponents/executeSpecificationTests'; 
+import PerformanceStats from "react-native-performance-stats";
+import {
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
+import { hideNavigationBar, showNavigationBar } from 'react-native-navigation-bar-color';
+import TouchScreen from './tests/TouchScreen';
 
-const TestDeviceScreen = ({ navigation, route }) => {
+
+const Stack = createNativeStackNavigator();
+
+const TestsWizard = ({ navigation, route }) => {
+  const insets = useSafeAreaInsets();
+  // showNavigationBar();
+
   const [elapsedTime, setElapsedTime] = useState(0);
-  const [testStep, setTestStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [currentTestIndex, setCurrentTestIndex] = useState(0);
   const [testData, setTestData] = useState([]);
-  const [testSteps, setTestsStep] = useState([
+  const [testStep, setTestStep] = useState(0);
+  const [testSteps, setTestsSteps] = useState([
     {
-      title: 'Specification',
-      icon: 'cellphone-cog',
-      subset: [
-        { title: 'Model', value: null },
-        { title: 'Device Name', value: null },
-        { title: 'Brand', value: null },
-        { title: 'Device', value: null },
-        { title: 'OS', value: null },
-        { title: 'Manufacturer', value: null },
-      ],
+      title: 'TouchScreen',
+      icon: 'cellphone-screenshot',
+      text: '',
+      result: null,
+      startBtn: true,
       priority: 1,
     },
-    {
-      title: 'CPU',
-      icon: 'cpu-64-bit',
-      subset: [
-        { title: 'CPU Model', value: null },
-        { title: 'Core Quantity', value: null },
-        { title: 'CPU Architecture', value: null },
-      ],
-      priority: 2,
-    },
   ]);
-
+  // showNavigationBar();
   useEffect(() => {
     const timer = setInterval(() => {
       setElapsedTime((prevElapsedTime) => prevElapsedTime + 1);
@@ -57,26 +54,13 @@ const TestDeviceScreen = ({ navigation, route }) => {
   };
 
   const performTestStep = async () => {
-    switch (testStep) {
-      case 0:
-        executeSpecificationTests(testStep, testSteps, setTestsStep)        
-          .then(() => {
-            console.log('in case 0');
-            // setTestStep(prevStep => prevStep + 1);
-          })
-          .catch(error => {
-            console.error('Error executing specification tests:', error);
-          });
-        break;
-      case 1:
-        await executeCallFunctionTests()
-          .then(() => {
-            console.log('in case 1', specificationResults);
-            // setTestStep(prevStep => prevStep + 1);
-          })
-          .catch(error => {
-            console.error('Error executing executeCallFunctionTests tests:', error);
-          });
+    switch (testSteps[testStep].title) {
+      case 'TouchScreen':
+        setTimeout(() => {
+          if (!testSteps[testStep].startBtn) {
+            navigation.navigate('TouchScreen', { testStep, testSteps, setTestsSteps })
+          }
+        }, 500);
         break;
       default:
         break;
@@ -103,7 +87,16 @@ const TestDeviceScreen = ({ navigation, route }) => {
   }, [testStep]);
 
   return (
-    <View style={styles.container}>
+    <View style={{
+      flex: 1,
+      backgroundColor: '#4908b0',
+      // Paddings to handle safe area
+      marginTop: insets.top,
+      paddingTop: insets.top,
+      paddingBottom: insets.bottom,
+      paddingLeft: insets.left,
+      paddingRight: insets.right,
+    }}>
 
       <View style={styles.testTopBar}>
         <View>
@@ -114,7 +107,7 @@ const TestDeviceScreen = ({ navigation, route }) => {
           :
           <Text style={styles.testsStage}>{testSteps.length} / {testSteps.length}</Text>
         }
-        <Icon name={'close-circle-outline'} style={styles.closeIcon} onPress={() => navigation.navigate('HomeScreen')} />
+        <Icon name={'close-circle-outline'} style={styles.closeIcon} onPress={() => navigation.navigate('Home')} />
       </View>
 
       <View style={styles.upperPart}>
@@ -129,27 +122,25 @@ const TestDeviceScreen = ({ navigation, route }) => {
             All tests were done
           </Text>
         }
-        <Icon name={testSteps[testStep] ? testSteps[testStep].icon : 'done'} style={styles.testIcon} />
       </View>
 
       <View style={[styles.middlePart]}>
         {testSteps[testStep] ?
           <>
-            <ScrollView style={[styles.middlePartTestsList]}>
-              {testSteps[testStep].subset.map((subtopic, index) => (
-                <View key={index} style={styles.testCard}>
-                  <Text style={styles.testTitle}>{subtopic.title}:</Text>
-                  {subtopic.value ?
-                    <Text style={styles.testValue}>{subtopic.value}</Text>
-                    :
-                    <ActivityIndicator size={20} color="#4908b0" />
-                  }
-                </View>
-              ))}
-            </ScrollView>
+            <View style={[styles.testContent]}>
+              <Icon name={testSteps[testStep] ? testSteps[testStep].icon : 'done'} size={300} color="#4908b0" />
+              <Text style={[styles.testText]}>
+                Fill the blocks to pass the touch screen test
+              </Text>
+              {testSteps[testStep].startBtn &&
+                <Button mode="contained" style={styles.testStart} onPress={() => navigation.navigate(testSteps[testStep].title)}>
+                  Start
+                </Button>
+              }
+            </View>
           </>
           :
-          <View style={[styles.middlePartTestsList]}>
+          <View style={[styles.testContent]}>
             <Text>
               Share Report
             </Text>
@@ -158,19 +149,19 @@ const TestDeviceScreen = ({ navigation, route }) => {
         <View style={styles.buttonsSection}>
           {testSteps[testStep] ?
             <>
-              <Button mode="outlined" style={styles.stepTestBtn} onPress={() => console.log('Pressed')}>
-                N/A
-              </Button>
-              <Button mode="outlined" style={styles.stepTestBtn} onPress={() => console.log('Pressed')}>
-                Skip
-              </Button>
               <Button mode="outlined" style={styles.stepTestBtn} onPress={() => setTestStep((prevStep) => prevStep - 1)}>
                 Back
+              </Button>
+              <Button mode="outlined" style={styles.stepTestBtn} onPress={() => console.log('Skip')}>
+                Skip
+              </Button>
+              <Button mode="outlined" style={styles.stepTestBtn} onPress={() => console.log('Failed')}>
+                Failed
               </Button>
               <Button
                 mode="outlined"
                 style={styles.stepTestBtn}
-                onPress={performTestStep}
+                onPress={() => testStep === testSteps.length - 1 ? '' : setTestStep(prevStep => prevStep + 1)}
                 disabled={testStep === testSteps.length - 1}
               >
                 {testStep === testSteps.length - 1 ? 'Finish' : 'Pass'}
@@ -195,30 +186,16 @@ const TestDeviceScreen = ({ navigation, route }) => {
   );
 };
 
-const executeCallFunctionTests = async () => {
-  // Execute individual tests for Call Function step and return results
-  return new Promise(resolve => {
-    setTimeout(() => {
-      // Resolve the Promise with the test results
-      resolve({
-        'Check Battery Health': 'Placeholder Value',
-        'Check Network Connection': 'Placeholder Value',
-        'Check Storage': 'Placeholder Value'
-      });
-    }, 5000);
-  });
+const TestsScreens = ({ navigation, route }) => {
+  return (
+    <Stack.Navigator >
+      <Stack.Screen name="TestsWizard" component={TestsWizard} options={{ title: 'Tests Wizard', headerShown: false }} />
+      <Stack.Screen name="TouchScreen" component={TouchScreen} options={{ title: 'Touch Screen', headerShown: false }} />
+    </Stack.Navigator>
+  );
 };
 
-const executeCpuTests = async () => {
-  // Execute individual tests for CPU step and return results
-  return {
-    'CPU Usage': 'Placeholder Value',
-    'Temperature': 'Placeholder Value',
-    'Performance': 'Placeholder Value'
-  };
-};
-
-export default TestDeviceScreen;
+export default TestsScreens;
 
 const styles = StyleSheet.create({
   container: {
@@ -271,13 +248,13 @@ const styles = StyleSheet.create({
   },
   stepTitle: {
     width: '100%',
-    fontSize: 20,
+    fontSize: 18,
     fontFamily: 'Quicksand-Bold',
     color: 'white',
     textAlign: 'center'
   },
   upperPart: {
-    flex: 3,
+    flex: 2,
     // justifyContent: 'center',,
     top: '8%',
     alignItems: 'center',
@@ -291,6 +268,8 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 70,
     width: '100%',
     backgroundColor: '#ECF0F1',
+    justifyContent: 'center',
+    alignItems: 'center'
   },
 
   deviceDetailsTitle: {
@@ -490,7 +469,10 @@ const styles = StyleSheet.create({
     color: '#4908b0',
     paddingHorizontal: 5
   },
-  middlePartTestsList: {
+  testStart: {
+    marginTop: 15
+  },
+  testContent: {
     display: 'flex',
     padding: 5,
     width: '90%',
@@ -498,6 +480,14 @@ const styles = StyleSheet.create({
     marginTop: '5%',
     height: '85%',
     flexDirection: 'column',
+    alignItems: 'center',
+    // justifyContent: 'space-between'
+  },
+  testText: {
+    marginTop: 10,
+    fontFamily: 'Quicksand-Medium',
+    color: 'black',
+    fontSize: 16
   },
   buttonsSection: {
     display: 'flex',
