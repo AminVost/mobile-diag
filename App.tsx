@@ -21,7 +21,7 @@ import Requirements from './inc/compenents/Requirements';
 import HelpScreen from './inc/compenents/HelpScreen';
 import TestsScreen from './inc/compenents/TestsScreen';
 
-export const NetworkContext = createContext(false);
+export const DataContext = createContext(false);
 const Drawer = createDrawerNavigator();
 
 export default function App() {
@@ -31,7 +31,42 @@ export default function App() {
   const [receivedSerialNumber, setReceivedSerialNumber] = React.useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // const isLargeScreen = dimensions.width >= 768;
+  const [testStep, setTestStep] = useState(1);
+  const [testSteps, setTestsSteps] = useState([
+    {
+      title: 'TouchScreen',
+      icon: 'cellphone-screenshot',
+      text: '',
+      result: null,
+      startBtn: true,
+      priority: 1,
+    },
+    {
+      title: 'Multitouch',
+      icon: 'cellphone-screenshot',
+      text: '',
+      result: null,
+      startBtn: true,
+      priority: 2,
+    },
+    {
+      title: 'display',
+      icon: 'cellphone-screenshot',
+      text: '',
+      result: null,
+      startBtn: true,
+      priority: 3,
+    },
+    {
+      title: 'battrey',
+      icon: 'cellphone-screenshot',
+      text: '',
+      result: null,
+      startBtn: true,
+      priority: 4,
+    },
+  ]);
+
   interface MyExpectedArgs {
     serialNumber?: string;
     wsIp?: string;
@@ -149,7 +184,7 @@ export default function App() {
 
   return (
 
-    <NetworkContext.Provider value={{ isInternetConnected, setIsNetConnected, websocketConnected, setWebsocketConnected, receivedSerialNumber }}>
+    <DataContext.Provider value={{ isInternetConnected, setIsNetConnected, websocketConnected, setWebsocketConnected, receivedSerialNumber,testStep, setTestStep,testSteps, setTestsSteps }}>
       <SafeAreaProvider>
         <NavigationContainer>
           <Drawer.Navigator
@@ -180,7 +215,7 @@ export default function App() {
 
         </NavigationContainer>
       </SafeAreaProvider>
-    </NetworkContext.Provider>
+    </DataContext.Provider>
 
 
   );

@@ -14,55 +14,24 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import { hideNavigationBar, showNavigationBar } from 'react-native-navigation-bar-color';
+import { DataContext } from '../../App';
 import TouchScreen from './tests/TouchScreen';
+import MultiTouch from './tests/MultiTouch';
 
 
 const Stack = createNativeStackNavigator();
 
 const TestsWizard = ({ navigation, route }) => {
+  const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
   const insets = useSafeAreaInsets();
-  // showNavigationBar();
 
   const [elapsedTime, setElapsedTime] = useState(0);
   const [loading, setLoading] = useState(false);
   const [currentTestIndex, setCurrentTestIndex] = useState(0);
   const [testData, setTestData] = useState([]);
-  const [testStep, setTestStep] = useState(1);
-  const [testSteps, setTestsSteps] = useState([
-    {
-      title: 'TouchScreen',
-      icon: 'cellphone-screenshot',
-      text: '',
-      result: null,
-      startBtn: true,
-      priority: 1,
-    },
-    {
-      title: 'multitouch',
-      icon: 'cellphone-screenshot',
-      text: '',
-      result: null,
-      startBtn: true,
-      priority: 2,
-    },
-    {
-      title: 'display',
-      icon: 'cellphone-screenshot',
-      text: '',
-      result: null,
-      startBtn: true,
-      priority: 3,
-    },
-    {
-      title: 'battrey',
-      icon: 'cellphone-screenshot',
-      text: '',
-      result: null,
-      startBtn: true,
-      priority: 4,
-    },
-  ]);
-  // showNavigationBar();
+
+
+
   useEffect(() => {
     const timer = setInterval(() => {
       setElapsedTime((prevElapsedTime) => prevElapsedTime + 1);
@@ -70,6 +39,7 @@ const TestsWizard = ({ navigation, route }) => {
 
     return () => clearInterval(timer);
   }, []);
+
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -79,19 +49,16 @@ const TestsWizard = ({ navigation, route }) => {
 
   const performTestStep = async () => {
     const sortedTestSteps = [...testSteps].sort((a, b) => a.priority - b.priority);
-    console.log(sortedTestSteps);
     setTestsSteps(sortedTestSteps);
     if (testStep < sortedTestSteps.length) {
       const currentTest = sortedTestSteps[testStep - 1];
-      console.log(currentTest);
+      // console.log('currentTest' , currentTest);
       switch (currentTest.title) {
         case 'TouchScreen':
-          console.log("Props before navigation:", testStep, setTestStep, testSteps, setTestsSteps);
-          navigation.navigate('TouchScreen', { testStep, setTestStep, testSteps, setTestsSteps });
+          navigation.navigate('TouchScreen');
           break;
-        case 'MultiTouch':
-          console.log("Props before MultiTouch:", testStep, setTestStep, testSteps, setTestsSteps);
-          navigation.navigate('TouchScreen', { testStep, setTestStep, testSteps, setTestsSteps });
+        case 'Multitouch':
+          navigation.navigate('MultiTouch');
           break;
       }
     } else {
@@ -111,19 +78,16 @@ const TestsWizard = ({ navigation, route }) => {
   };
 
   useEffect(() => {
+    console.log('testStep ', testStep);
+    console.log('testSteps.length ', testSteps.length);
     if (testStep < testSteps.length) {
       performTestStep();
     } else {
-      sendTestResults();
+      console.log('finished test')
+      navigation.navigate('Report');
     }
   }, [testStep]);
 
-
-  // return (
-  //   <Stack.Navigator >
-  //     <Stack.Screen name="TouchScreen" component={TouchScreen} options={{ title: 'Touch Screen', headerShown: false }} />
-  //   </Stack.Navigator>
-  // );
 };
 
 const TestsScreens = ({ navigation, route }) => {
@@ -131,6 +95,7 @@ const TestsScreens = ({ navigation, route }) => {
     <Stack.Navigator >
       <Stack.Screen name="TestsWizard" component={TestsWizard} options={{ title: 'Tests Wizard', headerShown: false }} />
       <Stack.Screen name="TouchScreen" component={TouchScreen} options={{ title: 'Touch Screen', headerShown: false }} />
+      <Stack.Screen name="MultiTouch" component={MultiTouch} options={{ title: 'Multi Touch', headerShown: false }} />
     </Stack.Navigator>
   );
 };

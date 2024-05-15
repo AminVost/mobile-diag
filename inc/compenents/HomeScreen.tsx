@@ -12,7 +12,7 @@ import {
   SafeAreaProvider,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
-import { NetworkContext } from '../../App';
+import { DataContext } from '../../App';
 import TestsScreen from './TestsScreen';
 
 const Stack = createNativeStackNavigator();
@@ -20,7 +20,7 @@ const Stack = createNativeStackNavigator();
 function HomeScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
 
-  const { isInternetConnected, websocketConnected, receivedSerialNumber } = useContext(NetworkContext);
+  const { isInternetConnected, websocketConnected, receivedSerialNumber } = useContext(DataContext);
 
   const checklistItems = [
     "Any Bluetooth Device",
@@ -67,6 +67,7 @@ function HomeScreen({ navigation, route }) {
     memory: '',
     usedMemory: '',
     freeStorage: '',
+    usedStorage: '',
     phoneNumber: '',
   });
   const [isSwitchDiag, setisSwitchDiag] = React.useState(true);
@@ -181,6 +182,7 @@ function HomeScreen({ navigation, route }) {
         phoneNumber: phoneNumber,
         osVersion: osVersion,
         storage: (storage / (1024 ** 3)).toFixed(2),
+        usedStorage: ((storage - free) / (1024 ** 3)).toFixed(2),
       });
     }).catch(error => {
       console.error('Error retrieving device information:', error);
@@ -270,7 +272,7 @@ function HomeScreen({ navigation, route }) {
               </View>
               <View style={styles.detailsItem}>
                 <Text style={styles.detailsTextLabel}>OS:</Text>
-                <Text style={styles.detailsTextValue}>{Platform.OS}  (v{deviceDetails.osVersion})</Text>
+                <Text style={styles.detailsTextValue}>{Platform.OS}  {deviceDetails.osVersion}</Text>
               </View>
               <View style={styles.detailsItem}>
                 <Text style={styles.detailsTextLabel}>CPU Model:</Text>
@@ -282,7 +284,7 @@ function HomeScreen({ navigation, route }) {
               </View>
               <View style={styles.detailsItem}>
                 <Text style={styles.detailsTextLabel}>Storage:</Text>
-                <Text style={styles.detailsTextValue}>{(deviceDetails.storage)} GB</Text>
+                <Text style={styles.detailsTextValue}>{(deviceDetails.storage)} GB (used {deviceDetails.usedStorage} GB)</Text>
               </View>
               <View style={styles.detailsItem}>
                 <Text style={styles.detailsTextLabel}>RAM:</Text>
