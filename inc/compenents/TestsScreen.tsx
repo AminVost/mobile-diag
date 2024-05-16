@@ -17,6 +17,8 @@ import { hideNavigationBar, showNavigationBar } from 'react-native-navigation-ba
 import { DataContext } from '../../App';
 import TouchScreen from './tests/TouchScreen';
 import MultiTouch from './tests/MultiTouch';
+import Display from './tests/Display';
+import Brightness from './tests/Brightness';
 
 
 const Stack = createNativeStackNavigator();
@@ -60,6 +62,12 @@ const TestsWizard = ({ navigation, route }) => {
         case 'Multitouch':
           navigation.navigate('MultiTouch');
           break;
+        case 'Display':
+          navigation.navigate('Display');
+          break;
+        case 'Brightness':
+          navigation.navigate('Brightness');
+          break;
       }
     } else {
       console.log('step not found')
@@ -96,6 +104,8 @@ const TestsScreens = ({ navigation, route }) => {
       <Stack.Screen name="TestsWizard" component={TestsWizard} options={{ title: 'Tests Wizard', headerShown: false }} />
       <Stack.Screen name="TouchScreen" component={TouchScreen} options={{ title: 'Touch Screen', headerShown: false }} />
       <Stack.Screen name="MultiTouch" component={MultiTouch} options={{ title: 'Multi Touch', headerShown: false }} />
+      <Stack.Screen name="Display" component={Display} options={{ title: 'Display', headerShown: false }} />
+      <Stack.Screen name="Brightness" component={Brightness} options={{ title: 'Brightness', headerShown: false }} />
     </Stack.Navigator>
   );
 };

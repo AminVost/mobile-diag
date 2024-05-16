@@ -35,35 +35,31 @@ export default function App() {
   const [testSteps, setTestsSteps] = useState([
     {
       title: 'TouchScreen',
-      icon: 'cellphone-screenshot',
-      text: '',
-      result: null,
-      startBtn: true,
-      priority: 1,
-    },
-    {
-      title: 'Multitouch',
-      icon: 'cellphone-screenshot',
-      text: '',
-      result: null,
-      startBtn: true,
-      priority: 2,
-    },
-    {
-      title: 'display',
-      icon: 'cellphone-screenshot',
       text: '',
       result: null,
       startBtn: true,
       priority: 3,
     },
     {
-      title: 'battrey',
-      icon: 'cellphone-screenshot',
+      title: 'Multitouch',
+      text: '',
+      result: null,
+      startBtn: true,
+      priority: 2,
+    },
+    {
+      title: 'Display',
       text: '',
       result: null,
       startBtn: true,
       priority: 4,
+    },
+    {
+      title: 'Brightness',
+      text: '',
+      result: null,
+      startBtn: true,
+      priority: 1,
     },
   ]);
 

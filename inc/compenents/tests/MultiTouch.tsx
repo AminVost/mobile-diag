@@ -49,14 +49,14 @@ const MultiTouchTest = ({ navigation }) => {
     };
 
     useEffect(() => {
-        if (maxTouches > 3) {
+        if (maxTouches > 2) {
             // If multi-touch is detected, mark the test as passed
-            // const updatedTestSteps = [...testSteps];
-            // updatedTestSteps[testStep - 1].result = 'pass';
-            // setTestsSteps(updatedTestSteps);
+            const updatedTestSteps = [...testSteps];
+            updatedTestSteps[testStep - 1].result = 'pass';
+            setTestsSteps(updatedTestSteps);
 
-            // // Move to the next test step
-            // setTestStep((prevStep) => prevStep + 1);
+            // Move to the next test step
+            setTestStep((prevStep) => prevStep + 1);
         }
     }, [maxTouches]);
 

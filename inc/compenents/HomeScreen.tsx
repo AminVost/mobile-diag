@@ -124,7 +124,7 @@ function HomeScreen({ navigation, route }) {
       <Modal
         visible={isAlertVisible}
         transparent={true}
-        animationType="fade"
+        animationType="slide"
         hardwareAccelerated={true}
         onRequestClose={() => {
           setAlertVisible(!isAlertVisible);
