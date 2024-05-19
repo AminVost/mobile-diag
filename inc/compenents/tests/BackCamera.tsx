@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
-import { View, Text, StyleSheet, Image, PermissionsAndroid, Platform, Alert } from 'react-native';
+import { View, Text, StyleSheet, Image, PermissionsAndroid, Platform, Alert, ActivityIndicator } from 'react-native';
 import { Camera, useCameraDevices, useCameraDevice } from 'react-native-vision-camera';
 import { Button } from 'react-native-paper';
 import { DataContext } from '../../../App';
@@ -8,28 +8,29 @@ import RNFS from 'react-native-fs';
 const BackCamera = () => {
   const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
   const [photoUri, setPhotoUri] = useState(null);
+  const [Device, setDevice] = useState(null);
   const cameraRef = useRef(null);
   const [permissionsGranted, setPermissionsGranted] = useState(false);
-  const devices = useCameraDevices();
-  const device = useCameraDevice('back');
 
   useEffect(() => {
     requestCameraPermission();
   }, []);
-
+  
   const requestCameraPermission = async () => {
+    const cameraPermission = await Camera.requestCameraPermission();
+    // setDevice(useCameraDevice('back'));
 
     const granted = await PermissionsAndroid.request(
       PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
       {
         title: 'IMEI Permission',
-        message: 'App needs access WRITE_EXTERNAL_STORAGE', // Replace with your reason
+        message: 'App needs access WRITE STORAGE', // Replace with your reason
         buttonNegative: 'Cancel',
         buttonPositive: 'OK',
       },
     );
     if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-      const cameraPermission = await Camera.requestCameraPermission();
+      // const cameraPermission = await Camera.requestCameraPermission();
       const micPermission = await Camera.requestMicrophonePermission();
 
       if (cameraPermission === 'granted' && micPermission === 'granted') {
@@ -74,11 +75,12 @@ const BackCamera = () => {
     return (
       <View style={styles.container}>
         <Text style={styles.text}>Requesting permissions...</Text>
+        <ActivityIndicator size="large" color="#4908b0" />
       </View>
     );
   }
 
-  if (!device) {
+  if (!Device) {
     return (
       <View style={styles.container}>
         <Text style={styles.text}>No camera device found...</Text>
@@ -102,7 +104,7 @@ const BackCamera = () => {
           <Camera
             ref={cameraRef}
             style={styles.preview}
-            device={device}
+            device={Device}
             isActive={true}
             photo={true}
           >
