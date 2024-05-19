@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row'
     },
     stepTestBtn: {
-        paddingHorizontal: 5
+        padding: 8
     },
 });
 

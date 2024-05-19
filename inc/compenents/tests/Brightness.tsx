@@ -1,36 +1,158 @@
-import React from 'react';
-import { View, Button, StyleSheet } from 'react-native';
-import SystemBrightness from 'react-native-screen-brightness';
+import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
+import { View, Text, StyleSheet, BackHandler, StatusBar } from 'react-native';
+import { hideNavigationBar, showNavigationBar } from 'react-native-navigation-bar-color';
+import { Button } from 'react-native-paper';
+import DeviceBrightness from '@adrianso/react-native-device-brightness';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import Slider from '@react-native-community/slider';
+import { DataContext } from '../../../App';
 
 const Brightness = () => {
-  const setBrightness = async (value) => {
-    try {
-      await SystemBrightness.setBrightness(value);
-    } catch (error) {
-      console.error('Failed to set brightness:', error);
+  const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
+  const [brightness, setBrightness] = useState(1);
+  const [autoAdjust, setAutoAdjust] = useState(true);
+  const autoAdjustRef = useRef(autoAdjust);
+  const timeoutRef = useRef(null);
+
+  useEffect(() => {
+    hideNavigationBar();
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
+
+    const fetchBrightness = async () => {
+      try {
+        await DeviceBrightness.setBrightnessLevel(brightness);
+        // Automatic brightness transition
+        timeoutRef.current = setTimeout(async () => {
+          await transitionBrightness(1, 0);
+          await transitionBrightness(0, 1);
+        }, 1000);
+      } catch (error) {
+        console.error("Error setting initial brightness:", error);
+      }
+    };
+
+    fetchBrightness();
+
+    return () => {
+      backHandler.remove();
+      showNavigationBar();
+      clearTimeout(timeoutRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    autoAdjustRef.current = autoAdjust;
+  }, [autoAdjust]);
+
+  const handleBackButtonPress = () => true;
+
+  const transitionBrightness = async (start, end) => {
+    const steps = 20;
+    const delay = 50;
+    const stepSize = (end - start) / steps;
+
+    for (let i = 0; i <= steps; i++) {
+      if (!autoAdjustRef.current) break;
+
+      const newBrightness = start + i * stepSize;
+      setBrightness(newBrightness);
+      try {
+        await DeviceBrightness.setBrightnessLevel(newBrightness);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      } catch (error) {
+        console.error("Error during brightness transition:", error);
+      }
     }
   };
 
+  const handleBrightnessChange = async (value) => {
+    setAutoAdjust(false);
+    setBrightness(value);
+    try {
+      await DeviceBrightness.setBrightnessLevel(value);
+    } catch (error) {
+      console.error("Error setting brightness:", error);
+    }
+  };
+
+  // const handleResult = useCallback((result) => {
+  //   const updatedTestSteps = [...testSteps];
+  //   updatedTestSteps[testStep - 1].result = result;
+  //   setTestsSteps(updatedTestSteps);
+  //   setTestStep((prevStep) => prevStep + 1);
+  // }, [testStep, testSteps, setTestsSteps, setTestStep]);
+
+
+  const handleResult = (result) => {
+    const updatedTestSteps = [...testSteps];
+    updatedTestSteps[testStep - 1].result = result;
+    setTestsSteps(updatedTestSteps);
+    setTestStep((prevStep) => prevStep + 1);
+  };
+
   return (
-    <View style={styles.container}>
-      <Button
-        title="Increase Brightness"
-        onPress={() => setBrightness(0.75)} // Set brightness to 75%
-      />
-      <Button
-        title="Decrease Brightness"
-        onPress={() => setBrightness(0.25)} // Set brightness to 25%
-      />
-    </View>
+    <>
+      <View style={styles.container}>
+        <Text style={styles.text}>Adjust the screen brightness using the slider below:</Text>
+        <Text style={styles.text}>Current Brightness: {Math.round(brightness * 100)}%</Text>
+        <View style={styles.sliderContainer}>
+          <Icon name="white-balance-sunny" size={30} color="#4908b0" />
+          <Slider
+            style={[styles.range, { width: '85%', height: 40 }]}
+            minimumValue={0}
+            maximumValue={1}
+            value={brightness}
+            onValueChange={handleBrightnessChange}
+            minimumTrackTintColor="#FFF"
+            maximumTrackTintColor="#000000"
+            thumbTintColor='#4908b0'
+          />
+        </View>
+        <View style={styles.btnContainer}>
+          <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.btns} onPress={() => handleResult('Fail')}>
+            Fail
+          </Button>
+          <Button mode="elevated" buttonColor="#7f8fa6" textColor="white" style={styles.btns} onPress={() => handleResult('Skip')}>
+            Skip
+          </Button>
+          <Button mode="elevated" buttonColor="#44bd32" textColor="white" style={styles.btns} onPress={() => handleResult('Pass')}>
+            Pass
+          </Button>
+        </View>
+      </View>
+    </>
   );
 };
+
+export default Brightness;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+  },
+  text: {
+    fontSize: 18,
+    margin: 10,
+    textAlign: 'center',
+  },
+  sliderContainer: {
+    marginVertical: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  btnContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '90%',
+    marginBottom: 20,
+  },
+  range: {
+    height: 40,
+  },
+  btns: {
+    padding: 8,
   },
 });
-
-export default Brightness;

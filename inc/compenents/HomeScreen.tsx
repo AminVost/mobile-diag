@@ -69,6 +69,7 @@ function HomeScreen({ navigation, route }) {
     freeStorage: '',
     usedStorage: '',
     phoneNumber: '',
+    manufacturer: '',
   });
   const [isSwitchDiag, setisSwitchDiag] = React.useState(true);
 
@@ -168,7 +169,8 @@ function HomeScreen({ navigation, route }) {
       DeviceInfo.getFreeDiskStorage(),
       DeviceInfo.getPhoneNumber(),
       DeviceInfo.getSystemVersion(),
-    ]).then(([device, model, abis, memory, usedMemory, hardWare, storage, free, phoneNumber, osVersion]) => {
+      DeviceInfo.getManufacturer(),
+    ]).then(([device, model, abis, memory, usedMemory, hardWare, storage, free, phoneNumber, osVersion, manufacturer]) => {
       setDeviceDetails({
         ...deviceDetails,
         deviceName: device,
@@ -183,6 +185,7 @@ function HomeScreen({ navigation, route }) {
         osVersion: osVersion,
         storage: (storage / (1024 ** 3)).toFixed(2),
         usedStorage: ((storage - free) / (1024 ** 3)).toFixed(2),
+        manufacturer: manufacturer,
       });
     }).catch(error => {
       console.error('Error retrieving device information:', error);

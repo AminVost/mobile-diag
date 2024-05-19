@@ -19,6 +19,8 @@ import TouchScreen from './tests/TouchScreen';
 import MultiTouch from './tests/MultiTouch';
 import Display from './tests/Display';
 import Brightness from './tests/Brightness';
+import Rotation from './tests/Rotation';
+import BackCamera from './tests/BackCamera';
 
 
 const Stack = createNativeStackNavigator();
@@ -68,6 +70,12 @@ const TestsWizard = ({ navigation, route }) => {
         case 'Brightness':
           navigation.navigate('Brightness');
           break;
+        case 'Rotation':
+          navigation.navigate('Rotation');
+          break;
+        case 'BackCamera':
+          navigation.navigate('BackCamera');
+          break;
       }
     } else {
       console.log('step not found')
@@ -88,7 +96,7 @@ const TestsWizard = ({ navigation, route }) => {
   useEffect(() => {
     console.log('testStep ', testStep);
     console.log('testSteps.length ', testSteps.length);
-    if (testStep < testSteps.length) {
+    if (testStep <= testSteps.length) {
       performTestStep();
     } else {
       console.log('finished test')
@@ -106,6 +114,8 @@ const TestsScreens = ({ navigation, route }) => {
       <Stack.Screen name="MultiTouch" component={MultiTouch} options={{ title: 'Multi Touch', headerShown: false }} />
       <Stack.Screen name="Display" component={Display} options={{ title: 'Display', headerShown: false }} />
       <Stack.Screen name="Brightness" component={Brightness} options={{ title: 'Brightness', headerShown: false }} />
+      <Stack.Screen name="Rotation" component={Rotation} options={{ title: 'Rotation', headerShown: false }} />
+      <Stack.Screen name="BackCamera" component={BackCamera} options={{ title: 'Camera', headerShown: false }} />
     </Stack.Navigator>
   );
 };

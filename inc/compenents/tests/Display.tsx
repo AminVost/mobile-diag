@@ -244,24 +244,21 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         flexDirection: 'row',
+        width: '100%'
     },
     stepTestBtn: {
-        paddingHorizontal: 10,
+        padding: 8
     },
     buttonContainer: {
-        // position: 'absolute',
-        // bottom: 50,
         flexDirection: 'row',
-        justifyContent: 'space-around',
+        justifyContent: 'space-between',
         width: '100%',
-        paddingHorizontal: 20,
     },
     completionContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
         padding: 20,
-        // gap: 5
     },
     completionText: {
         fontSize: 18,

@@ -1,0 +1,81 @@
+[
+    {
+      "id": "0",
+      "name": "BACK (0)",
+      "position": "back",
+      "sensorOrientation": "landscape-left",
+      "physicalDevices": ["wide-angle-camera"],
+      "hardwareLevel": "limited",
+      "isMultiCam": false,
+      "hasFlash": true,
+      "hasTorch": true,
+      "supportsFocus": true,
+      "supportsLowLightBoost": false,
+      "supportsRawCapture": false,
+      "maxExposure": 20,
+      "minExposure": -20,
+      "maxZoom": 4,
+      "minZoom": 1,
+      "neutralZoom": 1,
+      "minFocusDistance": 0,
+      "formats": [
+        // List of format objects
+        { /* Format Object */ }, 
+        { /* Format Object */ }
+        //... (additional format objects)
+      ]
+    },
+    {
+      "id": "1",
+      "name": "FRONT (1)",
+      "position": "front",
+      "sensorOrientation": "landscape-right",
+      "physicalDevices": ["wide-angle-camera"],
+      "hardwareLevel": "limited",
+      "isMultiCam": false,
+      "hasFlash": false,
+      "hasTorch": false,
+      "supportsFocus": false,
+      "supportsLowLightBoost": false,
+      "supportsRawCapture": false,
+      "maxExposure": 20,
+      "minExposure": -20,
+      "maxZoom": 4,
+      "minZoom": 1,
+      "neutralZoom": 1,
+      "minFocusDistance": 0,
+      "formats": [
+        // List of format objects
+        { /* Format Object */ }, 
+        { /* Format Object */ }
+        //... (additional format objects)
+      ]
+    },
+    {
+      "id": "2",
+      "name": "FRONT (2)",
+      "position": "front",
+      "sensorOrientation": "landscape-right",
+      "physicalDevices": ["wide-angle-camera"],
+      "hardwareLevel": "limited",
+      "isMultiCam": false,
+      "hasFlash": false,
+      "hasTorch": false,
+      "supportsFocus": false,
+      "supportsLowLightBoost": false,
+      "supportsRawCapture": false,
+      "maxExposure": 20,
+      "minExposure": -20,
+      "maxZoom": 4,
+      "minZoom": 1,
+      "neutralZoom": 1,
+      "minFocusDistance": 0,
+      "formats": [
+        // List of format objects
+        { /* Format Object */ }, 
+        { /* Format Object */ }
+        //... (additional format objects)
+      ]
+    }
+  ]
+  
