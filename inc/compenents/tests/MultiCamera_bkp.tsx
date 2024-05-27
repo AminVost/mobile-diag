@@ -1,30 +1,23 @@
-import React, { useState, useEffect, useContext, useRef, useMemo } from 'react';
-import { View, Text, StyleSheet, Image, Alert, TouchableOpacity, BackHandler, Modal } from 'react-native';
-import { Camera, useCameraDevices, useCameraDevice, useCameraFormat,findBestDevice } from 'react-native-vision-camera';
+import React, { useState, useEffect, useContext, useRef } from 'react';
+import { View, Text, StyleSheet, Image, Modal, BackHandler } from 'react-native';
+import { Camera, useCameraDevices } from 'react-native-vision-camera';
 import { Button } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { DataContext } from '../../../App';
 import RNFS from 'react-native-fs';
 import { requestPermissions, openAppSettings } from '../CameraPermission';
 
-const BackCamera = () => {
+const MultiCamera = () => {
   const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
   const [photoUri, setPhotoUri] = useState(null);
   const [isAlertVisible, setAlertVisible] = useState(false);
   const cameraRef = useRef(null);
   const [permissionsGranted, setPermissionsGranted] = useState(false);
   const [photoPath, setPhotoPath] = useState<string | ((arg: any) => string)>(null);
-  const device = useCameraDevice('back');
+  const devices = useCameraDevices();
+  const [currentDeviceIndex, setCurrentDeviceIndex] = useState(0);
+  const [isCycling, setIsCycling] = useState(true);
 
-  // const devices = useCameraDevices();
-  // console.log(devices);
-  // const backDevices = devices?.filter(device => device.position === 'back');
-  // const multiCamDevice = backDevices?.find(device => device.isMultiCam);
-  // const device = multiCamDevice || backDevices?.[0];
-  // console.log('ismultii' , device?.isMultiCam)
-  const format = useCameraFormat(device, [
-    { photoResolution: { width: 1280, height: 720 } }
-  ])
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
     requestCameraPermission();
@@ -33,6 +26,19 @@ const BackCamera = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (permissionsGranted && devices && devices.length > 0) {
+      const cycleCameras = async () => {
+        for (let i = 0; i < devices.length; i++) {
+          setCurrentDeviceIndex(i);
+          await new Promise(resolve => setTimeout(resolve, 3000));
+        }
+        setIsCycling(false);
+      };
+      cycleCameras();
+    }
+  }, [permissionsGranted, devices]);
+
   const handleBackButtonPress = () => {
     setAlertVisible(!isAlertVisible);
     return true;
@@ -40,42 +46,10 @@ const BackCamera = () => {
 
   const requestCameraPermission = async () => {
     const permissionStatus = await requestPermissions();
-    console.log('permissionStatus', permissionStatus)
     if (permissionStatus === 'granted') {
       setPermissionsGranted(true);
-    } else if (permissionStatus === 'never_ask_again' || permissionStatus == 'denied') {
+    } else if (permissionStatus === 'never_ask_again' || permissionStatus === 'denied') {
       openAppSettings();
-    }
-  };
-
-  const takePicture = async () => {
-    if (cameraRef.current) {
-      const photo = await cameraRef.current.takePhoto({
-        flash: 'on',
-        photoQualityBalance: 'speed', // You can use 'speed', 'quality', or 'balanced'
-        enableShutterSound: true,
-      });
-
-      const directoryPath = `${RNFS.PicturesDirectoryPath}/RapidMobileDiag`;
-      try {
-        await RNFS.mkdir(directoryPath);
-      } catch (err) {
-        console.error('Error creating directory:', err);
-      }
-
-      const currentDate = new Date();
-      const formattedDate = currentDate.toISOString().split('T')[0]; // YYYY-MM-DD
-      const formattedTime = currentDate.toTimeString().split(' ')[0].replace(/:/g, '-'); // HH-MM-SS
-      const fileName = `BackCamera_${formattedDate}_${formattedTime}.jpg`;
-      const filePath = `${directoryPath}/${fileName}`;
-      setPhotoPath(filePath);
-
-      try {
-        await RNFS.copyFile(photo.path, filePath);
-        setPhotoUri(filePath);
-      } catch (err) {
-        console.error('Error saving photo:', err);
-      }
     }
   };
 
@@ -87,7 +61,6 @@ const BackCamera = () => {
     }
     setTestsSteps(updatedTestSteps);
     setTestStep((prevStep) => prevStep + 1);
-    console.log(testSteps);
     setAlertVisible(false);
   };
 
@@ -107,7 +80,7 @@ const BackCamera = () => {
     >
       <View style={styles.modalBackground}>
         <View style={styles.customModalContent}>
-          <Text style={styles.customModalTitle}>Please select the Back Camera test result</Text>
+          <Text style={styles.customModalTitle}>Please select the camera test result</Text>
           <View style={styles.customModalRow}>
             <Icon name="camera-enhance-outline" size={100} color="#4908b0" />
           </View>
@@ -135,7 +108,7 @@ const BackCamera = () => {
     );
   }
 
-  if (!device) {
+  if (!devices || devices.length === 0) {
     return (
       <View style={styles.container}>
         <Text style={styles.text}>No camera device found...</Text>
@@ -143,11 +116,23 @@ const BackCamera = () => {
     );
   }
 
+  const currentDevice = devices[currentDeviceIndex];
+
   return (
     <View style={styles.container}>
-      {photoUri ? (
+      {isCycling ? (
+        <View style={styles.cameraContainer}>
+          <Camera ref={cameraRef} style={styles.preview} device={currentDevice} isActive={true} photo={true} />
+        </View>
+      ) : (
         <>
-          <Image source={{ uri: `file://${photoUri}` }} style={styles.photo} />
+          {photoUri ? (
+            <Image source={{ uri: `file://${photoUri}` }} style={styles.photo} />
+          ) : (
+            <View style={styles.cameraContainer}>
+              <Camera ref={cameraRef} style={styles.preview} device={currentDevice} isActive={true} photo={true} />
+            </View>
+          )}
           <View style={styles.btnContainer}>
             <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Fail')}>
               Fail
@@ -160,20 +145,13 @@ const BackCamera = () => {
             </Button>
           </View>
         </>
-      ) : (
-        <View style={styles.cameraContainer}>
-          <Camera ref={cameraRef} style={styles.preview} device={device} isActive={true} photo={true} format={format} />
-          <TouchableOpacity style={styles.btnTakePic} onPress={takePicture}>
-            <Icon name="checkbox-blank-circle" size={70} color={"#fff"} />
-          </TouchableOpacity>
-        </View>
       )}
       <CustomAlert visible={isAlertVisible} onClose={toggleAlert} />
     </View>
   );
 };
 
-export default BackCamera;
+export default MultiCamera;
 
 const styles = StyleSheet.create({
   container: {
@@ -185,14 +163,14 @@ const styles = StyleSheet.create({
   cameraContainer: {
     flex: 1,
     width: '100%',
-    height: '100%'
+    height: '100%',
   },
   btnTakePic: {
     position: 'absolute',
     bottom: 20,
     alignSelf: 'center',
     backgroundColor: '#95a5a6',
-    borderRadius: 100
+    borderRadius: 100,
   },
   preview: {
     flex: 1,
@@ -210,7 +188,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
     width: '100%',
-    height: '10%'
+    height: '10%',
   },
   photo: {
     width: '100%',
@@ -224,7 +202,7 @@ const styles = StyleSheet.create({
     padding: 7,
   },
   btnLabel: {
-    fontSize: 16
+    fontSize: 16,
   },
   modalBackground: {
     flex: 1,
@@ -248,7 +226,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontFamily: 'Quicksand-Bold',
     fontSize: 16,
-    marginBottom: 10
+    marginBottom: 10,
   },
   customModalRow: {
     display: 'flex',
@@ -256,14 +234,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    marginBottom: 20
+    marginBottom: 20,
   },
   customModalBtns: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    flexDirection: 'row'
+    flexDirection: 'row',
   },
 });
-
-

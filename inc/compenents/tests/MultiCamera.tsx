@@ -1,19 +1,25 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
-import { View, Text, StyleSheet, Image, PermissionsAndroid, Platform, Alert, TouchableOpacity, BackHandler, Modal } from 'react-native';
-import { Camera, useCameraDevices, useCameraDevice } from 'react-native-vision-camera';
+import { View, Text, StyleSheet, Image, TouchableOpacity, BackHandler, Modal } from 'react-native';
+import { Camera, useCameraDevices } from 'react-native-vision-camera';
 import { Button } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { DataContext } from '../../../App';
 import RNFS from 'react-native-fs';
+import { requestPermissions, openAppSettings } from '../CameraPermission';
 
-const BackCamera = () => {
+const MultiCameraTest = () => {
   const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
   const [photoUri, setPhotoUri] = useState(null);
   const [isAlertVisible, setAlertVisible] = useState(false);
   const cameraRef = useRef(null);
   const [permissionsGranted, setPermissionsGranted] = useState(false);
+  const [photoPath, setPhotoPath] = useState(null);
+  const [currentCameraIndex, setCurrentCameraIndex] = useState(0);
+
   const devices = useCameraDevices();
-  const device = useCameraDevice('back');
+  console.log(devices);
+  const cameraDevices = devices || [];
+  const device = cameraDevices[currentCameraIndex];
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
@@ -25,47 +31,24 @@ const BackCamera = () => {
 
   const handleBackButtonPress = () => {
     setAlertVisible(!isAlertVisible);
-    return true; // Returning true prevents default back button behavior
+    return true;
   };
 
   const requestCameraPermission = async () => {
-    const writeGranted = await PermissionsAndroid.request(
-      PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-      {
-        title: 'Storage Permission',
-        message: 'App needs access WRITE_EXTERNAL_STORAGE',
-        buttonNegative: 'Cancel',
-        buttonPositive: 'OK',
-      },
-    );
-    const readGranted = await PermissionsAndroid.request(
-      PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-      {
-        title: 'Storage Permission',
-        message: 'App needs access READ_EXTERNAL_STORAGE',
-        buttonNegative: 'Cancel',
-        buttonPositive: 'OK',
-      },
-    );
-
-    if (writeGranted === PermissionsAndroid.RESULTS.GRANTED && readGranted === PermissionsAndroid.RESULTS.GRANTED) {
-      const cameraPermission = await Camera.requestCameraPermission();
-      const micPermission = await Camera.requestMicrophonePermission();
-
-      if (cameraPermission === 'granted' && micPermission === 'granted') {
-        setPermissionsGranted(true);
-      } else {
-        Alert.alert('Permission Required', 'Camera permission is required to take pictures.');
-      }
-    } else {
-      console.log('EXTERNAL STORAGE permission denied');
+    const permissionStatus = await requestPermissions();
+    if (permissionStatus === 'granted') {
+      setPermissionsGranted(true);
+    } else if (permissionStatus === 'never_ask_again' || permissionStatus === 'denied') {
+      openAppSettings();
     }
   };
 
   const takePicture = async () => {
     if (cameraRef.current) {
       const photo = await cameraRef.current.takePhoto({
-        flash: 'off',
+        flash: 'on',
+        qualityPrioritization: 'speed',
+        enableShutterSound: true,
       });
 
       const directoryPath = `${RNFS.PicturesDirectoryPath}/RapidMobileDiag`;
@@ -78,8 +61,9 @@ const BackCamera = () => {
       const currentDate = new Date();
       const formattedDate = currentDate.toISOString().split('T')[0]; // YYYY-MM-DD
       const formattedTime = currentDate.toTimeString().split(' ')[0].replace(/:/g, '-'); // HH-MM-SS
-      const fileName = `BackCamera_${formattedDate}_${formattedTime}.jpg`;
+      const fileName = `Camera_${currentCameraIndex}_${formattedDate}_${formattedTime}.jpg`;
       const filePath = `${directoryPath}/${fileName}`;
+      setPhotoPath(filePath);
 
       try {
         await RNFS.copyFile(photo.path, filePath);
@@ -92,49 +76,81 @@ const BackCamera = () => {
 
   const handleResult = (result) => {
     const updatedTestSteps = [...testSteps];
-    updatedTestSteps[testStep - 1].result = result;
-    setTestsSteps(updatedTestSteps);
-    setTestStep((prevStep) => prevStep + 1);
-    setAlertVisible(false);
+    const multiCameraStepIndex = updatedTestSteps.findIndex(step => step.title === 'MultiCamera');
+
+    if (multiCameraStepIndex !== -1) {
+      const multiCamResult = updatedTestSteps[multiCameraStepIndex].multiCamResult || [];
+      const cameraResult = {
+        title: devices[currentCameraIndex].name, // Use the name of the camera
+        text: '',
+        result,
+        data: photoPath,
+        error: null,
+        duration: null,
+      };
+
+      multiCamResult[currentCameraIndex] = cameraResult;
+      updatedTestSteps[multiCameraStepIndex].multiCamResult = multiCamResult;
+    }
+
+    if (currentCameraIndex < cameraDevices.length - 1) {
+      setCurrentCameraIndex((prevIndex) => prevIndex + 1);
+      setPhotoUri(null); // Reset photoUri for the next camera
+      setPhotoPath(null); // Reset photoPath for the next camera
+    } else {
+      // Determine the overall result
+      const finalResults = updatedTestSteps[multiCameraStepIndex].multiCamResult.map(cam => cam.result);
+      let finalResult = 'Pass';
+      if (finalResults.includes('Fail')) {
+        finalResult = 'Fail';
+      } else if (finalResults.includes('Skip')) {
+        finalResult = 'Skip';
+      }
+      updatedTestSteps[multiCameraStepIndex].result = finalResult;
+
+      setTestsSteps(updatedTestSteps);
+      console.log(testSteps[0].multiCamResult[0]);
+      console.log(testSteps[0].multiCamResult[1]);
+      setTestStep((prevStep) => prevStep + 1);
+      setAlertVisible(false);
+    }
   };
 
   const toggleAlert = () => {
     setAlertVisible(!isAlertVisible);
   };
-  const CustomAlert = () => {
-    return (
-      <Modal
-        visible={isAlertVisible}
-        transparent={true}
-        animationType="slide"
-        hardwareAccelerated={true}
-        onRequestClose={() => {
-          setAlertVisible(!isAlertVisible);
-        }}
-      >
-        <View style={styles.modalBackground}>
-          <View style={styles.customModalContent}>
-            <Text style={styles.customModalTitle}>Please select the Back Camera test result</Text>
 
-            <View style={styles.customModalRow}>
-              <Icon name="camera-enhance-outline" size={100} color="#4908b0" />
-            </View>
-            <View style={styles.customModalBtns}>
-              <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.stepTestBtn} onPress={() => handleResult('Faile')}>
-                Faile
-              </Button>
-              <Button mode="elevated" buttonColor="#7f8fa6" textColor="white" style={styles.stepTestBtn} onPress={() => handleResult('Skip')}>
-                Skip
-              </Button>
-              <Button mode="elevated" buttonColor="#44bd32" textColor="white" style={styles.stepTestBtn} onPress={() => handleResult('Pass')}>
-                Pass
-              </Button>
-            </View>
+  const CustomAlert = () => (
+    <Modal
+      visible={isAlertVisible}
+      transparent={true}
+      animationType="slide"
+      hardwareAccelerated={true}
+      onRequestClose={() => {
+        setAlertVisible(!isAlertVisible);
+      }}
+    >
+      <View style={styles.modalBackground}>
+        <View style={styles.customModalContent}>
+          <Text style={styles.customModalTitle}>Please select the test result for {devices[currentCameraIndex].name}</Text>
+          <View style={styles.customModalRow}>
+            <Icon name="camera-enhance-outline" size={100} color="#4908b0" />
+          </View>
+          <View style={styles.customModalBtns}>
+            <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.stepTestBtn} onPress={() => handleResult('Fail')}>
+              Fail
+            </Button>
+            <Button mode="elevated" buttonColor="#7f8fa6" textColor="white" style={styles.stepTestBtn} onPress={() => handleResult('Skip')}>
+              Skip
+            </Button>
+            <Button mode="elevated" buttonColor="#44bd32" textColor="white" style={styles.stepTestBtn} onPress={() => handleResult('Pass')}>
+              Pass
+            </Button>
           </View>
         </View>
-      </Modal>
-    );
-  };
+      </View>
+    </Modal>
+  );
 
   if (!permissionsGranted) {
     return (
@@ -158,34 +174,13 @@ const BackCamera = () => {
         <>
           <Image source={{ uri: `file://${photoUri}` }} style={styles.photo} />
           <View style={styles.btnContainer}>
-            <Button
-              mode="elevated"
-              buttonColor="#e84118"
-              textColor="white"
-              style={styles.btns}
-              labelStyle={styles.btnLabel}
-              onPress={() => handleResult('Fail')}
-            >
+            <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Fail')}>
               Fail
             </Button>
-            <Button
-              mode="elevated"
-              buttonColor="#7f8fa6"
-              textColor="white"
-              style={styles.btns}
-              labelStyle={styles.btnLabel}
-              onPress={() => handleResult('Skip')}
-            >
+            <Button mode="elevated" buttonColor="#7f8fa6" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Skip')}>
               Skip
             </Button>
-            <Button
-              mode="elevated"
-              buttonColor="#44bd32"
-              textColor="white"
-              style={styles.btns}
-              labelStyle={styles.btnLabel}
-              onPress={() => handleResult('Pass')}
-            >
+            <Button mode="elevated" buttonColor="#44bd32" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Pass')}>
               Pass
             </Button>
           </View>
@@ -208,8 +203,8 @@ const BackCamera = () => {
     </View>
   );
 };
+export default MultiCameraTest;
 
-export default BackCamera;
 
 const styles = StyleSheet.create({
   container: {
@@ -221,14 +216,14 @@ const styles = StyleSheet.create({
   cameraContainer: {
     flex: 1,
     width: '100%',
-    height: '100%'
+    height: '100%',
   },
   btnTakePic: {
     position: 'absolute',
     bottom: 20,
     alignSelf: 'center',
     backgroundColor: '#95a5a6',
-    borderRadius: 100
+    borderRadius: 100,
   },
   preview: {
     flex: 1,
@@ -246,7 +241,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
     width: '100%',
-    height: '10%'
+    height: '10%',
   },
   photo: {
     width: '100%',
@@ -260,11 +255,10 @@ const styles = StyleSheet.create({
     padding: 7,
   },
   btnLabel: {
-    fontSize: 16
+    fontSize: 16,
   },
   modalBackground: {
     flex: 1,
-    // backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -285,7 +279,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontFamily: 'Quicksand-Bold',
     fontSize: 16,
-    marginBottom: 10
+    marginBottom: 10,
   },
   customModalRow: {
     display: 'flex',
@@ -293,15 +287,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    marginBottom: 20
-  },
-  customModalText: {
-    fontSize: 13,
+    marginBottom: 20,
   },
   customModalBtns: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    flexDirection: 'row'
+    flexDirection: 'row',
   },
 });

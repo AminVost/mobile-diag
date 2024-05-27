@@ -21,6 +21,8 @@ import Display from './tests/Display';
 import Brightness from './tests/Brightness';
 import Rotation from './tests/Rotation';
 import BackCamera from './tests/BackCamera';
+import FrontCamera from './tests/FrontCamera';
+import MultiCamera from './tests/MultiCamera';
 
 
 const Stack = createNativeStackNavigator();
@@ -76,6 +78,12 @@ const TestsWizard = ({ navigation, route }) => {
         case 'BackCamera':
           navigation.navigate('BackCamera');
           break;
+        case 'FrontCamera':
+          navigation.navigate('FrontCamera');
+          break;
+        case 'MultiCamera':
+          navigation.navigate('MultiCamera');
+          break;
       }
     } else {
       console.log('step not found')
@@ -115,7 +123,9 @@ const TestsScreens = ({ navigation, route }) => {
       <Stack.Screen name="Display" component={Display} options={{ title: 'Display', headerShown: false }} />
       <Stack.Screen name="Brightness" component={Brightness} options={{ title: 'Brightness', headerShown: false }} />
       <Stack.Screen name="Rotation" component={Rotation} options={{ title: 'Rotation', headerShown: false }} />
-      <Stack.Screen name="BackCamera" component={BackCamera} options={{ title: 'Camera', headerShown: false }} />
+      <Stack.Screen name="BackCamera" component={BackCamera} options={{ title: 'Back Camera', headerShown: false }} />
+      <Stack.Screen name="FrontCamera" component={FrontCamera} options={{ title: 'Front Camera', headerShown: false }} />
+      <Stack.Screen name="MultiCamera" component={MultiCamera} options={{ title: 'Multi Camera', headerShown: false }} />
     </Stack.Navigator>
   );
 };

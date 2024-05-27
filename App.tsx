@@ -37,50 +37,76 @@ export default function App() {
       title: 'TouchScreen',
       text: '',
       result: null,
-      error: null,
-      duration: null,
-      priority: 3,
-    },
-    {
-      title: 'Multitouch',
-      text: '',
-      result: null,
+      data: null,
       error: null,
       duration: null,
       priority: 4,
     },
     {
-      title: 'Display',
+      title: 'Multitouch',
       text: '',
       result: null,
-      error: null,
-      duration: null,
-      priority: 2,
-    },
-    {
-      title: 'Brightness',
-      text: '',
-      result: null,
-      error: null,
-      duration: null,
-      priority: 6,
-    },
-    {
-      title: 'Rotation',
-      text: '',
-      result: null,
+      data: null,
       error: null,
       duration: null,
       priority: 5,
     },
     {
+      title: 'Display',
+      text: '',
+      result: null,
+      data: null,
+      error: null,
+      duration: null,
+      priority: 8,
+    },
+    {
+      title: 'Brightness',
+      text: '',
+      result: null,
+      data: null,
+      error: null,
+      duration: null,
+      priority: 7,
+    },
+    {
+      title: 'Rotation',
+      text: '',
+      result: null,
+      data: null,
+      error: null,
+      duration: null,
+      priority: 6,
+    },
+    {
       title: 'BackCamera',
       text: '',
       result: null,
+      data: null,
+      error: null,
+      duration: null,
+      priority: 2,
+    },
+    {
+      title: 'FrontCamera',
+      text: '',
+      result: null,
+      data: null,
+      error: null,
+      duration: null,
+      priority: 3,
+    },
+    {
+      title: 'MultiCamera',
+      text: '',
+      result: null,
+      multiCamResult: [],
+      data: null,
       error: null,
       duration: null,
       priority: 1,
     },
+
   ]);
 
   interface MyExpectedArgs {
@@ -200,7 +226,7 @@ export default function App() {
 
   return (
 
-    <DataContext.Provider value={{ isInternetConnected, setIsNetConnected, websocketConnected, setWebsocketConnected, receivedSerialNumber,testStep, setTestStep,testSteps, setTestsSteps }}>
+    <DataContext.Provider value={{ isInternetConnected, setIsNetConnected, websocketConnected, setWebsocketConnected, receivedSerialNumber, testStep, setTestStep, testSteps, setTestsSteps }}>
       <SafeAreaProvider>
         <NavigationContainer>
           <Drawer.Navigator
