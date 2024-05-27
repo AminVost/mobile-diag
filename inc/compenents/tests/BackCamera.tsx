@@ -1,6 +1,12 @@
+<<<<<<< HEAD
 import React, { useState, useEffect, useContext, useRef, useMemo } from 'react';
 import { View, Text, StyleSheet, Image, Alert, TouchableOpacity, BackHandler, Modal } from 'react-native';
 import { Camera, useCameraDevices, useCameraDevice, useCameraFormat,findBestDevice } from 'react-native-vision-camera';
+=======
+import React, { useState, useEffect, useContext, useRef } from 'react';
+import { View, Text, StyleSheet, Image, PermissionsAndroid, Platform, Alert, ActivityIndicator } from 'react-native';
+import { Camera, useCameraDevices, useCameraDevice } from 'react-native-vision-camera';
+>>>>>>> 6d1087658aabe8f3eab1f90a918623c94896b5a2
 import { Button } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { DataContext } from '../../../App';
@@ -10,11 +16,17 @@ import { requestPermissions, openAppSettings } from '../CameraPermission';
 const BackCamera = () => {
   const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
   const [photoUri, setPhotoUri] = useState(null);
+<<<<<<< HEAD
   const [isAlertVisible, setAlertVisible] = useState(false);
   const cameraRef = useRef(null);
   const [permissionsGranted, setPermissionsGranted] = useState(false);
   const [photoPath, setPhotoPath] = useState<string | ((arg: any) => string)>(null);
   const device = useCameraDevice('back');
+=======
+  const [Device, setDevice] = useState(null);
+  const cameraRef = useRef(null);
+  const [permissionsGranted, setPermissionsGranted] = useState(false);
+>>>>>>> 6d1087658aabe8f3eab1f90a918623c94896b5a2
 
   // const devices = useCameraDevices();
   // console.log(devices);
@@ -32,6 +44,7 @@ const BackCamera = () => {
       backHandler.remove();
     };
   }, []);
+<<<<<<< HEAD
 
   const handleBackButtonPress = () => {
     setAlertVisible(!isAlertVisible);
@@ -45,6 +58,34 @@ const BackCamera = () => {
       setPermissionsGranted(true);
     } else if (permissionStatus === 'never_ask_again' || permissionStatus == 'denied') {
       openAppSettings();
+=======
+  
+  const requestCameraPermission = async () => {
+    const cameraPermission = await Camera.requestCameraPermission();
+    // setDevice(useCameraDevice('back'));
+
+    const granted = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+      {
+        title: 'IMEI Permission',
+        message: 'App needs access WRITE STORAGE', // Replace with your reason
+        buttonNegative: 'Cancel',
+        buttonPositive: 'OK',
+      },
+    );
+    if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+      // const cameraPermission = await Camera.requestCameraPermission();
+      const micPermission = await Camera.requestMicrophonePermission();
+
+      if (cameraPermission === 'granted' && micPermission === 'granted') {
+        setPermissionsGranted(true);
+      } else {
+        Alert.alert('Permission Required', 'Camera permission is required to take pictures.');
+      }
+    } else {
+      console.warn('IMEI permission denied');
+      return false; // Permission denied
+>>>>>>> 6d1087658aabe8f3eab1f90a918623c94896b5a2
     }
   };
 
@@ -131,11 +172,12 @@ const BackCamera = () => {
     return (
       <View style={styles.container}>
         <Text style={styles.text}>Requesting permissions...</Text>
+        <ActivityIndicator size="large" color="#4908b0" />
       </View>
     );
   }
 
-  if (!device) {
+  if (!Device) {
     return (
       <View style={styles.container}>
         <Text style={styles.text}>No camera device found...</Text>
@@ -161,12 +203,28 @@ const BackCamera = () => {
           </View>
         </>
       ) : (
+<<<<<<< HEAD
         <View style={styles.cameraContainer}>
           <Camera ref={cameraRef} style={styles.preview} device={device} isActive={true} photo={true} format={format} />
           <TouchableOpacity style={styles.btnTakePic} onPress={takePicture}>
             <Icon name="checkbox-blank-circle" size={70} color={"#fff"} />
           </TouchableOpacity>
         </View>
+=======
+        <>
+          <Camera
+            ref={cameraRef}
+            style={styles.preview}
+            device={Device}
+            isActive={true}
+            photo={true}
+          >
+          </Camera>
+          <View style={styles.captureContainer}>
+            <Button mode="contained" onPress={takePicture}>Take Picture</Button>
+          </View>
+        </>
+>>>>>>> 6d1087658aabe8f3eab1f90a918623c94896b5a2
       )}
       <CustomAlert visible={isAlertVisible} onClose={toggleAlert} />
     </View>
