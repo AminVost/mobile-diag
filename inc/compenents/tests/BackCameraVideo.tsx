@@ -1,29 +1,30 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
-import { View, Text, StyleSheet, Image, Alert, TouchableOpacity, BackHandler, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, BackHandler, Modal, ActivityIndicator } from 'react-native';
 import { Camera, useCameraDevice } from 'react-native-vision-camera';
 import { Button } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { DataContext } from '../../../App';
 import RNFS from 'react-native-fs';
 import { requestPermissions, openAppSettings } from '../CameraPermission';
+import Video from 'react-native-video';
 
-const FrontCamera = () => {
+const BackCameraVideoTest = () => {
   const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
-  const [photoUri, setPhotoUri] = useState(null);
+  const [videoUri, setVideoUri] = useState(null);
   const [isAlertVisible, setAlertVisible] = useState(false);
   const cameraRef = useRef(null);
   const [permissionsGranted, setPermissionsGranted] = useState(false);
-
-  const [photoPath, setPhotoPath] = useState<string | ((arg: any) => string)>(null);
-
-  const device = useCameraDevice('front');
+  const [videoPath, setVideoPath] = useState(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [cameraActive, setCameraActive] = useState(true);
+  const device = useCameraDevice('back');
 
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
     requestCameraPermission();
     return () => {
-      console.log('leaveeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee')
+      console.log('unmouting... backCamera')
       backHandler.remove();
     };
   }, []);
@@ -35,7 +36,6 @@ const FrontCamera = () => {
 
   const requestCameraPermission = async () => {
     const permissionStatus = await requestPermissions();
-    console.log('permissionStatus',permissionStatus)
     if (permissionStatus === 'granted') {
       setPermissionsGranted(true);
     } else if (permissionStatus === 'never_ask_again' || permissionStatus === 'denied') {
@@ -43,41 +43,53 @@ const FrontCamera = () => {
     }
   };
 
-  const takePicture = async () => {
+  const startRecording = async () => {
     if (cameraRef.current) {
-      const photo = await cameraRef.current.takePhoto({
-        quality: 1,
-        skipMetadata: true,
+      setIsRecording(true);
+      const video = await cameraRef.current.startRecording({
+        flash: 'on',
+        onRecordingFinished: (video) => handleVideoSaved(video),
+        onRecordingError: (error) => console.error(error),
       });
+    }
+  };
 
-      const directoryPath = `${RNFS.PicturesDirectoryPath}/RapidMobileDiag`;
-      try {
-        await RNFS.mkdir(directoryPath);
-      } catch (err) {
-        console.error('Error creating directory:', err);
-      }
+  const stopRecording = async () => {
+    if (cameraRef.current) {
+      await cameraRef.current.stopRecording();
+      setIsRecording(false);
+      setCameraActive(false); // Disable the camera after stopping the recording
+    }
+  };
 
-      const currentDate = new Date();
-      const formattedDate = currentDate.toISOString().split('T')[0]; // YYYY-MM-DD
-      const formattedTime = currentDate.toTimeString().split(' ')[0].replace(/:/g, '-'); // HH-MM-SS
-      const fileName = `FrontCamera_${formattedDate}_${formattedTime}.jpg`;
-      const filePath = `${directoryPath}/${fileName}`;
-      setPhotoPath(filePath);
+  const handleVideoSaved = async (video) => {
+    const directoryPath = `${RNFS.PicturesDirectoryPath}/RapidMobileDiag`;
+    try {
+      await RNFS.mkdir(directoryPath);
+    } catch (err) {
+      console.error('Error creating directory:', err);
+    }
 
-      try {
-        await RNFS.copyFile(photo.path, filePath);
-        setPhotoUri(filePath);
-      } catch (err) {
-        console.error('Error saving photo:', err);
-      }
+    const currentDate = new Date();
+    const formattedDate = currentDate.toISOString().split('T')[0];
+    const formattedTime = currentDate.toTimeString().split(' ')[0].replace(/:/g, '-');
+    const fileName = `BackCamera_${formattedDate}_${formattedTime}.mp4`;
+    const filePath = `${directoryPath}/${fileName}`;
+    setVideoPath(filePath);
+
+    try {
+      await RNFS.copyFile(video.path, filePath);
+      setVideoUri(filePath);
+    } catch (err) {
+      console.error('Error saving video:', err);
     }
   };
 
   const handleResult = (result) => {
     const updatedTestSteps = [...testSteps];
     updatedTestSteps[testStep - 1].result = result;
-    if (photoPath) {
-      updatedTestSteps[testStep - 1].data = photoPath;
+    if (videoPath) {
+      updatedTestSteps[testStep - 1].data = videoPath;
     }
     setTestsSteps(updatedTestSteps);
     setTestStep((prevStep) => prevStep + 1);
@@ -93,11 +105,14 @@ const FrontCamera = () => {
       visible={isAlertVisible}
       transparent={true}
       animationType="slide"
-      onRequestClose={toggleAlert}
+      hardwareAccelerated={true}
+      onRequestClose={() => {
+        setAlertVisible(!isAlertVisible);
+      }}
     >
       <View style={styles.modalBackground}>
         <View style={styles.customModalContent}>
-          <Text style={styles.customModalTitle}>Please select the Front Camera test result</Text>
+          <Text style={styles.customModalTitle}>Please select the Back Camera test result</Text>
           <View style={styles.customModalRow}>
             <Icon name="camera-enhance-outline" size={100} color="#4908b0" />
           </View>
@@ -121,6 +136,7 @@ const FrontCamera = () => {
     return (
       <View style={styles.container}>
         <Text style={styles.text}>Requesting permissions...</Text>
+        <ActivityIndicator size="large" color="#4908b0" />
       </View>
     );
   }
@@ -135,9 +151,9 @@ const FrontCamera = () => {
 
   return (
     <View style={styles.container}>
-      {photoUri ? (
+      {videoUri ? (
         <>
-          <Image source={{ uri: `file://${photoUri}` }} style={styles.photo} />
+          <Video source={{ uri: `file://${videoUri}` }} style={styles.video} controls={true} />
           <View style={styles.btnContainer}>
             <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Fail')}>
               Fail
@@ -152,9 +168,9 @@ const FrontCamera = () => {
         </>
       ) : (
         <View style={styles.cameraContainer}>
-          <Camera ref={cameraRef} style={styles.preview} device={device} isActive={true} photo={true} />
-          <TouchableOpacity style={styles.btnTakePic} onPress={takePicture}>
-            <Icon name="checkbox-blank-circle" size={70} color={"#fff"} />
+          <Camera ref={cameraRef} style={styles.preview} device={device} isActive={cameraActive} video={true} />
+          <TouchableOpacity style={styles.btnTakeVid} onPress={isRecording ? stopRecording : startRecording}>
+            <Icon name={isRecording ? "stop-circle" : "checkbox-blank-circle"} size={70} color={"#fff"} />
           </TouchableOpacity>
         </View>
       )}
@@ -163,7 +179,7 @@ const FrontCamera = () => {
   );
 };
 
-export default FrontCamera;
+export default BackCameraVideoTest;
 
 const styles = StyleSheet.create({
   container: {
@@ -177,7 +193,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  btnTakePic: {
+  btnTakeVid: {
     position: 'absolute',
     bottom: 20,
     alignSelf: 'center',
@@ -188,13 +204,6 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
   },
-  captureContainer: {
-    flex: 0,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
   btnContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -202,10 +211,9 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '10%',
   },
-  photo: {
+  video: {
     width: '100%',
     height: '90%',
-    resizeMode: 'contain',
   },
   text: {
     fontSize: 18,
@@ -239,17 +247,14 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   customModalRow: {
-    display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
     marginBottom: 20,
   },
   customModalBtns: {
-    display: 'flex',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    flexDirection: 'row',
   },
 });

@@ -26,12 +26,13 @@ const Display = () => {
     const opacity = useSharedValue(1);
 
     useEffect(() => {
-        console.log('testSteps[testStep]' , testSteps[testStep - 1]);
+        console.log('testSteps[testStep]', testSteps[testStep - 1]);
         hideNavigationBar();
         const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
         return () => {
             backHandler.remove();
             showNavigationBar();
+            console.log('unmount.... Display');
         };
     }, []);
 
@@ -140,7 +141,7 @@ const Display = () => {
             <View style={styles.completionContainer}>
                 <Text style={styles.completionText}>The display test is complete.</Text>
                 <Text style={styles.completionText}>Please select an option below to proceed.</Text>
-                <Button mode="elevated" buttonColor="#3498db" icon={'refresh'} textColor="white" style={[styles.stepTestBtn , {marginBottom: 30}]} onPress={restartTest}>
+                <Button mode="elevated" buttonColor="#3498db" icon={'refresh'} textColor="white" style={[styles.stepTestBtn, { marginBottom: 30 }]} onPress={restartTest}>
                     Display Test Again
                 </Button>
                 <View style={styles.buttonContainer}>

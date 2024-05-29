@@ -20,16 +20,7 @@ import CheckList from './inc/compenents/CheckList';
 import Requirements from './inc/compenents/Requirements';
 import HelpScreen from './inc/compenents/HelpScreen';
 import TestsScreen from './inc/compenents/TestsScreen';
-
-import TouchScreen from './inc/compenents/tests/TouchScreen';
-import MultiTouch from './inc/compenents/tests/MultiTouch';
-import Display from './inc/compenents/tests/Display';
-import Brightness from './inc/compenents/tests/Brightness';
-import Rotation from './inc/compenents/tests/Rotation';
-import BackCamera from './inc/compenents/tests/BackCamera';
-import FrontCamera from './inc/compenents/tests/FrontCamera';
-import MultiCamera from './inc/compenents/tests/MultiCamera';
-import BackCameraVideo from './inc/compenents/tests/BackCameraVideo';
+import BackCameraVideo from './inc/compenents/BackCameraVideo';
 
 export const DataContext = createContext(false);
 const Drawer = createDrawerNavigator();
@@ -59,7 +50,7 @@ export default function App() {
       data: null,
       error: null,
       duration: null,
-      priority: 2,
+      priority: 5,
     },
     {
       title: 'Display',
@@ -68,7 +59,7 @@ export default function App() {
       data: null,
       error: null,
       duration: null,
-      priority: 4,
+      priority: 2,
     },
     {
       title: 'Brightness',
@@ -77,7 +68,7 @@ export default function App() {
       data: null,
       error: null,
       duration: null,
-      priority: 5,
+      priority: 8,
     },
     {
       title: 'Rotation',
@@ -95,7 +86,7 @@ export default function App() {
       data: null,
       error: null,
       duration: null,
-      priority: 7,
+      priority: 9,
     },
     {
       title: 'FrontCamera',
@@ -104,7 +95,7 @@ export default function App() {
       data: null,
       error: null,
       duration: null,
-      priority: 8,
+      priority: 4,
     },
     {
       title: 'MultiCamera',
@@ -114,7 +105,7 @@ export default function App() {
       data: null,
       error: null,
       duration: null,
-      priority: 1,
+      priority: 7,
     },
     {
       title: 'BackCameraVideo',
@@ -123,7 +114,7 @@ export default function App() {
       data: null,
       error: null,
       duration: null,
-      priority: 9,
+      priority: 1,
     },
 
   ]);
@@ -216,6 +207,11 @@ export default function App() {
 
   }, []);
 
+
+
+
+
+  
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -268,18 +264,10 @@ export default function App() {
             <Drawer.Screen name="Requirements" component={Requirements} />
             <Drawer.Screen name="Help" component={HelpScreen} />
             <Drawer.Screen name="TestsScreen" component={TestsScreen} options={{
+              unmountOnBlur: true,
               drawerLabel: () => null,
               headerShown: false
             }} />
-            <Drawer.Screen name="TouchScreen" component={TouchScreen} options={{ title: 'TouchScreen', headerShown: false, unmountOnBlur: true }} />
-            <Drawer.Screen name="MultiTouch" component={MultiTouch} options={{ title: 'MultiTouch', headerShown: false, unmountOnBlur: true }} />
-            <Drawer.Screen name="Display" component={Display} options={{ title: 'Display', headerShown: false, unmountOnBlur: true }} />
-            <Drawer.Screen name="Brightness" component={Brightness} options={{ title: 'Brightness', headerShown: false, unmountOnBlur: true }} />
-            <Drawer.Screen name="Rotation" component={Rotation} options={{ title: 'Rotation', headerShown: false, unmountOnBlur: true }} />
-            <Drawer.Screen name="BackCamera" component={BackCamera} options={{ title: 'BackCamera', headerShown: false, unmountOnBlur: true }} />
-            <Drawer.Screen name="FrontCamera" component={FrontCamera} options={{ title: 'FrontCamera', headerShown: false, unmountOnBlur: true }} />
-            <Drawer.Screen name="MultiCamera" component={MultiCamera} options={{ title: 'MultiCamera', headerShown: false, unmountOnBlur: true }} />
-            <Drawer.Screen name="BackCameraVideo" component={BackCameraVideo} options={{ title: 'BackCameraVideo', headerShown: false, unmountOnBlur: true }} />
           </Drawer.Navigator>
 
         </NavigationContainer>

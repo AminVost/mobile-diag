@@ -17,7 +17,7 @@ const MultiCameraTest = () => {
   const [currentCameraIndex, setCurrentCameraIndex] = useState(0);
 
   const devices = useCameraDevices();
-  console.log(devices);
+  // console.log(devices);
   const cameraDevices = devices || [];
   const device = cameraDevices[currentCameraIndex];
 
@@ -25,6 +25,7 @@ const MultiCameraTest = () => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
     requestCameraPermission();
     return () => {
+      console.log(testSteps);
       backHandler.remove();
     };
   }, []);

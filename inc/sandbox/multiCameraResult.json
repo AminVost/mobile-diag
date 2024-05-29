@@ -1,0 +1,109 @@
+[
+    {
+        "data": null,
+        "duration": null,
+        "error": null,
+        "multiCamResult": [
+            {
+                "data": "/storage/emulated/0/Pictures/RapidMobileDiag/Camera_0_2024-05-29_16-57-47.jpg",
+                "duration": null,
+                "error": null,
+                "result": "Pass",
+                "text": "",
+                "title": "BACK (0)"
+            },
+            {
+                "data": "/storage/emulated/0/Pictures/RapidMobileDiag/Camera_1_2024-05-29_16-57-52.jpg",
+                "duration": null,
+                "error": null,
+                "result": "Pass",
+                "text": "",
+                "title": "FRONT (1)"
+            },
+            {
+                "data": "/storage/emulated/0/Pictures/RapidMobileDiag/Camera_2_2024-05-29_16-57-58.jpg",
+                "duration": null,
+                "error": null,
+                "result": "Pass",
+                "text": "",
+                "title": "FRONT (2)"
+            }
+        ],
+        "priority": 1,
+        "result": "Pass",
+        "text": "",
+        "title": "MultiCamera"
+    },
+    {
+        "data": null,
+        "duration": null,
+        "error": null,
+        "priority": 2,
+        "result": null,
+        "text": "",
+        "title": "Multitouch"
+    },
+    {
+        "data": null,
+        "duration": null,
+        "error": null,
+        "priority": 3,
+        "result": null,
+        "text": "",
+        "title": "TouchScreen"
+    },
+    {
+        "data": null,
+        "duration": null,
+        "error": null,
+        "priority": 4,
+        "result": null,
+        "text": "",
+        "title": "Display"
+    },
+    {
+        "data": null,
+        "duration": null,
+        "error": null,
+        "priority": 5,
+        "result": null,
+        "text": "",
+        "title": "Brightness"
+    },
+    {
+        "data": null,
+        "duration": null,
+        "error": null,
+        "priority": 6,
+        "result": null,
+        "text": "",
+        "title": "Rotation"
+    },
+    {
+        "data": null,
+        "duration": null,
+        "error": null,
+        "priority": 7,
+        "result": null,
+        "text": "",
+        "title": "BackCamera"
+    },
+    {
+        "data": null,
+        "duration": null,
+        "error": null,
+        "priority": 8,
+        "result": null,
+        "text": "",
+        "title": "FrontCamera"
+    },
+    {
+        "data": null,
+        "duration": null,
+        "error": null,
+        "priority": 9,
+        "result": null,
+        "text": "",
+        "title": "BackCameraVideo"
+    }
+]

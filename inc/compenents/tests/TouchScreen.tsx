@@ -30,6 +30,7 @@ const TouchScreenTest = ({ navigation, route }) => {
         return () => {
             backHandler.remove();
             showNavigationBar();
+            console.log('unmount..... touchScreen')
         };
     }, []);
 

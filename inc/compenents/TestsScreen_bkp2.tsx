@@ -9,6 +9,10 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import DeviceInfo from 'react-native-device-info';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import PerformanceStats from "react-native-performance-stats";
+import {
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import { hideNavigationBar, showNavigationBar } from 'react-native-navigation-bar-color';
 import { DataContext } from '../../App';
 import TouchScreen from './tests/TouchScreen';
@@ -23,10 +27,10 @@ import BackCameraVideo from './tests/BackCameraVideo';
 
 
 const Stack = createNativeStackNavigator();
-const Drawer = createDrawerNavigator();
 
-const TestsScreens = ({ navigation, route }) => {
+const TestsWizard = ({ navigation, route }) => {
   const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
+  const insets = useSafeAreaInsets();
 
   const [elapsedTime, setElapsedTime] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -55,8 +59,7 @@ const TestsScreens = ({ navigation, route }) => {
     setTestsSteps(sortedTestSteps);
     if (testStep < sortedTestSteps.length) {
       const currentTest = sortedTestSteps[testStep - 1];
-      console.log('currentTest', currentTest);
-      console.log('currentTest.title', currentTest.title);
+      console.log('currentTest.title' , currentTest.title);
       switch (currentTest.title) {
         case 'TouchScreen':
           navigation.navigate('TouchScreen');
@@ -90,6 +93,31 @@ const TestsScreens = ({ navigation, route }) => {
       console.log('step not found')
     }
   };
+  // const performTestStep = async () => {
+  //   const sortedTestSteps = [...testSteps].sort((a, b) => a.priority - b.priority);
+  //   setTestsSteps(sortedTestSteps);
+  //   if (testStep < sortedTestSteps.length) {
+  //     const currentTest = sortedTestSteps[testStep - 1];
+  //     navigation.replace(currentTest.title);
+  //   } else {
+  //     console.log('step not found');
+  //     navigation.replace('Report'); // Assuming 'Report' is a screen you navigate to after tests
+  //   }
+  // };
+//   const performTestStep = async (navigation, testSteps, testStep) => {
+//     const sortedTestSteps = [...testSteps].sort((a, b) => a.priority - b.priority);
+
+//     if (testStep < sortedTestSteps.length) {
+//         const currentTest = sortedTestSteps[testStep - 1];
+
+//         navigation.reset({
+//             index: 0,
+//             routes: [{ name: currentTest.title }],
+//         });
+//     } else {
+//         console.log('step not found');
+//     }
+// };
 
   const sendTestResults = async () => {
     try {
@@ -113,6 +141,23 @@ const TestsScreens = ({ navigation, route }) => {
     }
   }, [testStep]);
 
+};
+
+const TestsScreens = ({ navigation, route }) => {
+  return (
+    <Stack.Navigator >
+      <Stack.Screen name="TestsWizard" component={TestsWizard} options={{ title: 'Tests Wizard', headerShown: false }} />
+      <Stack.Screen name="TouchScreen" component={TouchScreen} options={{ title: 'Touch Screen', headerShown: false }} />
+      <Stack.Screen name="MultiTouch" component={MultiTouch} options={{ title: 'Multi Touch', headerShown: false }} />
+      <Stack.Screen name="Display" component={Display} options={{ title: 'Display', headerShown: false }} />
+      <Stack.Screen name="Brightness" component={Brightness} options={{ title: 'Brightness', headerShown: false }} />
+      <Stack.Screen name="Rotation" component={Rotation} options={{ title: 'Rotation', headerShown: false }} />
+      <Stack.Screen name="BackCamera" component={BackCamera} options={{ title: 'Back Camera', headerShown: false }} />
+      <Stack.Screen name="FrontCamera" component={FrontCamera} options={{ title: 'Front Camera', headerShown: false }} />
+      <Stack.Screen name="MultiCamera" component={MultiCamera} options={{ title: 'Multi Camera', headerShown: false }} />
+      <Stack.Screen name="BackCameraVideo" component={BackCameraVideo} options={{ title: 'Back Camera Video', headerShown: false }} />
+    </Stack.Navigator>
+  );
 };
 
 export default TestsScreens;

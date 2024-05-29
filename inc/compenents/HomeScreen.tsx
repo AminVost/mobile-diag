@@ -191,6 +191,10 @@ function HomeScreen({ navigation, route }) {
       console.error('Error retrieving device information:', error);
     });
     sendPhoneNumber();
+
+    return () => {
+      console.log('unmount HomeScreen')
+    }
   }, [])
 
   return (
