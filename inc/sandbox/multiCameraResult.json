@@ -5,7 +5,8 @@
         "error": null,
         "multiCamResult": [
             {
-                "data": "/storage/emulated/0/Pictures/RapidMobileDiag/Camera_0_2024-05-29_16-57-47.jpg",
+                "filePath": "/storage/emulated/0/Pictures/RapidMobileDiag/Camera_0_2024-05-29_16-57-47.jpg",
+                "deviceInfo": {},
                 "duration": null,
                 "error": null,
                 "result": "Pass",
@@ -13,7 +14,8 @@
                 "title": "BACK (0)"
             },
             {
-                "data": "/storage/emulated/0/Pictures/RapidMobileDiag/Camera_1_2024-05-29_16-57-52.jpg",
+                "filePath": "/storage/emulated/0/Pictures/RapidMobileDiag/Camera_1_2024-05-29_16-57-52.jpg",
+                "deviceInfo": {},
                 "duration": null,
                 "error": null,
                 "result": "Pass",
@@ -21,7 +23,8 @@
                 "title": "FRONT (1)"
             },
             {
-                "data": "/storage/emulated/0/Pictures/RapidMobileDiag/Camera_2_2024-05-29_16-57-58.jpg",
+                "filePath": "/storage/emulated/0/Pictures/RapidMobileDiag/Camera_2_2024-05-29_16-57-58.jpg",
+                "deviceInfo": {},
                 "duration": null,
                 "error": null,
                 "result": "Pass",
