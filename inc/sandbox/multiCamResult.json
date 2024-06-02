@@ -1,0 +1,18 @@
+[
+    {
+        "duration": null,
+        "error": null,
+        "filePath": "/storage/emulated/0/Pictures/RapidMobileDiag/Camera_0_2024-06-02_16-12-35.jpg",
+        "result": "Pass",
+        "text": "",
+        "title": "BACK (0)"
+    },
+    {
+        "duration": null,
+        "error": null,
+        "filePath": "/storage/emulated/0/Pictures/RapidMobileDiag/Camera_1_2024-06-02_16-12-40.jpg",
+        "result": "Pass",
+        "text": "",
+        "title": "FRONT (1)"
+    }
+]

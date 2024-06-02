@@ -121,13 +121,13 @@ const TouchScreenTest = ({ navigation, route }) => {
                             <Icon name="cellphone" size={100} color="#4908b0" />
                         </View>
                         <View style={styles.customModalBtns}>
-                            <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.stepTestBtn} onPress={() => handleResult('Faile')}>
+                            <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Faile')}>
                                 Faile
                             </Button>
-                            <Button mode="elevated" buttonColor="#7f8fa6" textColor="white" style={styles.stepTestBtn} onPress={() => handleResult('Skip')}>
+                            <Button mode="elevated" buttonColor="#7f8fa6" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Skip')}>
                                 Skip
                             </Button>
-                            <Button mode="elevated" buttonColor="#44bd32" textColor="white" style={styles.stepTestBtn} onPress={() => handleResult('Pass')}>
+                            <Button mode="elevated" buttonColor="#44bd32" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Pass')}>
                                 Pass
                             </Button>
                         </View>
@@ -152,7 +152,7 @@ const TouchScreenTest = ({ navigation, route }) => {
                     >
                     </View>
                 ))}
-                {
+                {/* {
                     completed &&
                     <>
                         <Icon name="check-circle" size={150} color="#27ae60" />
@@ -160,7 +160,7 @@ const TouchScreenTest = ({ navigation, route }) => {
                             Touch screen test successful!
                         </Text>
                     </>
-                }
+                } */}
             </View>
             <CustomAlert visible={isAlertVisible} onClose={toggleAlert} />
         </>
@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
     },
     customModalContent: {
         backgroundColor: 'white',
-        padding: 20,
+        paddingBottom: 15,
         paddingTop: 15,
         borderRadius: 10,
         display: 'flex',
@@ -239,10 +239,16 @@ const styles = StyleSheet.create({
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        flexDirection: 'row'
+        flexDirection: 'row',
+        width: '100%',
+        paddingHorizontal: 10
     },
-    stepTestBtn: {
-        padding: 8
+    btns: {
+        padding: 8,
+    },
+    btnLabel: {
+        fontFamily: 'Quicksand-Bold',
+        fontSize: 17
     },
 });
 

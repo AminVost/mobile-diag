@@ -146,13 +146,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     width: '100%',
-    marginTop: 20,
-    paddingHorizontal: 10
+    marginBottom: 20,
+    paddingHorizontal: 10,
+    position: 'absolute',
+    bottom: 0
   },
   btns: {
     padding: 7,
   },
   btnLabel: {
-    fontSize: 16
-  },
+    fontFamily: 'Quicksand-Bold',
+    fontSize: 17
+},
 });

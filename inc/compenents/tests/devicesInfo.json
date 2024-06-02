@@ -1,0 +1,46 @@
+[
+    {
+        "hardwareLevel": "full",
+        "hasFlash": true,
+        "hasTorch": true,
+        "id": "0",
+        "isMultiCam": false,
+        "maxExposure": 4,
+        "maxZoom": 8,
+        "minExposure": -4,
+        "minFocusDistance": 10,
+        "minZoom": 1,
+        "name": "BACK (0)",
+        "neutralZoom": 1,
+        "physicalDevices": [
+            "wide-angle-camera"
+        ],
+        "position": "back",
+        "sensorOrientation": "landscape-left",
+        "supportsFocus": true,
+        "supportsLowLightBoost": false,
+        "supportsRawCapture": true
+    },
+    {
+        "hardwareLevel": "limited",
+        "hasFlash": false,
+        "hasTorch": false,
+        "id": "1",
+        "isMultiCam": false,
+        "maxExposure": 4,
+        "maxZoom": 4,
+        "minExposure": -4,
+        "minFocusDistance": 10,
+        "minZoom": 1,
+        "name": "FRONT (1)",
+        "neutralZoom": 1,
+        "physicalDevices": [
+            "wide-angle-camera"
+        ],
+        "position": "front",
+        "sensorOrientation": "landscape-right",
+        "supportsFocus": true,
+        "supportsLowLightBoost": false,
+        "supportsRawCapture": false
+    }
+]

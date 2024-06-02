@@ -23,18 +23,27 @@ const Display = () => {
     const [isAlertVisible, setAlertVisible] = useState(false);
     const [currentTestIndex, setCurrentTestIndex] = useState(0);
     const [testComplete, setTestComplete] = useState(false);
+    const [showText, setShowText] = useState(true);
     const opacity = useSharedValue(1);
 
     useEffect(() => {
         console.log('testSteps[testStep]', testSteps[testStep - 1]);
         hideNavigationBar();
         const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
+
         return () => {
             backHandler.remove();
             showNavigationBar();
             console.log('unmount.... Display');
         };
     }, []);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setShowText(false);
+        }, 1000);
+        console.log('timer...')
+    }, [currentTestIndex])
 
     const handleBackButtonPress = () => {
         setAlertVisible(true);
@@ -68,13 +77,13 @@ const Display = () => {
                             <Icon name="circle-opacity" size={100} color="#4908b0" />
                         </View>
                         <View style={styles.customModalBtns}>
-                            <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.stepTestBtn} onPress={() => handleResult('Fail')}>
+                            <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Fail')}>
                                 Fail
                             </Button>
-                            <Button mode="elevated" buttonColor="#7f8fa6" textColor="white" style={styles.stepTestBtn} onPress={() => handleResult('Skip')}>
+                            <Button mode="elevated" buttonColor="#7f8fa6" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Skip')}>
                                 Skip
                             </Button>
-                            <Button mode="elevated" buttonColor="#44bd32" textColor="white" style={styles.stepTestBtn} onPress={() => handleResult('Pass')}>
+                            <Button mode="elevated" buttonColor="#44bd32" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Pass')}>
                                 Pass
                             </Button>
                         </View>
@@ -89,6 +98,7 @@ const Display = () => {
         } else {
             opacity.value = 0;
             setTimeout(() => {
+                setShowText(true);
                 setCurrentTestIndex((prevIndex) => (prevIndex + 1) % testPatterns.length);
                 opacity.value = 1;
             }, 300);
@@ -141,17 +151,30 @@ const Display = () => {
             <View style={styles.completionContainer}>
                 <Text style={styles.completionText}>The display test is complete.</Text>
                 <Text style={styles.completionText}>Please select an option below to proceed.</Text>
-                <Button mode="elevated" buttonColor="#3498db" icon={'refresh'} textColor="white" style={[styles.stepTestBtn, { marginBottom: 30 }]} onPress={restartTest}>
+                <Button mode="elevated"
+                    buttonColor="#3498db"
+                    labelStyle={[styles.reTestBtn]}
+                    icon={() => (
+                        <Icon
+                            name="refresh"
+                            size={30}
+                            color="white"
+                        />
+                    )}
+                    textColor="white"
+                    style={[styles.stepTestBtn, { marginBottom: 30 }]}
+                    onPress={restartTest}
+                >
                     Display Test Again
                 </Button>
                 <View style={styles.buttonContainer}>
-                    <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.stepTestBtn} onPress={() => handleResult('Fail')}>
+                    <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Fail')}>
                         Fail
                     </Button>
-                    <Button mode="elevated" buttonColor="#7f8fa6" textColor="white" style={styles.stepTestBtn} onPress={() => handleResult('Skip')}>
+                    <Button mode="elevated" buttonColor="#7f8fa6" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Skip')}>
                         Skip
                     </Button>
-                    <Button mode="elevated" buttonColor="#44bd32" textColor="white" style={styles.stepTestBtn} onPress={() => handleResult('Pass')}>
+                    <Button mode="elevated" buttonColor="#44bd32" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Pass')}>
                         Pass
                     </Button>
                 </View>
@@ -161,21 +184,25 @@ const Display = () => {
 
     return (
         <>
-            <StatusBar hidden={false} translucent={true} backgroundColor="transparent" barStyle="default" />
+            <StatusBar hidden={false} translucent={true} backgroundColor="transparent" barStyle="light-content" />
             <CustomAlert />
             {testComplete ? (
                 renderCompletionPage()
             ) : (
                 <TouchableOpacity style={styles.container} onPress={handleNextTest}>
                     {renderPattern()}
-                    <View style={styles.textContainer}>
-                        <Text style={styles.text}>Tap to change pattern ({currentTestIndex + 1}/{testPatterns.length})</Text>
-                    </View>
+                    {showText && (
+                        <View style={styles.textContainer}>
+                            <Text style={styles.text}>Tap to change pattern ({currentTestIndex + 1}/{testPatterns.length})</Text>
+                        </View>
+                    )}
                 </TouchableOpacity>
             )}
         </>
     );
 };
+
+export default Display;
 
 const styles = StyleSheet.create({
     container: {
@@ -254,18 +281,33 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         width: '100%',
+        position: 'absolute',
+        paddingHorizontal: 10,
+        marginBottom: 20,
+        bottom: 0,
+    },
+    btns: {
+        padding: 8,
+    },
+    btnLabel: {
+        fontFamily: 'Quicksand-Bold',
+        fontSize: 17
+    },
+    reTestBtn: {
+        fontFamily: 'Quicksand-Bold',
+        fontSize: 17
     },
     completionContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 20,
     },
     completionText: {
         fontSize: 18,
         textAlign: 'center',
         marginBottom: 20,
+        fontFamily: 'Quicksand-semiBold'
     },
 });
 
-export default Display;
+

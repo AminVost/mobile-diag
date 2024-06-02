@@ -89,7 +89,7 @@ const BackCameraVideoTest = () => {
     const updatedTestSteps = [...testSteps];
     updatedTestSteps[testStep - 1].result = result;
     if (videoPath) {
-      updatedTestSteps[testStep - 1].data = videoPath;
+      updatedTestSteps[testStep - 1].filePath = videoPath;
     }
     setTestsSteps(updatedTestSteps);
     setTestStep((prevStep) => prevStep + 1);
@@ -117,13 +117,13 @@ const BackCameraVideoTest = () => {
             <Icon name="camera-enhance-outline" size={100} color="#4908b0" />
           </View>
           <View style={styles.customModalBtns}>
-            <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.stepTestBtn} onPress={() => handleResult('Fail')}>
+            <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Fail')}>
               Fail
             </Button>
-            <Button mode="elevated" buttonColor="#7f8fa6" textColor="white" style={styles.stepTestBtn} onPress={() => handleResult('Skip')}>
+            <Button mode="elevated" buttonColor="#7f8fa6" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Skip')}>
               Skip
             </Button>
-            <Button mode="elevated" buttonColor="#44bd32" textColor="white" style={styles.stepTestBtn} onPress={() => handleResult('Pass')}>
+            <Button mode="elevated" buttonColor="#44bd32" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Pass')}>
               Pass
             </Button>
           </View>

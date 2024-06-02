@@ -109,13 +109,13 @@ const Brightness = () => {
           />
         </View>
         <View style={styles.btnContainer}>
-          <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.btns} onPress={() => handleResult('Fail')}>
+          <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Fail')}>
             Fail
           </Button>
-          <Button mode="elevated" buttonColor="#7f8fa6" textColor="white" style={styles.btns} onPress={() => handleResult('Skip')}>
+          <Button mode="elevated" buttonColor="#7f8fa6" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Skip')}>
             Skip
           </Button>
-          <Button mode="elevated" buttonColor="#44bd32" textColor="white" style={styles.btns} onPress={() => handleResult('Pass')}>
+          <Button mode="elevated" buttonColor="#44bd32" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Pass')}>
             Pass
           </Button>
         </View>
@@ -146,13 +146,20 @@ const styles = StyleSheet.create({
   btnContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '90%',
+    width: '100%',
+    paddingHorizontal: 10,
     marginBottom: 20,
+    position: 'absolute',
+    bottom: 0
   },
   range: {
     height: 40,
   },
   btns: {
     padding: 8,
+  },
+  btnLabel: {
+    fontFamily: 'Quicksand-Bold',
+    fontSize: 17
   },
 });

@@ -47,16 +47,14 @@ export default function App() {
       title: 'TouchScreen',
       text: '',
       result: null,
-      data: null,
       error: null,
       duration: null,
-      priority: 3,
+      priority: 1,
     },
     {
       title: 'Multitouch',
       text: '',
       result: null,
-      data: null,
       error: null,
       duration: null,
       priority: 2,
@@ -65,16 +63,14 @@ export default function App() {
       title: 'Display',
       text: '',
       result: null,
-      data: null,
       error: null,
       duration: null,
-      priority: 4,
+      priority: 6,
     },
     {
       title: 'Brightness',
       text: '',
       result: null,
-      data: null,
       error: null,
       duration: null,
       priority: 5,
@@ -83,44 +79,44 @@ export default function App() {
       title: 'Rotation',
       text: '',
       result: null,
-      data: null,
-      error: null,
-      duration: null,
-      priority: 6,
-    },
-    {
-      title: 'BackCamera',
-      text: '',
-      result: null,
-      data: null,
       error: null,
       duration: null,
       priority: 7,
     },
     {
-      title: 'FrontCamera',
+      title: 'BackCamera',
       text: '',
       result: null,
-      data: null,
+      filePath: null,
       error: null,
       duration: null,
       priority: 8,
+    },
+    {
+      title: 'FrontCamera',
+      text: '',
+      result: null,
+      filePath: null,
+      error: null,
+      duration: null,
+      priority: 4,
     },
     {
       title: 'MultiCamera',
       text: '',
       result: null,
       multiCamResult: [],
-      data: null,
+      devicesInfo: null,
+      filePath: null,
       error: null,
       duration: null,
-      priority: 1,
+      priority: 3,
     },
     {
       title: 'BackCameraVideo',
       text: '',
       result: null,
-      data: null,
+      filePath: null,
       error: null,
       duration: null,
       priority: 9,
@@ -147,7 +143,6 @@ export default function App() {
       }
     }
   }, []);
-
 
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener((state) => {
@@ -271,15 +266,15 @@ export default function App() {
               drawerLabel: () => null,
               headerShown: false
             }} />
-            <Drawer.Screen name="TouchScreen" component={TouchScreen} options={{ title: 'TouchScreen', headerShown: false, unmountOnBlur: true }} />
-            <Drawer.Screen name="MultiTouch" component={MultiTouch} options={{ title: 'MultiTouch', headerShown: false, unmountOnBlur: true }} />
-            <Drawer.Screen name="Display" component={Display} options={{ title: 'Display', headerShown: false, unmountOnBlur: true }} />
-            <Drawer.Screen name="Brightness" component={Brightness} options={{ title: 'Brightness', headerShown: false, unmountOnBlur: true }} />
-            <Drawer.Screen name="Rotation" component={Rotation} options={{ title: 'Rotation', headerShown: false, unmountOnBlur: true }} />
-            <Drawer.Screen name="BackCamera" component={BackCamera} options={{ title: 'BackCamera', headerShown: false, unmountOnBlur: true }} />
-            <Drawer.Screen name="FrontCamera" component={FrontCamera} options={{ title: 'FrontCamera', headerShown: false, unmountOnBlur: true }} />
-            <Drawer.Screen name="MultiCamera" component={MultiCamera} options={{ title: 'MultiCamera', headerShown: false, unmountOnBlur: true }} />
-            <Drawer.Screen name="BackCameraVideo" component={BackCameraVideo} options={{ title: 'BackCameraVideo', headerShown: false, unmountOnBlur: true }} />
+            <Drawer.Screen name="TouchScreen" component={TouchScreen} options={{ title: 'TouchScreen', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
+            <Drawer.Screen name="MultiTouch" component={MultiTouch} options={{ title: 'MultiTouch', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
+            <Drawer.Screen name="Display" component={Display} options={{ title: 'Display', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
+            <Drawer.Screen name="Brightness" component={Brightness} options={{ title: 'Brightness', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
+            <Drawer.Screen name="Rotation" component={Rotation} options={{ title: 'Rotation', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
+            <Drawer.Screen name="BackCamera" component={BackCamera} options={{ title: 'BackCamera', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
+            <Drawer.Screen name="FrontCamera" component={FrontCamera} options={{ title: 'FrontCamera', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
+            <Drawer.Screen name="MultiCamera" component={MultiCamera} options={{ title: 'MultiCamera', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
+            <Drawer.Screen name="BackCameraVideo" component={BackCameraVideo} options={{ title: 'BackCameraVideo', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
           </Drawer.Navigator>
 
         </NavigationContainer>

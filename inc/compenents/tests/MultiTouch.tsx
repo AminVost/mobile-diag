@@ -83,6 +83,7 @@ const MultiTouchTest = ({ navigation }) => {
                         buttonColor="#e84118"
                         textColor="white"
                         style={styles.btns}
+                        labelStyle={styles.btnLabel}
                         onPress={() => {
                             const updatedTestSteps = [...testSteps];
                             updatedTestSteps[testStep - 1].result = 'Faile';
@@ -97,6 +98,7 @@ const MultiTouchTest = ({ navigation }) => {
                         buttonColor="#7f8fa6"
                         textColor="white"
                         style={styles.btns}
+                        labelStyle={styles.btnLabel}
                         onPress={() => {
                             const updatedTestSteps = [...testSteps];
                             updatedTestSteps[testStep - 1].result = 'Skip';
@@ -111,6 +113,7 @@ const MultiTouchTest = ({ navigation }) => {
                         buttonColor="#44bd32"
                         textColor="white"
                         style={styles.btns}
+                        labelStyle={styles.btnLabel}
                         onPress={() => {
                             const updatedTestSteps = [...testSteps];
                             updatedTestSteps[testStep - 1].result = 'Pass';
@@ -169,10 +172,14 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingHorizontal: 10,
-        marginBottom: 10
+        marginBottom: 25
     },
     btns: {
-        padding: 3
+        padding: 8,
+    },
+    btnLabel: {
+        fontFamily: 'Quicksand-Bold',
+        fontSize: 17
     },
 });
 

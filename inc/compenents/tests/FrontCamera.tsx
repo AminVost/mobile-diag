@@ -23,7 +23,7 @@ const FrontCamera = () => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
     requestCameraPermission();
     return () => {
-      console.log('leaveeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee')
+      console.log('unmount FrontCamera')
       backHandler.remove();
     };
   }, []);
@@ -35,7 +35,7 @@ const FrontCamera = () => {
 
   const requestCameraPermission = async () => {
     const permissionStatus = await requestPermissions();
-    console.log('permissionStatus',permissionStatus)
+    console.log('permissionStatus', permissionStatus)
     if (permissionStatus === 'granted') {
       setPermissionsGranted(true);
     } else if (permissionStatus === 'never_ask_again' || permissionStatus === 'denied') {
@@ -77,7 +77,7 @@ const FrontCamera = () => {
     const updatedTestSteps = [...testSteps];
     updatedTestSteps[testStep - 1].result = result;
     if (photoPath) {
-      updatedTestSteps[testStep - 1].data = photoPath;
+      updatedTestSteps[testStep - 1].filePath = photoPath;
     }
     setTestsSteps(updatedTestSteps);
     setTestStep((prevStep) => prevStep + 1);
@@ -102,13 +102,13 @@ const FrontCamera = () => {
             <Icon name="camera-enhance-outline" size={100} color="#4908b0" />
           </View>
           <View style={styles.customModalBtns}>
-            <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.stepTestBtn} onPress={() => handleResult('Fail')}>
+            <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Fail')}>
               Fail
             </Button>
-            <Button mode="elevated" buttonColor="#7f8fa6" textColor="white" style={styles.stepTestBtn} onPress={() => handleResult('Skip')}>
+            <Button mode="elevated" buttonColor="#7f8fa6" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Skip')}>
               Skip
             </Button>
-            <Button mode="elevated" buttonColor="#44bd32" textColor="white" style={styles.stepTestBtn} onPress={() => handleResult('Pass')}>
+            <Button mode="elevated" buttonColor="#44bd32" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Pass')}>
               Pass
             </Button>
           </View>
@@ -215,7 +215,8 @@ const styles = StyleSheet.create({
     padding: 7,
   },
   btnLabel: {
-    fontSize: 16,
+    fontFamily: 'Quicksand-Bold',
+    fontSize: 17
   },
   modalBackground: {
     flex: 1,

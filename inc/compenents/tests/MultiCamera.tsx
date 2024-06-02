@@ -19,13 +19,15 @@ const MultiCameraTest = () => {
   const devices = useCameraDevices();
   // console.log(devices);
   const cameraDevices = devices || [];
+  const FormattedCameraDevices = cameraDevices.length > 0 ? cameraDevices.map(({ formats, ...rest }) => rest) : [];
   const device = cameraDevices[currentCameraIndex];
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
     requestCameraPermission();
     return () => {
-      console.log(testSteps);
+      // console.log('testSteps', testSteps[0].devicesInfo);
+      console.log('testSteps', testSteps[0].multiCamResult);
       backHandler.remove();
     };
   }, []);
@@ -85,7 +87,7 @@ const MultiCameraTest = () => {
         title: devices[currentCameraIndex].name, // Use the name of the camera
         text: '',
         result,
-        data: photoPath,
+        filePath: photoPath,
         error: null,
         duration: null,
       };
@@ -108,7 +110,7 @@ const MultiCameraTest = () => {
         finalResult = 'Skip';
       }
       updatedTestSteps[multiCameraStepIndex].result = finalResult;
-
+      updatedTestSteps[multiCameraStepIndex].devicesInfo = FormattedCameraDevices
       setTestsSteps(updatedTestSteps);
       console.log(testSteps[0].multiCamResult[0]);
       console.log(testSteps[0].multiCamResult[1]);
@@ -138,13 +140,13 @@ const MultiCameraTest = () => {
             <Icon name="camera-enhance-outline" size={100} color="#4908b0" />
           </View>
           <View style={styles.customModalBtns}>
-            <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.stepTestBtn} onPress={() => handleResult('Fail')}>
+            <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Fail')}>
               Fail
             </Button>
-            <Button mode="elevated" buttonColor="#7f8fa6" textColor="white" style={styles.stepTestBtn} onPress={() => handleResult('Skip')}>
+            <Button mode="elevated" buttonColor="#7f8fa6" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Skip')}>
               Skip
             </Button>
-            <Button mode="elevated" buttonColor="#44bd32" textColor="white" style={styles.stepTestBtn} onPress={() => handleResult('Pass')}>
+            <Button mode="elevated" buttonColor="#44bd32" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Pass')}>
               Pass
             </Button>
           </View>
