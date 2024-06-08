@@ -1,23 +1,58 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, PermissionsAndroid, Platform, Image, ScrollView, StatusBar, Pressable } from 'react-native';
+import React, { createContext, useState, useEffect, useRef, useContext } from 'react';
+import { View, Text, TextInput, StyleSheet, TouchableHighlight, Alert, Dimensions, SafeAreaView, StatusBar, ScrollView, TouchableOpacity, Platform, Image, Modal, Pressable, Linking, PermissionsAndroid } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createDrawerNavigator } from '@react-navigation/drawer';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { RNCamera } from 'react-native-camera';
-import { Button, Switch } from 'react-native-paper';
+import { Button, PaperProvider, Switch, Tooltip } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import DeviceInfo from 'react-native-device-info';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { DataContext } from '../../DataContext';  // Updated import to DataContext from new file
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
+import { DataContext } from '../../App';
+import TestsScreen from './TestsScreen';
 
-function HomeScreen({ navigation }) {
+const Stack = createNativeStackNavigator();
+
+function HomeScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
 
   const { isInternetConnected, websocketConnected, receivedSerialNumber } = useContext(DataContext);
 
   const checklistItems = [
-    "Any Bluetooth Device", "Headset", "NFC Tag", "SIM Card", "Camera", 
-    "Another Camera Device", "Magnet", "SD Card", "OTG Connector"
+    "Any Bluetooth Device",
+    "Headset",
+    "NFC Tag",
+    "SIM Card",
+    "Camera",
+    "Another Camera Device",
+    "Magnet",
+    "SD Card",
+    "OTG Connector",
+    "Any Bluetooth Device",
+    "Headset",
+    "NFC Tag",
+    "SIM Card",
+    "Camera",
+    "Another Camera Device",
+    "Magnet",
+    "SD Card",
+    "Magnet",
+    "SD Card",
+    "Magnet",
+    "SD Card",
+    "Magnet",
+    "SD Card",
+    "Magnet",
+    "SD Card",
+    "Magnet",
+    "SD Card",
+    "OTG Connector",
   ];
-
-  const [deviceDetails, setDeviceDetails] = useState({
+  const [deviceDetails, setDeviceDetails] = React.useState({
     deviceName: '',
     model: '',
     brand: DeviceInfo.getBrand(),
@@ -36,60 +71,93 @@ function HomeScreen({ navigation }) {
     phoneNumber: '',
     manufacturer: '',
   });
+  const [isSwitchDiag, setisSwitchDiag] = React.useState(true);
 
-  const [isSwitchDiag, setIsSwitchDiag] = useState(true);
-  const [modalVisible, setModalVisible] = useState(false);
+  const [modalVisible, setModalVisible] = React.useState(false);
+
   const [isAlertVisible, setAlertVisible] = useState(false);
 
-  const onToggleSwitch = () => setIsSwitchDiag(!isSwitchDiag);
+  const onToggleSwitch = () => setisSwitchDiag(!isSwitchDiag);
 
-  const toggleAlert = () => setAlertVisible(!isAlertVisible);
+
+  const toggleAlert = () => {
+    setAlertVisible(!isAlertVisible);
+  };
+
+
 
   const sendPhoneNumber = async () => {
-    const hasPhoneStatePermission = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.READ_PHONE_STATE);
-    const hasReadSMSPermission = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.READ_SMS);
+    const hasPhoneStatePermission = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.READ_PHONE_STATE,
+    );
+
+    console.log('hasPhoneStatePermission', hasPhoneStatePermission)
+
+    const hasReadSMSPermission = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.READ_SMS,
+    );
+    console.log('hasReadSMSPermission', hasReadSMSPermission)
 
     if (
       hasPhoneStatePermission === PermissionsAndroid.RESULTS.GRANTED &&
       hasReadSMSPermission === PermissionsAndroid.RESULTS.GRANTED
     ) {
       const phoneNumber = await DeviceInfo.getPhoneNumber();
-      console.log('phoneNumber', phoneNumber);
+      console.log('phoneNumber', phoneNumber)
+
+      if (phoneNumber) {
+        DeviceInfo.getPhoneNumber().then((phoneNumber) => {
+          // Android: null return: no permission, empty string: unprogrammed or empty SIM1, e.g. "+15555215558": normal return value
+          console.log('phoneNumber', phoneNumber)
+        });
+      }
     }
   };
 
-  const CustomAlert = () => (
-    <Modal
-      visible={isAlertVisible}
-      transparent={true}
-      animationType="slide"
-      hardwareAccelerated={true}
-      onRequestClose={() => setAlertVisible(!isAlertVisible)}
-    >
-      <View style={styles.modalBackground}>
-        <View style={styles.customModalContent}>
-          <Text style={styles.customModalTitle}>Connection Status Guide</Text>
-          <View style={styles.customModalRow}>
-            <Icon name="wifi-remove" size={30} color="#e84118" />
-            <Text style={styles.customModalText}>The device is not connected to the Internet</Text>
-          </View>
-          <View style={styles.customModalRow}>
-            <Icon name="wifi-alert" size={30} color="#F79F1F" />
-            <Text style={styles.customModalText}>The device is connected to the Internet, but the connection with the PC system is not established</Text>
-          </View>
-          <View style={styles.customModalRow}>
-            <Icon name="wifi-check" size={30} color="#44bd32" />
-            <Text style={styles.customModalText}>The connection is established correctly</Text>
-          </View>
-          <TouchableOpacity style={styles.closeButtonCon} onPress={toggleAlert}>
-            <Text style={styles.closeButton}>Okay</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </Modal>
-  );
+  // return {
+  //   sendPhoneNumber,
+  // };
 
-  useEffect(() => {
+
+
+  const CustomAlert = () => {
+    return (
+      <Modal
+        visible={isAlertVisible}
+        transparent={true}
+        animationType="slide"
+        hardwareAccelerated={true}
+        onRequestClose={() => {
+          setAlertVisible(!isAlertVisible);
+        }}
+      >
+        <View style={styles.modalBackground}>
+          <View style={styles.customModalContent}>
+            <Text style={styles.customModalTitle}>Connection Status Guide</Text>
+
+            <View style={styles.customModalRow}>
+              <Icon name="wifi-remove" size={30} color="#e84118" />
+              <Text style={styles.customModalText}>The device is not connected to the Internet</Text>
+            </View>
+            <View style={styles.customModalRow}>
+              <Icon name="wifi-alert" size={30} color="#F79F1F" />
+              <Text style={styles.customModalText}>The device is connected to the Internet, but the connection with the PC system is not established</Text>
+            </View>
+            <View style={styles.customModalRow}>
+              <Icon name="wifi-check" size={30} color="#44bd32" />
+              <Text style={styles.customModalText}>The connection is established correctly</Text>
+            </View>
+
+            <TouchableOpacity style={styles.closeButtonCon} onPress={toggleAlert}>
+              <Text style={styles.closeButton}>Okay</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    );
+  };
+
+  React.useEffect(() => {
     Promise.all([
       DeviceInfo.getDevice(),
       DeviceInfo.getModel(),
@@ -104,59 +172,95 @@ function HomeScreen({ navigation }) {
       DeviceInfo.getManufacturer(),
     ]).then(([device, model, abis, memory, usedMemory, hardWare, storage, free, phoneNumber, osVersion, manufacturer]) => {
       setDeviceDetails({
+        ...deviceDetails,
         deviceName: device,
         model: model,
-        brand: DeviceInfo.getBrand(),
-        oS: Platform.OS,
-        osVersion: osVersion,
-        imei: '',
-        meid: '',
         serialNumber: receivedSerialNumber,
-        cpu: abis.join(', '),
-        hardWare: hardWare,
-        storage: (storage / (1024 ** 3)).toFixed(2),
+        cpu: abis,
         memory: (memory / (1024 ** 3)).toFixed(2),
         usedMemory: (usedMemory / (1024 ** 3)).toFixed(2),
+        hardWare: hardWare,
         freeStorage: (free / (1024 ** 3)).toFixed(2),
-        usedStorage: ((storage - free) / (1024 ** 3)).toFixed(2),
         phoneNumber: phoneNumber,
+        osVersion: osVersion,
+        storage: (storage / (1024 ** 3)).toFixed(2),
+        usedStorage: ((storage - free) / (1024 ** 3)).toFixed(2),
         manufacturer: manufacturer,
       });
-    }).catch(error => console.error('Error retrieving device information:', error));
-
+    }).catch(error => {
+      console.error('Error retrieving device information:', error);
+    });
     sendPhoneNumber();
 
-    return () => console.log('unmount HomeScreen');
-  }, []);
+    return () => {
+      console.log('unmount HomeScreen')
+    }
+  }, [])
 
   return (
     <>
       <StatusBar backgroundColor="#ECF0F1" barStyle="dark-content" />
-      <View style={{ flex: 1, paddingTop: insets.top, paddingBottom: insets.bottom, paddingLeft: insets.left, paddingRight: insets.right }}>
-        <CustomAlert />
-        <TouchableOpacity onPress={() => navigation.openDrawer()} style={{ marginLeft: 10, marginTop: 10, position: 'absolute', top: insets.top, left: 10 }}>
+      <View style={{
+        flex: 1,
+        // Paddings to handle safe area
+        paddingTop: insets.top,
+        paddingBottom: insets.bottom,
+        paddingLeft: insets.left,
+        paddingRight: insets.right,
+      }}>
+        <CustomAlert visible={isAlertVisible} onClose={toggleAlert} />
+        <TouchableOpacity onPress={() => navigation.openDrawer()} style={{
+          marginLeft: 10,
+          marginTop: 10,
+          position: 'absolute',
+          top: insets.top,
+          left: 10
+        }}>
           <Icon name="forwardburger" size={40} color={isSwitchDiag ? "#4908b0" : "#E74C3C"} />
         </TouchableOpacity>
-        <TouchableOpacity style={{ marginLeft: 10, marginTop: 10, position: 'absolute', top: insets.top, right: 10 }} onPress={toggleAlert}>
-          {!isInternetConnected ? <Icon name="wifi-remove" size={40} color="#e84118" />
-            : !websocketConnected ? <Icon name="wifi-alert" size={40} color="#F79F1F" />
-              : <Icon name="wifi-check" size={40} color="#44bd32" />}
+        <TouchableOpacity style={{
+          marginLeft: 10,
+          marginTop: 10,
+          position: 'absolute',
+          top: insets.top,
+          right: 10
+        }} onPress={toggleAlert}>
+          {!isInternetConnected ?
+            <Icon name="wifi-remove" size={40} style={[isInternetConnected]} color="#e84118" />
+            : !websocketConnected ?
+              <Icon name="wifi-alert" size={40} style={[isInternetConnected]} color="#F79F1F" />
+              :
+              <Icon name="wifi-check" size={40} style={[isInternetConnected]} color="#44bd32" />}
         </TouchableOpacity>
         <View style={styles.upperPart}>
-          <TouchableOpacity style={isSwitchDiag ? styles.startButtonDiag : styles.startButtonWipe} onPress={() => isSwitchDiag && navigation.navigate('TestsScreen')}>
-            <Icon name={isSwitchDiag ? 'cog-play-outline' : 'cellphone-remove'} style={isSwitchDiag ? styles.startIconDiag : styles.startIconWipe} />
-            <Text style={isSwitchDiag ? styles.startButtonTextDiag : styles.startButtonTextWipe}>
-              {isSwitchDiag ? 'Click To Diag' : 'Click To Wipe'}
-            </Text>
+          <TouchableOpacity style={isSwitchDiag ? styles.startButtonDiag : styles.startButtonWipe} onPress={() => isSwitchDiag ? navigation.navigate('TestsScreen') : ''}>
+            {isSwitchDiag ?
+              <Icon name={'cog-play-outline'} style={styles.startIconDiag} />
+              :
+              <Icon name={'cellphone-remove'} style={styles.startIconWipe} />}
+            {isSwitchDiag ?
+              <Text style={styles.startButtonTextDiag}>
+                Click To Diag
+              </Text>
+              :
+              <Text style={styles.startButtonTextWipe}>
+                Click To Wipe
+              </Text>}
           </TouchableOpacity>
           <View style={styles.switchContainer}>
-            <Text style={styles.switchText}>Wipe</Text>
+            <Text style={[styles.switchText]}>
+              Wipe
+            </Text>
             <Switch value={isSwitchDiag} style={styles.switchBtn} onValueChange={onToggleSwitch} trackColor={{ false: '#E74C3Cb8', true: '#4908b099' }} thumbColor={isSwitchDiag ? '#4908b0' : '#E74C3C'} />
-            <Text style={styles.switchText}>Diag</Text>
+            <Text style={[styles.switchText]}>
+              Diag
+            </Text>
           </View>
         </View>
+
         <View style={[styles.middlePart, { backgroundColor: isSwitchDiag ? '#4908b0' : '#E74C3C' }]}>
           {isSwitchDiag &&
+
             <View style={styles.middlePartBtnsCon}>
               <Button textColor='white' icon="clipboard-pulse-outline" mode="outlined" style={styles.preTestBtn} onPress={() => navigation.navigate('Report')}>
                 Diag Report
@@ -165,21 +269,48 @@ function HomeScreen({ navigation }) {
           <View style={styles.middlePartDeviceInfo}>
             <Text style={styles.deviceDetailsTitle}>Device Info</Text>
             <View style={styles.deviceContainer}>
-              {Object.entries(deviceDetails).map(([label, value], index) => (
-                <View key={index} style={styles.detailsItem}>
-                  <Text style={styles.detailsTextLabel}>{label.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:</Text>
-                  <Text style={styles.detailsTextValue}>{value}</Text>
-                </View>
-              ))}
+              <View style={styles.detailsItem}>
+                <Text style={styles.detailsTextLabel}>Device:</Text>
+                <Text style={styles.detailsTextValue}>{deviceDetails.brand} {deviceDetails.deviceName}  ({deviceDetails.model})</Text>
+              </View>
+              <View style={styles.detailsItem}>
+                <Text style={styles.detailsTextLabel}>Serial Number:</Text>
+                <Text style={styles.detailsTextValue}>{deviceDetails.serialNumber}</Text>
+              </View>
+              <View style={styles.detailsItem}>
+                <Text style={styles.detailsTextLabel}>OS:</Text>
+                <Text style={styles.detailsTextValue}>{Platform.OS}  {deviceDetails.osVersion}</Text>
+              </View>
+              <View style={styles.detailsItem}>
+                <Text style={styles.detailsTextLabel}>CPU Model:</Text>
+                <Text style={styles.detailsTextValue}>{deviceDetails.hardWare}</Text>
+              </View>
+              <View style={styles.detailsItem}>
+                <Text style={styles.detailsTextLabel}>CPU Architectures:</Text>
+                <Text style={styles.detailsTextValue}>{deviceDetails.cpu}</Text>
+              </View>
+              <View style={styles.detailsItem}>
+                <Text style={styles.detailsTextLabel}>Storage:</Text>
+                <Text style={styles.detailsTextValue}>{(deviceDetails.storage)} GB (used {deviceDetails.usedStorage} GB)</Text>
+              </View>
+              <View style={styles.detailsItem}>
+                <Text style={styles.detailsTextLabel}>RAM:</Text>
+                <Text style={styles.detailsTextValue}>{(deviceDetails.memory)} GB  (used {deviceDetails.usedMemory} GB)</Text>
+              </View>
             </View>
           </View>
         </View>
-        <Text style={styles.versionText}>Version : 1.0.0</Text>
+        <Text style={styles.versionText}>
+          Version : 1.0.0
+        </Text>
         <Modal
           animationType="slide"
           transparent={false}
           visible={modalVisible}
-          onRequestClose={() => setModalVisible(!modalVisible)}
+          onRequestClose={() => {
+            // Alert.alert('Modal has been closed.');
+            setModalVisible(!modalVisible);
+          }}
         >
           <View style={styles.centeredView}>
             <Text style={styles.preTestTitle}>Pre-Test Requirements</Text>
@@ -189,18 +320,27 @@ function HomeScreen({ navigation }) {
                 <Text key={index} style={styles.checklistItems}>{index + 1}. {item}</Text>
               ))}
             </ScrollView>
-            <Pressable style={styles.buttonModalClose} onPress={() => setModalVisible(!modalVisible)}>
+            <Pressable
+              style={[styles.buttonModalClose]}
+              onPress={() => setModalVisible(!modalVisible)}>
               <Icon name={'close-circle-outline'} style={styles.closeIcon} />
             </Pressable>
           </View>
         </Modal>
-      </View>
-    </>
+      </View></>
   );
 }
 
-export default HomeScreen;
+// const Dashboard = ({ navigation, route }) => {
+//   return (
+//     <Stack.Navigator >
+//       <Stack.Screen name="HomeScreen" component={HomeScreen} options={{ title: 'Home Screen', headerShown: false }} />
+//       <Stack.Screen name="TestsScreen" component={TestsScreen} options={{ title: 'Tests Screen', headerShown: false }} />
+//     </Stack.Navigator>
+//   );
+// };
 
+export default HomeScreen;
 
 const styles = StyleSheet.create({
   container: {

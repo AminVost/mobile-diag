@@ -9,12 +9,12 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import DeviceInfo from 'react-native-device-info';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import logoImage from './assets/images/logo.png';
-import { NetworkContext } from '../../App';
+import { DataContext } from '../../App';
 // import CustomAlert from './inc/modal/customAlert';
 
 
 export default function HomeScreen({ navigation, route }) {
-  const { isInternetConnected, websocketConnected, receivedSerialNumber } = useContext(NetworkContext);
+  const { isInternetConnected, websocketConnected, receivedSerialNumber } = useContext(DataContext);
 
   const checklistItems = [
     "Any Bluetooth Device",

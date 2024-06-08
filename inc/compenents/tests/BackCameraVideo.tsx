@@ -1,16 +1,16 @@
-import React, { useState, useEffect, useContext, useRef } from 'react';
+import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, BackHandler, Modal, ActivityIndicator } from 'react-native';
 import { Camera, useCameraDevice } from 'react-native-vision-camera';
 import { Button } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { DataContext } from '../../../App';
-import { formatTime } from '../../utils/formatTime'; // Adjust the import path as needed
+// import { formatTime } from '../../utils/formatTime'; // Adjust the import path as needed
 import RNFS from 'react-native-fs';
 import { requestPermissions, openAppSettings } from '../CameraPermission';
 import Video from 'react-native-video';
 
 const BackCameraVideoTest = () => {
-  const { testStep, setTestStep, testSteps, setTestsSteps,elapsedTime, setElapsedTime } = useContext(DataContext);
+  const { testStep, setTestStep, testSteps, setTestsSteps, elapsedTime, setElapsedTime } = useContext(DataContext);
   const [videoUri, setVideoUri] = useState(null);
   const [isAlertVisible, setAlertVisible] = useState(false);
   const cameraRef = useRef(null);
@@ -18,22 +18,29 @@ const BackCameraVideoTest = () => {
   const [videoPath, setVideoPath] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
   const [cameraActive, setCameraActive] = useState(true);
+  const localElapsedTimeRef = useRef(elapsedTime);
+  const [displayElapsedTime, setDisplayElapsedTime] = useState(elapsedTime);
   const device = useCameraDevice('back');
-
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
     requestCameraPermission();
+    const timer = setInterval(() => {
+      localElapsedTimeRef.current += 1;
+      setDisplayElapsedTime(localElapsedTimeRef.current); // Update state to trigger re-render for the timer display
+    }, 1000);
     return () => {
-      console.log('unmouting... backCamera')
+      console.log('unmounting... backCamera');
       backHandler.remove();
+      clearInterval(timer);
+      setElapsedTime(prevElapsedTime => prevElapsedTime + localElapsedTimeRef.current - elapsedTime);
     };
-  }, []);
+  }, [elapsedTime, setElapsedTime]);
 
-  const handleBackButtonPress = () => {
+  const handleBackButtonPress = useCallback(() => {
     setAlertVisible(!isAlertVisible);
     return true;
-  };
+  }, [isAlertVisible]);
 
   const requestCameraPermission = async () => {
     const permissionStatus = await requestPermissions();
@@ -86,7 +93,7 @@ const BackCameraVideoTest = () => {
     }
   };
 
-  const handleResult = (result) => {
+  const handleResult = useCallback((result) => {
     const updatedTestSteps = [...testSteps];
     updatedTestSteps[testStep - 1].result = result;
     if (videoPath) {
@@ -95,21 +102,19 @@ const BackCameraVideoTest = () => {
     setTestsSteps(updatedTestSteps);
     setTestStep((prevStep) => prevStep + 1);
     setAlertVisible(false);
-  };
+  }, [testStep, testSteps, videoPath, setTestStep, setTestsSteps]);
 
-  const toggleAlert = () => {
+  const toggleAlert = useCallback(() => {
     setAlertVisible(!isAlertVisible);
-  };
+  }, [isAlertVisible]);
 
-  const CustomAlert = () => (
+  const CustomAlert = useCallback(() => (
     <Modal
       visible={isAlertVisible}
       transparent={true}
       animationType="slide"
       hardwareAccelerated={true}
-      onRequestClose={() => {
-        setAlertVisible(!isAlertVisible);
-      }}
+      onRequestClose={toggleAlert}
     >
       <View style={styles.modalBackground}>
         <View style={styles.customModalContent}>
@@ -131,7 +136,7 @@ const BackCameraVideoTest = () => {
         </View>
       </View>
     </Modal>
-  );
+  ), [isAlertVisible, handleResult, toggleAlert]);
 
   if (!permissionsGranted) {
     return (
@@ -173,15 +178,22 @@ const BackCameraVideoTest = () => {
           <TouchableOpacity style={styles.btnTakeVid} onPress={isRecording ? stopRecording : startRecording}>
             <Icon name={isRecording ? "stop-circle" : "checkbox-blank-circle"} size={70} color={"#fff"} />
           </TouchableOpacity>
-          <Text style={styles.customModalTitle}> Timer : {formatTime(elapsedTime)}</Text>
+          <Text style={styles.customModalTitle}> Timer : {formatTime(localElapsedTimeRef.current)}</Text>
         </View>
       )}
-      <CustomAlert visible={isAlertVisible} onClose={toggleAlert} />
+      <CustomAlert />
     </View>
   );
 };
 
 export default BackCameraVideoTest;
+
+const formatTime = (time) => {
+  const minutes = Math.floor(time / 60);
+  const seconds = time % 60;
+  return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+};
+
 
 const styles = StyleSheet.create({
   container: {

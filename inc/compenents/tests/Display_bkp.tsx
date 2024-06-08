@@ -24,8 +24,7 @@ const Display = () => {
     const [currentTestIndex, setCurrentTestIndex] = useState(0);
     const [testComplete, setTestComplete] = useState(false);
     const [showText, setShowText] = useState(true);
-    const localElapsedTimeRef = useRef(elapsedTime);
-    const [displayElapsedTime, setDisplayElapsedTime] = useState(elapsedTime);
+    const localElapsedTimeRef = useRef(0);
     const opacity = useSharedValue(1);
 
     useEffect(() => {
@@ -33,18 +32,17 @@ const Display = () => {
         hideNavigationBar();
         const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
         const timer = setInterval(() => {
-            localElapsedTimeRef.current += 1;
-            setDisplayElapsedTime(localElapsedTimeRef.current); // Update state to trigger re-render for the timer display
+            localElapsedTimeRef.current += 1;           
         }, 1000);
 
         return () => {
-            console.log('unmounting Display...');
+            console.log('returnnnnn....');
+            clearInterval(timer);
             backHandler.remove();
             showNavigationBar();
-            clearInterval(timer);
             setElapsedTime(prevElapsedTime => prevElapsedTime + localElapsedTimeRef.current);
         };
-    }, [elapsedTime, setElapsedTime]);
+    }, []);
 
     useEffect(() => {
         const timerText = setTimeout(() => {
@@ -215,6 +213,7 @@ const Display = () => {
 };
 
 export default Display;
+
 
 const formatTime = (time) => {
     const minutes = Math.floor(time / 60);

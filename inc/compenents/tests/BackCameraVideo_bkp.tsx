@@ -1,39 +1,34 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
-import { View, Text, StyleSheet, Alert, TouchableOpacity, BackHandler, Modal, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, BackHandler, Modal, ActivityIndicator } from 'react-native';
 import { Camera, useCameraDevice } from 'react-native-vision-camera';
 import { Button } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { DataContext } from '../../../App';
+import { formatTime } from '../../utils/formatTime'; // Adjust the import path as needed
+import RNFS from 'react-native-fs';
 import { requestPermissions, openAppSettings } from '../CameraPermission';
-import Video from 'react-native-video'; // Import the Video component
+import Video from 'react-native-video';
 
-const BackCameraVideo = () => {
-  const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
+const BackCameraVideoTest = () => {
+  const { testStep, setTestStep, testSteps, setTestsSteps,elapsedTime, setElapsedTime } = useContext(DataContext);
   const [videoUri, setVideoUri] = useState(null);
   const [isAlertVisible, setAlertVisible] = useState(false);
-  const [isActiveCamera, setisActiveCamera] = useState(true);
-  const [permissionsGranted, setPermissionsGranted] = useState(false);
-
   const cameraRef = useRef(null);
+  const [permissionsGranted, setPermissionsGranted] = useState(false);
+  const [videoPath, setVideoPath] = useState(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [cameraActive, setCameraActive] = useState(true);
   const device = useCameraDevice('back');
+
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
     requestCameraPermission();
     return () => {
+      console.log('unmouting... backCamera')
       backHandler.remove();
-      // Cleanup the camera reference on component unmount
-      if (cameraRef.current) {
-        cameraRef.current.stopRecording();
-      }
     };
   }, []);
-
-  useEffect(() => {
-    if (permissionsGranted && !device) {
-      console.log('No camera device found');
-    }
-  }, [permissionsGranted, device]);
 
   const handleBackButtonPress = () => {
     setAlertVisible(!isAlertVisible);
@@ -42,7 +37,6 @@ const BackCameraVideo = () => {
 
   const requestCameraPermission = async () => {
     const permissionStatus = await requestPermissions();
-    console.log('permissionStatus', permissionStatus);
     if (permissionStatus === 'granted') {
       setPermissionsGranted(true);
     } else if (permissionStatus === 'never_ask_again' || permissionStatus === 'denied') {
@@ -50,51 +44,56 @@ const BackCameraVideo = () => {
     }
   };
 
-  const recordVideo = async () => {
-    if (!permissionsGranted) {
-      Alert.alert('Permissions not granted', 'Please grant the necessary permissions to use the camera.');
-      return;
-    }
-
-    if (!device) {
-      console.error('No camera device found');
-      return;
-    }
-
+  const startRecording = async () => {
     if (cameraRef.current) {
-      try {
-        setVideoUri(null); // Reset video URI before starting a new recording
-        setisActiveCamera(true);
-        await cameraRef.current.startRecording({
-          onRecordingFinished: (video) => setVideoUri(video.path),
-          onRecordingError: (error) => console.error('Recording Error: ', error),
-        });
-        console.log('videoUri', videoUri)
+      setIsRecording(true);
+      const video = await cameraRef.current.startRecording({
+        flash: 'on',
+        onRecordingFinished: (video) => handleVideoSaved(video),
+        onRecordingError: (error) => console.error(error),
+      });
+    }
+  };
 
-        setTimeout(() => {
-          cameraRef.current.stopRecording();
-          setisActiveCamera(false);
-        }, 5000);
-      } catch (error) {
-        console.error('Error starting recording', error);
-        if (error.message.includes('prepare failed')) {
-          Alert.alert('Error', 'Prepare failed, please ensure no other app is using the camera');
-        }
-      }
-    } else {
-      console.log('Camera not initialized');
+  const stopRecording = async () => {
+    if (cameraRef.current) {
+      await cameraRef.current.stopRecording();
+      setIsRecording(false);
+      setCameraActive(false); // Disable the camera after stopping the recording
+    }
+  };
+
+  const handleVideoSaved = async (video) => {
+    const directoryPath = `${RNFS.PicturesDirectoryPath}/RapidMobileDiag`;
+    try {
+      await RNFS.mkdir(directoryPath);
+    } catch (err) {
+      console.error('Error creating directory:', err);
+    }
+
+    const currentDate = new Date();
+    const formattedDate = currentDate.toISOString().split('T')[0];
+    const formattedTime = currentDate.toTimeString().split(' ')[0].replace(/:/g, '-');
+    const fileName = `BackCamera_${formattedDate}_${formattedTime}.mp4`;
+    const filePath = `${directoryPath}/${fileName}`;
+    setVideoPath(filePath);
+
+    try {
+      await RNFS.copyFile(video.path, filePath);
+      setVideoUri(filePath);
+    } catch (err) {
+      console.error('Error saving video:', err);
     }
   };
 
   const handleResult = (result) => {
     const updatedTestSteps = [...testSteps];
     updatedTestSteps[testStep - 1].result = result;
-    if (videoUri) {
-      updatedTestSteps[testStep - 1].data = videoUri;
+    if (videoPath) {
+      updatedTestSteps[testStep - 1].filePath = videoPath;
     }
     setTestsSteps(updatedTestSteps);
     setTestStep((prevStep) => prevStep + 1);
-    console.log(testSteps);
     setAlertVisible(false);
   };
 
@@ -107,7 +106,10 @@ const BackCameraVideo = () => {
       visible={isAlertVisible}
       transparent={true}
       animationType="slide"
-      onRequestClose={toggleAlert}
+      hardwareAccelerated={true}
+      onRequestClose={() => {
+        setAlertVisible(!isAlertVisible);
+      }}
     >
       <View style={styles.modalBackground}>
         <View style={styles.customModalContent}>
@@ -116,13 +118,13 @@ const BackCameraVideo = () => {
             <Icon name="camera-enhance-outline" size={100} color="#4908b0" />
           </View>
           <View style={styles.customModalBtns}>
-            <Button mode="contained" buttonColor="#e84118" textColor="white" style={styles.stepTestBtn} onPress={() => handleResult('Fail')}>
+            <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Fail')}>
               Fail
             </Button>
-            <Button mode="contained" buttonColor="#7f8fa6" textColor="white" style={styles.stepTestBtn} onPress={() => handleResult('Skip')}>
+            <Button mode="elevated" buttonColor="#7f8fa6" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Skip')}>
               Skip
             </Button>
-            <Button mode="contained" buttonColor="#44bd32" textColor="white" style={styles.stepTestBtn} onPress={() => handleResult('Pass')}>
+            <Button mode="elevated" buttonColor="#44bd32" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Pass')}>
               Pass
             </Button>
           </View>
@@ -151,47 +153,35 @@ const BackCameraVideo = () => {
   return (
     <View style={styles.container}>
       {videoUri ? (
-
         <>
-          <Video
-            source={{ uri: videoUri }}
-            style={styles.video}
-            controls={true}
-          />
+          <Video source={{ uri: `file://${videoUri}` }} style={styles.video} controls={true} />
           <View style={styles.btnContainer}>
-            <Button mode="contained" buttonColor="#e84118" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Fail')}>
+            <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Fail')}>
               Fail
             </Button>
-            <Button mode="contained" buttonColor="#7f8fa6" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Skip')}>
+            <Button mode="elevated" buttonColor="#7f8fa6" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Skip')}>
               Skip
             </Button>
-            <Button mode="contained" buttonColor="#44bd32" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Pass')}>
+            <Button mode="elevated" buttonColor="#44bd32" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Pass')}>
               Pass
             </Button>
           </View>
         </>
       ) : (
         <View style={styles.cameraContainer}>
-          <Camera
-            ref={cameraRef}
-            style={styles.preview}
-            device={device}
-            isActive={isActiveCamera}
-            video={true}
-            audio={true} // Enable audio if required
-            onError={(error) => console.error('Camera Error: ', error)} // Handle camera errors
-          />
-          <TouchableOpacity style={styles.btnTakeVideo} onPress={recordVideo}>
-            <Icon name="checkbox-blank-circle" size={70} color="#fff" />
+          <Camera ref={cameraRef} style={styles.preview} device={device} isActive={cameraActive} video={true} />
+          <TouchableOpacity style={styles.btnTakeVid} onPress={isRecording ? stopRecording : startRecording}>
+            <Icon name={isRecording ? "stop-circle" : "checkbox-blank-circle"} size={70} color={"#fff"} />
           </TouchableOpacity>
+          <Text style={styles.customModalTitle}> Timer : {formatTime(elapsedTime)}</Text>
         </View>
       )}
-      <CustomAlert />
+      <CustomAlert visible={isAlertVisible} onClose={toggleAlert} />
     </View>
   );
 };
-export default BackCameraVideo;
 
+export default BackCameraVideoTest;
 
 const styles = StyleSheet.create({
   container: {
@@ -205,7 +195,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  btnTakeVideo: {
+  btnTakeVid: {
     position: 'absolute',
     bottom: 20,
     alignSelf: 'center',
@@ -259,16 +249,14 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   customModalRow: {
-    display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 20,
   },
   customModalBtns: {
-    display: 'flex',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    flexDirection: 'row',
   },
 });

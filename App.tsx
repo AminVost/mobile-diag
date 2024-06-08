@@ -66,7 +66,7 @@ export default function App() {
       result: null,
       error: null,
       duration: null,
-      priority: 6,
+      priority: 1,
     },
     {
       title: 'Brightness',
@@ -74,7 +74,7 @@ export default function App() {
       result: null,
       error: null,
       duration: null,
-      priority: 5,
+      priority: 6,
     },
     {
       title: 'Rotation',
@@ -111,7 +111,7 @@ export default function App() {
       filePath: null,
       error: null,
       duration: null,
-      priority: 1,
+      priority: 5,
     },
     {
       title: 'BackCameraVideo',
@@ -239,21 +239,8 @@ export default function App() {
     );
   }
 
-
-  // const dataContextValues = {
-  //   isInternetConnected,
-  //   setIsNetConnected,
-  //   websocketConnected,
-  //   setWebsocketConnected,
-  //   receivedSerialNumber,
-  //   testStep,
-  //   setTestStep,
-  //   testSteps,
-  //   setTestsSteps,
-  // };
   return (
 
-    // <DataContext.Provider value={{ isInternetConnected, setIsNetConnected, websocketConnected, setWebsocketConnected, receivedSerialNumber, testStep, setTestStep, testSteps, setTestsSteps }}>
     <DataContext.Provider value={{ isInternetConnected, setIsNetConnected, websocketConnected, setWebsocketConnected, receivedSerialNumber, testStep, setTestStep, testSteps, setTestsSteps, elapsedTime, setElapsedTime }}>
       <SafeAreaProvider>
         <NavigationContainer>
