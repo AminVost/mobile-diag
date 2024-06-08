@@ -4,11 +4,13 @@ import { Camera, useCameraDevices } from 'react-native-vision-camera';
 import { Button } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { DataContext } from '../../../App';
+import { formatTime } from '../../utils/formatTime';
 import RNFS from 'react-native-fs';
 import { requestPermissions, openAppSettings } from '../CameraPermission';
 
 const MultiCameraTest = () => {
-  const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
+  const { testStep, setTestStep, testSteps, setTestsSteps, elapsedTime, setElapsedTime } = useContext(DataContext);
+  const [isCameraActive, setIsCameraActive] = useState(true);
   const [photoUri, setPhotoUri] = useState(null);
   const [isAlertVisible, setAlertVisible] = useState(false);
   const cameraRef = useRef(null);
@@ -27,7 +29,8 @@ const MultiCameraTest = () => {
     requestCameraPermission();
     return () => {
       // console.log('testSteps', testSteps[0].devicesInfo);
-      console.log('testSteps', testSteps[0].multiCamResult);
+      console.log('unmount multiCamera')
+      setIsCameraActive(false);
       backHandler.remove();
     };
   }, []);
@@ -194,12 +197,13 @@ const MultiCameraTest = () => {
             ref={cameraRef}
             style={styles.preview}
             device={device}
-            isActive={true}
+            isActive={isCameraActive}
             photo={true}
           />
           <TouchableOpacity style={styles.btnTakePic} onPress={takePicture}>
             <Icon name="checkbox-blank-circle" size={70} color={"#fff"} />
           </TouchableOpacity>
+          <Text style={styles.customModalTitle}> Timer : {formatTime(elapsedTime)}</Text>
         </View>
       )}
       <CustomAlert visible={isAlertVisible} onClose={toggleAlert} />

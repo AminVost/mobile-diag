@@ -37,9 +37,10 @@ const Drawer = createDrawerNavigator();
 export default function App() {
   // hideNavigationBar();
   const [isInternetConnected, setIsNetConnected] = useState(false);
-  const [websocketConnected, setWebsocketConnected] = React.useState(false);
-  const [receivedSerialNumber, setReceivedSerialNumber] = React.useState(null);
+  const [websocketConnected, setWebsocketConnected] = useState(false);
+  const [receivedSerialNumber, setReceivedSerialNumber] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [elapsedTime, setElapsedTime] = useState(0);
 
   const [testStep, setTestStep] = useState(1);
   const [testSteps, setTestsSteps] = useState([
@@ -49,7 +50,7 @@ export default function App() {
       result: null,
       error: null,
       duration: null,
-      priority: 1,
+      priority: 9,
     },
     {
       title: 'Multitouch',
@@ -57,7 +58,7 @@ export default function App() {
       result: null,
       error: null,
       duration: null,
-      priority: 2,
+      priority: 3,
     },
     {
       title: 'Display',
@@ -110,7 +111,7 @@ export default function App() {
       filePath: null,
       error: null,
       duration: null,
-      priority: 3,
+      priority: 1,
     },
     {
       title: 'BackCameraVideo',
@@ -119,7 +120,7 @@ export default function App() {
       filePath: null,
       error: null,
       duration: null,
-      priority: 9,
+      priority: 2,
     },
 
   ]);
@@ -130,7 +131,7 @@ export default function App() {
   }
 
   const paramss = LaunchArguments.value<MyExpectedArgs>();
-  const paramsTest = { "wsIp": "192.168.1.22", "serialNumber": "R58M42HXCZW" };
+  const paramsTest = { "wsIp": "192.168.1.22", "serialNumber": "R58M42HXCZW" };//TODO
 
   useEffect(() => {
     if (paramsTest) {
@@ -238,9 +239,22 @@ export default function App() {
     );
   }
 
+
+  // const dataContextValues = {
+  //   isInternetConnected,
+  //   setIsNetConnected,
+  //   websocketConnected,
+  //   setWebsocketConnected,
+  //   receivedSerialNumber,
+  //   testStep,
+  //   setTestStep,
+  //   testSteps,
+  //   setTestsSteps,
+  // };
   return (
 
-    <DataContext.Provider value={{ isInternetConnected, setIsNetConnected, websocketConnected, setWebsocketConnected, receivedSerialNumber, testStep, setTestStep, testSteps, setTestsSteps }}>
+    // <DataContext.Provider value={{ isInternetConnected, setIsNetConnected, websocketConnected, setWebsocketConnected, receivedSerialNumber, testStep, setTestStep, testSteps, setTestsSteps }}>
+    <DataContext.Provider value={{ isInternetConnected, setIsNetConnected, websocketConnected, setWebsocketConnected, receivedSerialNumber, testStep, setTestStep, testSteps, setTestsSteps, elapsedTime, setElapsedTime }}>
       <SafeAreaProvider>
         <NavigationContainer>
           <Drawer.Navigator
@@ -262,10 +276,6 @@ export default function App() {
             <Drawer.Screen name="CheckList" component={CheckList} />
             <Drawer.Screen name="Requirements" component={Requirements} />
             <Drawer.Screen name="Help" component={HelpScreen} />
-            <Drawer.Screen name="TestsScreen" component={TestsScreen} options={{
-              drawerLabel: () => null,
-              headerShown: false
-            }} />
             <Drawer.Screen name="TouchScreen" component={TouchScreen} options={{ title: 'TouchScreen', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
             <Drawer.Screen name="MultiTouch" component={MultiTouch} options={{ title: 'MultiTouch', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
             <Drawer.Screen name="Display" component={Display} options={{ title: 'Display', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
@@ -275,6 +285,10 @@ export default function App() {
             <Drawer.Screen name="FrontCamera" component={FrontCamera} options={{ title: 'FrontCamera', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
             <Drawer.Screen name="MultiCamera" component={MultiCamera} options={{ title: 'MultiCamera', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
             <Drawer.Screen name="BackCameraVideo" component={BackCameraVideo} options={{ title: 'BackCameraVideo', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
+            <Drawer.Screen name="TestsScreen" component={TestsScreen} options={{
+              drawerLabel: () => null,
+              headerShown: false
+            }} />
           </Drawer.Navigator>
 
         </NavigationContainer>

@@ -26,9 +26,9 @@ const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
 
 const TestsScreens = ({ navigation, route }) => {
-  const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
+  const { testStep, setTestStep, testSteps, setTestsSteps, elapsedTime, setElapsedTime } = useContext(DataContext);
 
-  const [elapsedTime, setElapsedTime] = useState(0);
+  // const [elapsedTime, setElapsedTime] = useState(0);
   const [loading, setLoading] = useState(false);
   const [currentTestIndex, setCurrentTestIndex] = useState(0);
   const [testData, setTestData] = useState([]);

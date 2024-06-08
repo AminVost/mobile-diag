@@ -4,12 +4,13 @@ import { Camera, useCameraDevice } from 'react-native-vision-camera';
 import { Button } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { DataContext } from '../../../App';
+import { formatTime } from '../../utils/formatTime'; // Adjust the import path as needed
 import RNFS from 'react-native-fs';
 import { requestPermissions, openAppSettings } from '../CameraPermission';
 import Video from 'react-native-video';
 
 const BackCameraVideoTest = () => {
-  const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
+  const { testStep, setTestStep, testSteps, setTestsSteps,elapsedTime, setElapsedTime } = useContext(DataContext);
   const [videoUri, setVideoUri] = useState(null);
   const [isAlertVisible, setAlertVisible] = useState(false);
   const cameraRef = useRef(null);
@@ -172,6 +173,7 @@ const BackCameraVideoTest = () => {
           <TouchableOpacity style={styles.btnTakeVid} onPress={isRecording ? stopRecording : startRecording}>
             <Icon name={isRecording ? "stop-circle" : "checkbox-blank-circle"} size={70} color={"#fff"} />
           </TouchableOpacity>
+          <Text style={styles.customModalTitle}> Timer : {formatTime(elapsedTime)}</Text>
         </View>
       )}
       <CustomAlert visible={isAlertVisible} onClose={toggleAlert} />
