@@ -121,8 +121,8 @@ const TouchScreenTest = ({ navigation, route }) => {
                             <Icon name="cellphone" size={100} color="#4908b0" />
                         </View>
                         <View style={styles.customModalBtns}>
-                            <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Faile')}>
-                                Faile
+                            <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('fail')}>
+                                fail
                             </Button>
                             <Button mode="elevated" buttonColor="#7f8fa6" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Skip')}>
                                 Skip

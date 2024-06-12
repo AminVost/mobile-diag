@@ -4,7 +4,9 @@ import { Button } from 'react-native-paper';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { hideNavigationBar, showNavigationBar } from 'react-native-navigation-bar-color';
-import { DataContext } from '../../../App';
+import { DataContext, TimerContext } from '../../../App';
+import { formatTime } from '../../utils/formatTime';
+import CustomAlert from './CustomAlertDisplay';
 
 const { width, height } = Dimensions.get('screen');
 
@@ -19,38 +21,30 @@ const testPatterns = [
 ];
 
 const Display = () => {
-    const { testStep, setTestStep, testSteps, setTestsSteps, elapsedTime, setElapsedTime } = useContext(DataContext);
+    const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
+    const { elapsedTimeRef } = useContext(TimerContext);
     const [isAlertVisible, setAlertVisible] = useState(false);
     const [currentTestIndex, setCurrentTestIndex] = useState(0);
     const [testComplete, setTestComplete] = useState(false);
     const [showText, setShowText] = useState(true);
-    const localElapsedTimeRef = useRef(elapsedTime);
-    const [displayElapsedTime, setDisplayElapsedTime] = useState(elapsedTime);
     const opacity = useSharedValue(1);
 
     useEffect(() => {
         console.log('testSteps[testStep]', testSteps[testStep - 1]);
         hideNavigationBar();
         const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
-        const timer = setInterval(() => {
-            localElapsedTimeRef.current += 1;
-            setDisplayElapsedTime(localElapsedTimeRef.current); // Update state to trigger re-render for the timer display
-        }, 1000);
 
         return () => {
-            console.log('unmounting Display...');
+            console.log('returnnnnn.... testSteps : ' , testSteps);
             backHandler.remove();
             showNavigationBar();
-            clearInterval(timer);
-            setElapsedTime(prevElapsedTime => prevElapsedTime + localElapsedTimeRef.current);
         };
-    }, [elapsedTime, setElapsedTime]);
+    }, []);
 
     useEffect(() => {
         const timerText = setTimeout(() => {
             setShowText(false);
         }, 1000);
-        console.log('timer...');
         return () => clearTimeout(timerText);
     }, [currentTestIndex]);
 
@@ -71,39 +65,42 @@ const Display = () => {
         setAlertVisible(!isAlertVisible);
     }, [isAlertVisible]);
 
-    const CustomAlert = useCallback(() => {
-        return (
-            <Modal
-                visible={isAlertVisible}
-                transparent={true}
-                animationType="slide"
-                hardwareAccelerated={true}
-                onRequestClose={toggleAlert}
-            >
-                <View style={styles.modalBackground}>
-                    <View style={styles.customModalContent}>
-                        <Text style={styles.customModalTitle}>Please select the Display test result {formatTime(localElapsedTimeRef.current)}</Text>
-                        <View style={styles.customModalRow}>
-                            <Icon name="circle-opacity" size={100} color="#4908b0" />
-                        </View>
-                        <View style={styles.customModalBtns}>
-                            <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Fail')}>
-                                Fail
-                            </Button>
-                            <Button mode="elevated" buttonColor="#7f8fa6" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Skip')}>
-                                Skip
-                            </Button>
-                            <Button mode="elevated" buttonColor="#44bd32" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Pass')}>
-                                Pass
-                            </Button>
-                        </View>
-                    </View>
-                </View>
-            </Modal>
-        );
-    }, [isAlertVisible, handleResult, toggleAlert]);
+    // const CustomAlert = useCallback(() => {
+    //     console.log('ddddd')
+    //     return (
+    //         <Modal
+    //             visible={isAlertVisible}
+    //             transparent={true}
+    //             animationType="slide"
+    //             hardwareAccelerated={true}
+    //             onRequestClose={toggleAlert}
+    //         >
+    //             <View style={styles.modalBackground}>
+    //                 <View style={styles.customModalContent}>
+    //                     <Text style={styles.customModalTitle}>Please select the Display test result</Text>
+    //                     {/* <Text style={styles.customModalTitle}>{`Elapsed Time: ${formatTime(elapsedTimeRef.current)}`}</Text> */}
+                        
+    //                     <View style={styles.customModalRow}>
+    //                         <Icon name="circle-opacity" size={100} color="#4908b0" />
+    //                     </View>
+    //                     <View style={styles.customModalBtns}>
+    //                         <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Fail')}>
+    //                             Fail
+    //                         </Button>
+    //                         <Button mode="elevated" buttonColor="#7f8fa6" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Skip')}>
+    //                             Skip
+    //                         </Button>
+    //                         <Button mode="elevated" buttonColor="#44bd32" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Pass')}>
+    //                             Pass
+    //                         </Button>
+    //                     </View>
+    //                 </View>
+    //             </View>
+    //         </Modal>
+    //     );
+    // }, [isAlertVisible, handleResult, toggleAlert,elapsedTimeRef.current]);
 
-    const handleNextTest = () => {
+    const handleNextTest = useCallback(() => {
         if (currentTestIndex === testPatterns.length - 1) {
             setTestComplete(true);
         } else {
@@ -114,7 +111,7 @@ const Display = () => {
                 opacity.value = 1;
             }, 300);
         }
-    };
+    }, [currentTestIndex]);
 
     const restartTest = () => {
         setCurrentTestIndex(0);
@@ -127,7 +124,7 @@ const Display = () => {
         };
     });
 
-    const renderPattern = () => {
+    const renderPattern = useCallback(() => {
         const currentTest = testPatterns[currentTestIndex];
         switch (currentTest.type) {
             case 'color':
@@ -155,13 +152,12 @@ const Display = () => {
             default:
                 return null;
         }
-    };
+    }, [currentTestIndex , setCurrentTestIndex]);
 
     const renderCompletionPage = () => {
         return (
             <View style={styles.completionContainer}>
                 <Text style={styles.completionText}>The display test is complete.</Text>
-                <Text style={styles.completionText}>{formatTime(localElapsedTimeRef.current)}</Text>
                 <Text style={styles.completionText}>Please select an option below to proceed.</Text>
                 <Button mode="elevated"
                     buttonColor="#3498db"
@@ -197,18 +193,22 @@ const Display = () => {
     return (
         <>
             <StatusBar hidden={false} translucent={true} backgroundColor="transparent" barStyle="light-content" />
-            <CustomAlert />
+            {/* <CustomAlert /> */}
+            <CustomAlert isAlertVisible={isAlertVisible} handleResult={handleResult} toggleAlert={toggleAlert} />
             {testComplete ? (
                 renderCompletionPage()
             ) : (
-                <TouchableOpacity style={styles.container} onPress={handleNextTest}>
-                    {renderPattern()}
-                    {showText && (
-                        <View style={styles.textContainer}>
-                            <Text style={styles.text}>Tap to change pattern ({currentTestIndex + 1}/{testPatterns.length})</Text>
-                        </View>
-                    )}
-                </TouchableOpacity>
+                <>
+                    <Text style={styles.timerText}>{`Elapsed Time: ${formatTime(elapsedTimeRef.current)}`}</Text>
+                    <TouchableOpacity style={styles.container} onPress={handleNextTest}>
+                        {renderPattern()}
+                        {showText && (
+                            <View style={styles.textContainer}>
+                                <Text style={styles.text}>Tap to change pattern ({currentTestIndex + 1}/{testPatterns.length})</Text>
+                            </View>
+                        )}
+                    </TouchableOpacity>
+                </>
             )}
         </>
     );
@@ -216,14 +216,8 @@ const Display = () => {
 
 export default Display;
 
-const formatTime = (time) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = time % 60;
-    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-};
-
-
 const styles = StyleSheet.create({
+    timerText: { fontSize: 20, fontWeight: 'bold' },
     container: {
         flex: 1,
         justifyContent: 'center',

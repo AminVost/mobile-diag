@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useRef } from 'react';
+import React, { createContext, useState, useEffect, useRef, useContext } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableHighlight, Alert, ActivityIndicator, SafeAreaView, useWindowDimensions, ScrollView, TouchableOpacity, Platform, Image, Modal, Pressable, Linking, StatusBar } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createDrawerNavigator, DrawerContentScrollView, DrawerItemList, DrawerItem } from '@react-navigation/drawer';
@@ -32,7 +32,6 @@ import MultiCamera from './inc/compenents/tests/MultiCamera';
 import BackCameraVideo from './inc/compenents/tests/BackCameraVideo';
 
 export const DataContext = createContext(false);
-export const TimerContext = createContext({});
 const Drawer = createDrawerNavigator();
 
 export default function App() {
@@ -41,6 +40,8 @@ export default function App() {
   const [websocketConnected, setWebsocketConnected] = useState(false);
   const [receivedSerialNumber, setReceivedSerialNumber] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [elapsedTime, setElapsedTime] = useState(0);
+
   const [testStep, setTestStep] = useState(1);
   const [testSteps, setTestsSteps] = useState([
     {
@@ -49,7 +50,7 @@ export default function App() {
       result: null,
       error: null,
       duration: null,
-      priority: 3,
+      priority: 9,
     },
     {
       title: 'Multitouch',
@@ -57,7 +58,7 @@ export default function App() {
       result: null,
       error: null,
       duration: null,
-      priority: 8,
+      priority: 3,
     },
     {
       title: 'Display',
@@ -73,7 +74,7 @@ export default function App() {
       result: null,
       error: null,
       duration: null,
-      priority: 4,
+      priority: 6,
     },
     {
       title: 'Rotation',
@@ -81,7 +82,7 @@ export default function App() {
       result: null,
       error: null,
       duration: null,
-      priority: 5,
+      priority: 7,
     },
     {
       title: 'BackCamera',
@@ -90,7 +91,7 @@ export default function App() {
       filePath: null,
       error: null,
       duration: null,
-      priority: 6,
+      priority: 8,
     },
     {
       title: 'FrontCamera',
@@ -99,7 +100,7 @@ export default function App() {
       filePath: null,
       error: null,
       duration: null,
-      priority: 7,
+      priority: 4,
     },
     {
       title: 'MultiCamera',
@@ -110,7 +111,7 @@ export default function App() {
       filePath: null,
       error: null,
       duration: null,
-      priority: 9,
+      priority: 5,
     },
     {
       title: 'BackCameraVideo',
@@ -123,11 +124,6 @@ export default function App() {
     },
 
   ]);
-
-
-  const [startTime, setStartTime] = useState(null);
-  const elapsedTimeRef = useRef(0);
-  const [, setElapsedTime] = useState(0); // State for re-rendering
 
   interface MyExpectedArgs {
     serialNumber?: string;
@@ -243,52 +239,49 @@ export default function App() {
     );
   }
 
-
   return (
 
     // <DataContext.Provider value={{ isInternetConnected, setIsNetConnected, websocketConnected, setWebsocketConnected, receivedSerialNumber, testStep, setTestStep, testSteps, setTestsSteps, elapsedTime, setElapsedTime }}>
     <DataContext.Provider value={{ isInternetConnected, setIsNetConnected, websocketConnected, setWebsocketConnected, receivedSerialNumber, testStep, setTestStep, testSteps, setTestsSteps }}>
-      <TimerContext.Provider value={{ startTime, setStartTime, elapsedTimeRef, setElapsedTime }}>
-        <SafeAreaProvider>
-          <NavigationContainer>
-            <Drawer.Navigator
-              initialRouteName="Home"
-              drawerContent={(props) => <CustomDrawerContent {...props} />}
-              screenOptions={{
-                drawerActiveBackgroundColor: '#4908b0',
-                drawerActiveTintColor: "white",
-                drawerType: 'back',
-                drawerStyle: { width: '70%' },
-                overlayColor: 'transparent',
-              }}
-            >
-              {/* <Drawer.Screen name="ScanQrCode" component={ScanQrCode} options={{ headerShown: false }} /> */}
-              <Drawer.Screen name="Home" component={HomeScreen} options={{ headerShown: false, unmountOnBlur: true }} />
-              <Drawer.Screen name="DeviceInfo" component={DeviceInfoScreen} />
-              <Drawer.Screen name="Setting" component={SettingScreen} />
-              <Drawer.Screen name="Report" component={ReportScreen} />
-              <Drawer.Screen name="CheckList" component={CheckList} />
-              <Drawer.Screen name="Requirements" component={Requirements} />
-              <Drawer.Screen name="Help" component={HelpScreen} />
-              <Drawer.Screen name="TouchScreen" component={TouchScreen} options={{ title: 'TouchScreen', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
-              <Drawer.Screen name="MultiTouch" component={MultiTouch} options={{ title: 'MultiTouch', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
-              <Drawer.Screen name="Display" component={Display} options={{ title: 'Display', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
-              <Drawer.Screen name="Brightness" component={Brightness} options={{ title: 'Brightness', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
-              <Drawer.Screen name="Rotation" component={Rotation} options={{ title: 'Rotation', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
-              <Drawer.Screen name="BackCamera" component={BackCamera} options={{ title: 'BackCamera', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
-              <Drawer.Screen name="FrontCamera" component={FrontCamera} options={{ title: 'FrontCamera', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
-              <Drawer.Screen name="MultiCamera" component={MultiCamera} options={{ title: 'MultiCamera', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
-              <Drawer.Screen name="BackCameraVideo" component={BackCameraVideo} options={{ title: 'BackCameraVideo', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
-              <Drawer.Screen name="TestsScreen" component={TestsScreen} options={{
-                drawerLabel: () => null,
-                headerShown: false
-              }} />
-            </Drawer.Navigator>
+      <SafeAreaProvider>
+        <NavigationContainer>
+          <Drawer.Navigator
+            initialRouteName="Home"
+            drawerContent={(props) => <CustomDrawerContent {...props} />}
+            screenOptions={{
+              drawerActiveBackgroundColor: '#4908b0',
+              drawerActiveTintColor: "white",
+              drawerType: 'back',
+              drawerStyle: { width: '70%' },
+              overlayColor: 'transparent',
+            }}
+          >
+            {/* <Drawer.Screen name="ScanQrCode" component={ScanQrCode} options={{ headerShown: false }} /> */}
+            <Drawer.Screen name="Home" component={HomeScreen} options={{ headerShown: false, unmountOnBlur: true }} />
+            <Drawer.Screen name="DeviceInfo" component={DeviceInfoScreen} />
+            <Drawer.Screen name="Setting" component={SettingScreen} />
+            <Drawer.Screen name="Report" component={ReportScreen} />
+            <Drawer.Screen name="CheckList" component={CheckList} />
+            <Drawer.Screen name="Requirements" component={Requirements} />
+            <Drawer.Screen name="Help" component={HelpScreen} />
+            <Drawer.Screen name="TouchScreen" component={TouchScreen} options={{ title: 'TouchScreen', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
+            <Drawer.Screen name="MultiTouch" component={MultiTouch} options={{ title: 'MultiTouch', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
+            <Drawer.Screen name="Display" component={Display} options={{ title: 'Display', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
+            <Drawer.Screen name="Brightness" component={Brightness} options={{ title: 'Brightness', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
+            <Drawer.Screen name="Rotation" component={Rotation} options={{ title: 'Rotation', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
+            <Drawer.Screen name="BackCamera" component={BackCamera} options={{ title: 'BackCamera', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
+            <Drawer.Screen name="FrontCamera" component={FrontCamera} options={{ title: 'FrontCamera', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
+            <Drawer.Screen name="MultiCamera" component={MultiCamera} options={{ title: 'MultiCamera', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
+            <Drawer.Screen name="BackCameraVideo" component={BackCameraVideo} options={{ title: 'BackCameraVideo', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
+            <Drawer.Screen name="TestsScreen" component={TestsScreen} options={{
+              drawerLabel: () => null,
+              headerShown: false
+            }} />
+          </Drawer.Navigator>
 
-          </NavigationContainer>
-        </SafeAreaProvider>
-      </TimerContext.Provider>
-    </DataContext.Provider >
+        </NavigationContainer>
+      </SafeAreaProvider>
+    </DataContext.Provider>
 
 
   );

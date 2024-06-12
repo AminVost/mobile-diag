@@ -1,9 +1,8 @@
 import React, { createContext, useState, useEffect, useRef, useContext } from 'react';
-import { DataContext, TimerContext } from '../../App';
+import { DataContext } from '../../App';
 
 const TestsScreens = ({ navigation, route }) => {
   const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
-  const { startTime, setStartTime, elapsedTimeRef, setElapsedTime } = useContext(TimerContext);
 
   const performTestStep = async () => {
     const sortedTestSteps = [...testSteps].sort((a, b) => a.priority - b.priority);
@@ -58,24 +57,15 @@ const TestsScreens = ({ navigation, route }) => {
   };
 
   useEffect(() => {
-    if (!startTime) {
-      setStartTime(Date.now());
-    }
-
-    const intervalId = setInterval(() => {
-      elapsedTimeRef.current = Math.floor((Date.now() - startTime) / 1000);
-      setElapsedTime(elapsedTimeRef.current); // This will cause a re-render every second
-    }, 1000);
-
+    // console.log('testStep ', testStep);
+    // console.log('testSteps.length ', testSteps.length);
     if (testStep <= testSteps.length) {
       performTestStep();
     } else {
       console.log('finished test')
       navigation.navigate('Report');
     }
-
-    return () => clearInterval(intervalId);
-  }, [testStep, startTime]);
+  }, [testStep]);
 
 };
 

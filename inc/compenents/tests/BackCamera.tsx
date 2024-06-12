@@ -3,12 +3,14 @@ import { View, Text, StyleSheet, Image, Alert, TouchableOpacity, BackHandler, Mo
 import { Camera, useCameraDevices, useCameraDevice, useCameraFormat } from 'react-native-vision-camera';
 import { Button } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { DataContext } from '../../../App';
+import { DataContext,TimerContext } from '../../../App';
 import RNFS from 'react-native-fs';
+import { formatTime } from '../../utils/formatTime';
 import { requestPermissions, openAppSettings } from '../CameraPermission';
 
 const BackCamera = () => {
   const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
+  const { elapsedTimeRef } = useContext(TimerContext);
   const [photoUri, setPhotoUri] = useState(null);
   const [isAlertVisible, setAlertVisible] = useState(false);
   const cameraRef = useRef(null);

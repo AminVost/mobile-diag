@@ -86,12 +86,12 @@ const MultiTouchTest = ({ navigation }) => {
                         labelStyle={styles.btnLabel}
                         onPress={() => {
                             const updatedTestSteps = [...testSteps];
-                            updatedTestSteps[testStep - 1].result = 'Faile';
+                            updatedTestSteps[testStep - 1].result = 'fail';
                             setTestsSteps(updatedTestSteps);
                             setTestStep((prevStep) => prevStep + 1);
                         }}
                     >
-                        Faile
+                        fail
                     </Button>
                     <Button
                         mode="elevated"

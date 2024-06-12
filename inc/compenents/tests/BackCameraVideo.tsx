@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, BackHandler, Modal, ActivityI
 import { Camera, useCameraDevice } from 'react-native-vision-camera';
 import { Button } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { DataContext } from '../../../App';
+import { DataContext, TimerContext } from '../../../App';
 // import { formatTime } from '../../utils/formatTime'; // Adjust the import path as needed
 import RNFS from 'react-native-fs';
 import { requestPermissions, openAppSettings } from '../CameraPermission';
@@ -11,6 +11,7 @@ import Video from 'react-native-video';
 
 const BackCameraVideoTest = () => {
   const { testStep, setTestStep, testSteps, setTestsSteps, elapsedTime, setElapsedTime } = useContext(DataContext);
+  const { elapsedTimeRef } = useContext(TimerContext);
   const [videoUri, setVideoUri] = useState(null);
   const [isAlertVisible, setAlertVisible] = useState(false);
   const cameraRef = useRef(null);
@@ -18,22 +19,15 @@ const BackCameraVideoTest = () => {
   const [videoPath, setVideoPath] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
   const [cameraActive, setCameraActive] = useState(true);
-  const localElapsedTimeRef = useRef(elapsedTime);
-  const [displayElapsedTime, setDisplayElapsedTime] = useState(elapsedTime);
   const device = useCameraDevice('back');
 
   useEffect(() => {
+    console.log('elapsedTimeRef.current', elapsedTimeRef.current)
     const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
     requestCameraPermission();
-    const timer = setInterval(() => {
-      localElapsedTimeRef.current += 1;
-      setDisplayElapsedTime(localElapsedTimeRef.current); // Update state to trigger re-render for the timer display
-    }, 1000);
     return () => {
       console.log('unmounting... backCamera');
       backHandler.remove();
-      clearInterval(timer);
-      setElapsedTime(prevElapsedTime => prevElapsedTime + localElapsedTimeRef.current - elapsedTime);
     };
   }, [elapsedTime, setElapsedTime]);
 
@@ -178,7 +172,7 @@ const BackCameraVideoTest = () => {
           <TouchableOpacity style={styles.btnTakeVid} onPress={isRecording ? stopRecording : startRecording}>
             <Icon name={isRecording ? "stop-circle" : "checkbox-blank-circle"} size={70} color={"#fff"} />
           </TouchableOpacity>
-          <Text style={styles.customModalTitle}> Timer : {formatTime(localElapsedTimeRef.current)}</Text>
+          <Text style={styles.customModalTitle}> Timer : {`Elapsed Time: ${formatTime(elapsedTimeRef.current)}`}</Text>
         </View>
       )}
       <CustomAlert />
