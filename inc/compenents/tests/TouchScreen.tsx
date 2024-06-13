@@ -1,14 +1,19 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext, useEffect, useCallback } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableHighlight, Alert, Dimensions, SafeAreaView, StatusBar, ScrollView, TouchableOpacity, BackHandler, Platform, Image, PanResponder, Modal, Pressable, Linking, PermissionsAndroid } from 'react-native';
 import { Button } from 'react-native-paper';
 import { hideNavigationBar, showNavigationBar } from 'react-native-navigation-bar-color';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { DataContext } from '../../../App';
+import CustomAlert from './CustomAlert';
+import Timer from '../Timer';
+
 
 const TouchScreenTest = ({ navigation, route }) => {
     const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
     const [isAlertVisible, setAlertVisible] = useState(false);
+    const [startTime, setStartTime] = useState(0);
+    const [endTime, setEndTime] = useState(0);
 
     const heightBar = StatusBar.currentHeight;
     const [squares, setSquares] = useState([]);
@@ -26,32 +31,42 @@ const TouchScreenTest = ({ navigation, route }) => {
     useEffect(() => {
         hideNavigationBar();
         generateSquares();
+        setStartTime(Date.now());
         const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
         return () => {
             backHandler.remove();
             showNavigationBar();
-            console.log('unmount..... touchScreen')
+            console.log('unmount..... touchScreen' , testSteps[testStep - 1])
         };
     }, []);
 
-    const handleBackButtonPress = () => {
+    const handleBackButtonPress = useCallback(() => {
         setAlertVisible(!isAlertVisible);
         return true; // Returning true prevents default back button behavior
-    };
+    },[isAlertVisible]);
 
-    const handleResult = (result) => {
-        console.log('result ', result);
-        const updatedTestSteps = [...testSteps];
-        updatedTestSteps[testStep - 1].result = result;
-        setTestsSteps(updatedTestSteps);
+    const handleResult = useCallback((result) => {
+        setEndTime(Date.now());
+        // Calculate elapsedTimeStep when endTime updates
+        // Using setTimeout to ensure endTime has updated value
+        setTimeout(() => {
+            const elapsedTimeStep = Math.floor((endTime - startTime) / 1000);
+            console.log('result ', result);
+            const updatedTestSteps = [...testSteps];
+            updatedTestSteps[testStep - 1].result = result;
+            updatedTestSteps[testStep - 1].duration = elapsedTimeStep;
+            setTestsSteps(updatedTestSteps);
+            console.log('hereeeeeeeeeeeeeeeee',testSteps[testStep - 1])
+        }, 0);
 
         setTestStep((prevStep) => prevStep + 1);
         setAlertVisible(false);
-    };
+    }, [endTime, startTime, testStep, testSteps, setTestsSteps]);
 
-    const toggleAlert = () => {
-        setAlertVisible(!isAlertVisible);
-    };
+    const toggleAlert = useCallback(() => {
+        // setAlertVisible(!isAlertVisible);
+        setAlertVisible(prev => !prev);
+    }, []);
 
     useEffect(() => {
         if (completed) {
@@ -102,45 +117,11 @@ const TouchScreenTest = ({ navigation, route }) => {
         },
     });
 
-    const CustomAlert = () => {
-        return (
-            <Modal
-                visible={isAlertVisible}
-                transparent={true}
-                animationType="slide"
-                hardwareAccelerated={true}
-                onRequestClose={() => {
-                    setAlertVisible(!isAlertVisible);
-                }}
-            >
-                <View style={styles.modalBackground}>
-                    <View style={styles.customModalContent}>
-                        <Text style={styles.customModalTitle}>Please select the touchScreen test result</Text>
-
-                        <View style={styles.customModalRow}>
-                            <Icon name="cellphone" size={100} color="#4908b0" />
-                        </View>
-                        <View style={styles.customModalBtns}>
-                            <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('fail')}>
-                                fail
-                            </Button>
-                            <Button mode="elevated" buttonColor="#7f8fa6" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Skip')}>
-                                Skip
-                            </Button>
-                            <Button mode="elevated" buttonColor="#44bd32" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Pass')}>
-                                Pass
-                            </Button>
-                        </View>
-                    </View>
-                </View>
-            </Modal>
-        );
-    };
-
-
     return (
         <>
             <StatusBar hidden={false} translucent={true} backgroundColor="transparent" barStyle="default" />
+            <Timer />
+            <CustomAlert isAlertVisible={isAlertVisible} handleResult={handleResult} toggleAlert={toggleAlert} currentTestStep={testSteps[testStep - 1]} />
             <View
                 style={styles.container}
                 {...panResponder.panHandlers}
@@ -162,7 +143,6 @@ const TouchScreenTest = ({ navigation, route }) => {
                     </>
                 } */}
             </View>
-            <CustomAlert visible={isAlertVisible} onClose={toggleAlert} />
         </>
     );
 };

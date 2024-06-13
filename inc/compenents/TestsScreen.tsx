@@ -3,15 +3,15 @@ import { DataContext, TimerContext } from '../../App';
 
 const TestsScreens = ({ navigation, route }) => {
   const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
-  const { startTime, setStartTime, elapsedTimeRef, setElapsedTime } = useContext(TimerContext);
+  const { startTime, setStartTime } = useContext(TimerContext);
 
   const performTestStep = async () => {
     const sortedTestSteps = [...testSteps].sort((a, b) => a.priority - b.priority);
     setTestsSteps(sortedTestSteps);
     if (testStep < sortedTestSteps.length) {
       const currentTest = sortedTestSteps[testStep - 1];
-      console.log('currentTest', currentTest);
-      console.log('currentTest.title', currentTest.title);
+      // console.log('currentTest', currentTest);
+      // console.log('currentTest.title', currentTest.title);
       switch (currentTest.title) {
         case 'TouchScreen':
           navigation.navigate('TouchScreen');
@@ -62,11 +62,6 @@ const TestsScreens = ({ navigation, route }) => {
       setStartTime(Date.now());
     }
 
-    const intervalId = setInterval(() => {
-      elapsedTimeRef.current = Math.floor((Date.now() - startTime) / 1000);
-      setElapsedTime(elapsedTimeRef.current); // This will cause a re-render every second
-    }, 1000);
-
     if (testStep <= testSteps.length) {
       performTestStep();
     } else {
@@ -74,8 +69,8 @@ const TestsScreens = ({ navigation, route }) => {
       navigation.navigate('Report');
     }
 
-    return () => clearInterval(intervalId);
-  }, [testStep, startTime]);
+    return () => '';
+  }, [testStep]);
 
 };
 

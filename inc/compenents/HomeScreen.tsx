@@ -13,7 +13,6 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import { DataContext } from '../../App';
-import TestsScreen from './TestsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -91,24 +90,22 @@ function HomeScreen({ navigation, route }) {
       PermissionsAndroid.PERMISSIONS.READ_PHONE_STATE,
     );
 
-    console.log('hasPhoneStatePermission', hasPhoneStatePermission)
+    // console.log('hasPhoneStatePermission', hasPhoneStatePermission)
 
     const hasReadSMSPermission = await PermissionsAndroid.request(
       PermissionsAndroid.PERMISSIONS.READ_SMS,
     );
-    console.log('hasReadSMSPermission', hasReadSMSPermission)
+    // console.log('hasReadSMSPermission', hasReadSMSPermission)
 
     if (
       hasPhoneStatePermission === PermissionsAndroid.RESULTS.GRANTED &&
       hasReadSMSPermission === PermissionsAndroid.RESULTS.GRANTED
     ) {
       const phoneNumber = await DeviceInfo.getPhoneNumber();
-      console.log('phoneNumber', phoneNumber)
 
       if (phoneNumber) {
         DeviceInfo.getPhoneNumber().then((phoneNumber) => {
-          // Android: null return: no permission, empty string: unprogrammed or empty SIM1, e.g. "+15555215558": normal return value
-          console.log('phoneNumber', phoneNumber)
+          // console.log('phoneNumber', phoneNumber)
         });
       }
     }

@@ -1,13 +1,11 @@
 import React, { memo, useState, useEffect, useContext, useRef, useCallback } from 'react';
-import { View, Text, Modal,StyleSheet } from 'react-native';
+import { View, Text, Modal, StyleSheet } from 'react-native';
 import { Button } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { DataContext, TimerContext } from '../../../App';
-import { formatTime } from '../../utils/formatTime';
-const CustomAlert = memo(({ isAlertVisible, handleResult, toggleAlert }) => {
 
-    // const { elapsedTimeRef } = useContext(TimerContext);
-    console.log('CustomAlert rendered');
+const CustomAlert = memo(({ isAlertVisible, handleResult, toggleAlert, currentTestStep }) => {
+
+    console.log('CustomAlert rendered', currentTestStep.title);
     return (
         <Modal
             visible={isAlertVisible}
@@ -18,11 +16,11 @@ const CustomAlert = memo(({ isAlertVisible, handleResult, toggleAlert }) => {
         >
             <View style={styles.modalBackground}>
                 <View style={styles.customModalContent}>
-                    <Text style={styles.customModalTitle}>Please select the Display test result</Text>
-                    {/* <Text style={styles.customModalTitle}>{`Elapsed Time: ${formatTime(elapsedTimeRef.current)}`}</Text> */}
-                    {/* Do not include frequently changing props */}
+                    <Text style={styles.customModalTitle}>
+                        {currentTestStep.Modaltext}
+                    </Text>
                     <View style={styles.customModalRow}>
-                        <Icon name="circle-opacity" size={100} color="#4908b0" />
+                        <Icon name={currentTestStep.icon} size={100} color="#4908b0" />
                     </View>
                     <View style={styles.customModalBtns}>
                         <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Fail')}>
@@ -44,12 +42,6 @@ const CustomAlert = memo(({ isAlertVisible, handleResult, toggleAlert }) => {
 export default CustomAlert;
 
 const styles = StyleSheet.create({
-    timerText: { fontSize: 20, fontWeight: 'bold' },
-    container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
     pattern: {
         ...StyleSheet.absoluteFillObject,
     },

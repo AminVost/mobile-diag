@@ -42,34 +42,57 @@ export default function App() {
   const [receivedSerialNumber, setReceivedSerialNumber] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [testStep, setTestStep] = useState(1);
+
   const [testSteps, setTestsSteps] = useState([
-    {
-      title: 'TouchScreen',
-      text: '',
-      result: null,
-      error: null,
-      duration: null,
-      priority: 3,
-    },
-    {
-      title: 'Multitouch',
-      text: '',
-      result: null,
-      error: null,
-      duration: null,
-      priority: 8,
-    },
     {
       title: 'Display',
       text: '',
+      Modaltext: 'Please select the Display test result',
+      icon: 'circle-opacity',
+      showInfoBar: true,
+      showTimer: true,
+      showStepTitle: true,
+      showProgress: true,
+      result: null,
+      error: null,
+      duration: null,
+      priority: 2,
+    },
+    {
+      title: 'TouchScreen',
+      text: '',
+      Modaltext: 'Please select the TouchScreen test result',
+      icon: 'cellphone',
+      showInfoBar: true,
+      showTimer: true,
+      showStepTitle: true,
+      showProgress: true,
       result: null,
       error: null,
       duration: null,
       priority: 1,
     },
     {
+      title: 'Multitouch',
+      text: '',
+      Modaltext: 'Please select the Multitouch test result',
+      showInfoBar: true,
+      showTimer: true,
+      showStepTitle: true,
+      showProgress: true,
+      result: null,
+      error: null,
+      duration: null,
+      priority: 3,
+    },
+    {
       title: 'Brightness',
       text: '',
+      Modaltext: 'Please select the Brightness test result',
+      showInfoBar: true,
+      showTimer: true,
+      showStepTitle: true,
+      showProgress: true,
       result: null,
       error: null,
       duration: null,
@@ -78,6 +101,11 @@ export default function App() {
     {
       title: 'Rotation',
       text: '',
+      Modaltext: 'Please select the Rotation test result',
+      showInfoBar: true,
+      showTimer: true,
+      showStepTitle: true,
+      showProgress: true,
       result: null,
       error: null,
       duration: null,
@@ -86,6 +114,11 @@ export default function App() {
     {
       title: 'BackCamera',
       text: '',
+      Modaltext: 'Please select the BackCamera test result',
+      showInfoBar: true,
+      showTimer: true,
+      showStepTitle: true,
+      showProgress: true,
       result: null,
       filePath: null,
       error: null,
@@ -95,6 +128,11 @@ export default function App() {
     {
       title: 'FrontCamera',
       text: '',
+      Modaltext: 'Please select the FrontCamera test result',
+      showInfoBar: true,
+      showTimer: true,
+      showStepTitle: true,
+      showProgress: true,
       result: null,
       filePath: null,
       error: null,
@@ -104,6 +142,11 @@ export default function App() {
     {
       title: 'MultiCamera',
       text: '',
+      Modaltext: 'Please select the MultiCamera test result',
+      showInfoBar: true,
+      showTimer: true,
+      showStepTitle: true,
+      showProgress: true,
       result: null,
       multiCamResult: [],
       devicesInfo: null,
@@ -115,19 +158,23 @@ export default function App() {
     {
       title: 'BackCameraVideo',
       text: '',
+      Modaltext: 'Please select the BackCameraVideo test result',
+      showInfoBar: true,
+      showTimer: true,
+      showStepTitle: true,
+      showProgress: true,
       result: null,
       filePath: null,
       error: null,
       duration: null,
-      priority: 2,
+      priority: 8,
     },
-
   ]);
+  
 
 
   const [startTime, setStartTime] = useState(null);
   const elapsedTimeRef = useRef(0);
-  const [, setElapsedTime] = useState(0); // State for re-rendering
 
   interface MyExpectedArgs {
     serialNumber?: string;
@@ -248,7 +295,7 @@ export default function App() {
 
     // <DataContext.Provider value={{ isInternetConnected, setIsNetConnected, websocketConnected, setWebsocketConnected, receivedSerialNumber, testStep, setTestStep, testSteps, setTestsSteps, elapsedTime, setElapsedTime }}>
     <DataContext.Provider value={{ isInternetConnected, setIsNetConnected, websocketConnected, setWebsocketConnected, receivedSerialNumber, testStep, setTestStep, testSteps, setTestsSteps }}>
-      <TimerContext.Provider value={{ startTime, setStartTime, elapsedTimeRef, setElapsedTime }}>
+      <TimerContext.Provider value={{ startTime, setStartTime, elapsedTimeRef }}>
         <SafeAreaProvider>
           <NavigationContainer>
             <Drawer.Navigator

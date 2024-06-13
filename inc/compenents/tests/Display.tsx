@@ -6,7 +6,8 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { hideNavigationBar, showNavigationBar } from 'react-native-navigation-bar-color';
 import { DataContext, TimerContext } from '../../../App';
 import { formatTime } from '../../utils/formatTime';
-import CustomAlert from './CustomAlertDisplay';
+import CustomAlert from './CustomAlert';
+import Timer from '../Timer';
 
 const { width, height } = Dimensions.get('screen');
 
@@ -22,7 +23,7 @@ const testPatterns = [
 
 const Display = () => {
     const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
-    const { elapsedTimeRef } = useContext(TimerContext);
+    // const { elapsedTimeRef } = useContext(TimerContext);
     const [isAlertVisible, setAlertVisible] = useState(false);
     const [currentTestIndex, setCurrentTestIndex] = useState(0);
     const [testComplete, setTestComplete] = useState(false);
@@ -30,12 +31,11 @@ const Display = () => {
     const opacity = useSharedValue(1);
 
     useEffect(() => {
-        console.log('testSteps[testStep]', testSteps[testStep - 1]);
         hideNavigationBar();
         const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
-
+        // console.log(testSteps);
         return () => {
-            console.log('returnnnnn.... testSteps : ' , testSteps);
+            console.log('Unmount Display');
             backHandler.remove();
             showNavigationBar();
         };
@@ -64,41 +64,6 @@ const Display = () => {
     const toggleAlert = useCallback(() => {
         setAlertVisible(!isAlertVisible);
     }, [isAlertVisible]);
-
-    // const CustomAlert = useCallback(() => {
-    //     console.log('ddddd')
-    //     return (
-    //         <Modal
-    //             visible={isAlertVisible}
-    //             transparent={true}
-    //             animationType="slide"
-    //             hardwareAccelerated={true}
-    //             onRequestClose={toggleAlert}
-    //         >
-    //             <View style={styles.modalBackground}>
-    //                 <View style={styles.customModalContent}>
-    //                     <Text style={styles.customModalTitle}>Please select the Display test result</Text>
-    //                     {/* <Text style={styles.customModalTitle}>{`Elapsed Time: ${formatTime(elapsedTimeRef.current)}`}</Text> */}
-                        
-    //                     <View style={styles.customModalRow}>
-    //                         <Icon name="circle-opacity" size={100} color="#4908b0" />
-    //                     </View>
-    //                     <View style={styles.customModalBtns}>
-    //                         <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Fail')}>
-    //                             Fail
-    //                         </Button>
-    //                         <Button mode="elevated" buttonColor="#7f8fa6" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Skip')}>
-    //                             Skip
-    //                         </Button>
-    //                         <Button mode="elevated" buttonColor="#44bd32" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Pass')}>
-    //                             Pass
-    //                         </Button>
-    //                     </View>
-    //                 </View>
-    //             </View>
-    //         </Modal>
-    //     );
-    // }, [isAlertVisible, handleResult, toggleAlert,elapsedTimeRef.current]);
 
     const handleNextTest = useCallback(() => {
         if (currentTestIndex === testPatterns.length - 1) {
@@ -193,13 +158,13 @@ const Display = () => {
     return (
         <>
             <StatusBar hidden={false} translucent={true} backgroundColor="transparent" barStyle="light-content" />
-            {/* <CustomAlert /> */}
-            <CustomAlert isAlertVisible={isAlertVisible} handleResult={handleResult} toggleAlert={toggleAlert} />
+            <CustomAlert isAlertVisible={isAlertVisible} handleResult={handleResult} toggleAlert={toggleAlert} currentTestStep={testSteps[testStep - 1]} />
             {testComplete ? (
                 renderCompletionPage()
             ) : (
                 <>
-                    <Text style={styles.timerText}>{`Elapsed Time: ${formatTime(elapsedTimeRef.current)}`}</Text>
+                    {/* <Text style={styles.timerText}>{`Elapsed Time: ${formatTime(elapsedTimeRef.current)}`}</Text> */}
+                    <Timer />
                     <TouchableOpacity style={styles.container} onPress={handleNextTest}>
                         {renderPattern()}
                         {showText && (
