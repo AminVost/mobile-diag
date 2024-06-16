@@ -5,7 +5,17 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const CustomAlert = memo(({ isAlertVisible, handleResult, toggleAlert, currentTestStep }) => {
 
-    console.log('CustomAlert rendered', currentTestStep.title);
+    if (!currentTestStep) {
+        return null;
+    }
+
+    useEffect(() => {
+        if (!currentTestStep) return;
+
+        return () => '';
+    }, [currentTestStep]);
+
+    console.log('CustomAlert rendered', currentTestStep);
     return (
         <Modal
             visible={isAlertVisible}

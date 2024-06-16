@@ -1,5 +1,5 @@
 import React, { useContext, useState, memo, useEffect } from 'react';
-import { Text, StyleSheet, View } from 'react-native';
+import { Text, StyleSheet, View, StatusBar } from 'react-native';
 import { TimerContext, DataContext } from '../../App';
 import { formatTime } from '../utils/formatTime';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -15,24 +15,16 @@ const Timer = memo(({ }) => {
     const currentStep = testSteps[testStep - 1];
     const insets = useSafeAreaInsets();
 
-    // console.log('testStep', currentStep);
+
+
+    console.log('testStep', currentStep);
 
     const [gozar, setGozar] = useState(null);
 
-    useEffect(() => {
-        if (!currentStep) return;
-
-        const interval = setInterval(() => {
-            elapsedTimeRef.current = Math.floor((Date.now() - startTime) / 1000);
-            setGozar(elapsedTimeRef.current); // causing the component to render
-        }, 1000);
-
-        return () => clearInterval(interval);
-    }, [currentStep]);
-
-    if (!currentStep || !currentStep.showInfoBar) {
-        return null;
-    }
+    const intervalTimer = setInterval(() => {
+        elapsedTimeRef.current = Math.floor((Date.now() - startTime) / 1000);
+        setGozar(elapsedTimeRef.current); // causing the component to render
+    }, 1000);
 
     return (
         currentStep.showInfoBar &&
@@ -40,7 +32,7 @@ const Timer = memo(({ }) => {
             {
                 currentStep.showTimer &&
                 <View style={styles.timerContainer}>
-                    <Icon style={styles.timerIcon} name="timer-outline" size={16} color="black" />
+                    <Icon style={styles.timerIcon} name="timer-outline" size={16} color="#7f8c8d" />
                     <Text style={styles.timerText}>
                         {formatTime(elapsedTimeRef.current)}
                     </Text>
@@ -65,6 +57,7 @@ const Timer = memo(({ }) => {
         </View>
     );
 });
+const heightBar = StatusBar.currentHeight;
 
 
 const styles = StyleSheet.create({
@@ -77,10 +70,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         width: '100%',
-        paddingHorizontal: 10,
-        // backgroundColor: '#ffffff21',
-        backgroundColor: 'white',
-        padding: 3
+        paddingHorizontal: 10
     },
     progressContainer: {
         display: 'flex',
@@ -110,20 +100,20 @@ const styles = StyleSheet.create({
     },
     timerText: {
         fontSize: 16,
-        color: 'black',
+        color: '#7f8c8d',
         fontFamily: 'Quicksand-SemiBold',
         marginLeft: 5,
-        width: 'auto'
+        width: 45
     },
     currentText: {
         fontSize: 16,
-        color: 'black',
+        color: '#7f8c8d',
         fontFamily: 'Quicksand-SemiBold',
         marginLeft: 5
     },
     progressText: {
         fontSize: 16,
-        color: 'black',
+        color: '#7f8c8d',
         fontFamily: 'Quicksand-SemiBold',
         marginLeft: 5
     }

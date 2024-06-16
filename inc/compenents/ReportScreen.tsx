@@ -2,10 +2,14 @@ import React, { useContext } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Button } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { DataContext } from '../../App';
+import { DataContext, TimerContext } from '../../App';
+import { formatTime } from '../utils/formatTime';
 
 export default function ReportScreen({ navigation }) {
     const { testSteps } = useContext(DataContext);
+    const { elapsedTimeRef, startTime } = useContext(TimerContext);
+    console.log(elapsedTimeRef.current)
+
 
     const getResultColor = (result) => {
         switch (result) {
@@ -24,20 +28,28 @@ export default function ReportScreen({ navigation }) {
         <View style={styles.container}>
             {/* <Text style={styles.header}>Test Report</Text> */}
             <ScrollView contentContainerStyle={styles.scrollView}>
+                <Text style={styles.header}>The total elapsed time: {formatTime(elapsedTimeRef.current)}</Text>
                 {testSteps.map((step, index) => (
                     <View key={index} style={[styles.stepContainer, getResultColor(step.result)]}>
                         <Icon name={step.icon} size={30} style={styles.icon} />
+
                         <View style={styles.textContainer}>
                             <Text style={styles.title}>{step.title}</Text>
-                            <Text style={styles.priority}>Priority: {step.priority}</Text>
+                            <View style={styles.subTitle}>
+                                <Text style={styles.stepInfo}>Priority: {step.priority}</Text>
+                                {step.duration &&
+                                    < Text style={styles.stepInfo}>Duration: {step.duration}</Text>
+                                }
+                            </View>
                         </View>
                     </View>
-                ))}
-            </ScrollView>
+                ))
+                }
+            </ScrollView >
             <Button mode="contained" onPress={() => navigation.goBack()} style={styles.button}>
                 Go back home
             </Button>
-        </View>
+        </View >
     );
 }
 
@@ -48,7 +60,7 @@ const styles = StyleSheet.create({
         padding: 10,
     },
     header: {
-        fontSize: 24,
+        fontSize: 16,
         fontWeight: 'bold',
         marginBottom: 20,
         textAlign: 'center',
@@ -71,11 +83,17 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 18,
-        fontWeight: 'bold',
+        fontFamily: 'Quicksand-Bold'
     },
-    priority: {
+    subTitle: {
+        display: 'flex',
+        flexDirection: 'row',
+        columnGap: 10,
+    },
+    stepInfo: {
         fontSize: 14,
         color: '#555',
+        fontFamily: 'Quicksand-Regular'
     },
     pass: {
         backgroundColor: '#d4edda',

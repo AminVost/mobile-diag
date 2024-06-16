@@ -55,7 +55,7 @@ function HomeScreen({ navigation, route }) {
     deviceName: '',
     model: '',
     brand: DeviceInfo.getBrand(),
-    oS: '',
+    oS: Platform.OS,
     osVersion: '',
     imei: '',
     meid: '',
@@ -83,7 +83,14 @@ function HomeScreen({ navigation, route }) {
     setAlertVisible(!isAlertVisible);
   };
 
+  // useEffect(() => {
+  //   console.log('in HomeScreen')
+  //   return () => {
+  //     console.log('Unmount HomeScreen');
+  //     console.log(deviceDetails);
 
+  //   };
+  // }, [deviceDetails]);
 
   const sendPhoneNumber = async () => {
     const hasPhoneStatePermission = await PermissionsAndroid.request(
@@ -154,7 +161,7 @@ function HomeScreen({ navigation, route }) {
     );
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     Promise.all([
       DeviceInfo.getDevice(),
       DeviceInfo.getModel(),
@@ -184,6 +191,7 @@ function HomeScreen({ navigation, route }) {
         usedStorage: ((storage - free) / (1024 ** 3)).toFixed(2),
         manufacturer: manufacturer,
       });
+      console.log('deviceDetails.....', deviceDetails)
     }).catch(error => {
       console.error('Error retrieving device information:', error);
     });
@@ -191,6 +199,7 @@ function HomeScreen({ navigation, route }) {
 
     return () => {
       console.log('unmount HomeScreen')
+        // console.log('deviceDetails', deviceDetails)
     }
   }, [])
 
@@ -276,7 +285,7 @@ function HomeScreen({ navigation, route }) {
               </View>
               <View style={styles.detailsItem}>
                 <Text style={styles.detailsTextLabel}>OS:</Text>
-                <Text style={styles.detailsTextValue}>{Platform.OS}  {deviceDetails.osVersion}</Text>
+                <Text style={styles.detailsTextValue}>{deviceDetails.oS}  {deviceDetails.osVersion}</Text>
               </View>
               <View style={styles.detailsItem}>
                 <Text style={styles.detailsTextLabel}>CPU Model:</Text>

@@ -1,0 +1,200 @@
+[
+    {
+        "duration": null,
+        "error": null,
+        "filePath": "/storage/emulated/0/Pictures/RapidMobileDiag/NativeCamera_2024-06-16_10-55-19.jpg",
+        "priority": 1,
+        "result": "Pass",
+        "showInfoBar": true,
+        "showProgress": true,
+        "showStepTitle": true,
+        "showTimer": true,
+        "text": "",
+        "title": "NativeCameraPhoto"
+    },
+    {
+        "duration": null,
+        "error": null,
+        "priority": 2,
+        "result": "Pass",
+        "showInfoBar": true,
+        "showProgress": true,
+        "showStepTitle": true,
+        "showTimer": true,
+        "text": "",
+        "title": "NativeCameraVideo"
+    },
+    {
+        "duration": null,
+        "error": null,
+        "filePath": "/storage/emulated/0/Pictures/RapidMobileDiag/BackCamera_2024-06-16_10-55-39.mp4",
+        "priority": 3,
+        "result": "Pass",
+        "showInfoBar": true,
+        "showProgress": true,
+        "showStepTitle": true,
+        "showTimer": true,
+        "text": "",
+        "title": "BackCameraVideo"
+    },
+    {
+        "duration": null,
+        "error": null,
+        "filePath": "/storage/emulated/0/Pictures/RapidMobileDiag/BackCamera_2024-06-16_10-55-45.jpg",
+        "priority": 4,
+        "result": "Pass",
+        "showInfoBar": true,
+        "showProgress": true,
+        "showStepTitle": true,
+        "showTimer": true,
+        "text": "",
+        "title": "BackCamera"
+    },
+    {
+        "duration": null,
+        "error": null,
+        "filePath": "/storage/emulated/0/Pictures/RapidMobileDiag/FrontCamera_2024-06-16_10-55-53.jpg",
+        "priority": 5,
+        "result": "Pass",
+        "showInfoBar": true,
+        "showProgress": true,
+        "showStepTitle": true,
+        "showTimer": true,
+        "text": "",
+        "title": "FrontCamera"
+    },
+    {
+        "devicesInfo": [
+            {
+                "hardwareLevel": "full",
+                "hasFlash": true,
+                "hasTorch": true,
+                "id": "0",
+                "isMultiCam": false,
+                "maxExposure": 4,
+                "maxZoom": 8,
+                "minExposure": -4,
+                "minFocusDistance": 10,
+                "minZoom": 1,
+                "name": "BACK (0)",
+                "neutralZoom": 1,
+                "physicalDevices": [
+                    "wide-angle-camera"
+                ],
+                "position": "back",
+                "sensorOrientation": "landscape-left",
+                "supportsFocus": true,
+                "supportsLowLightBoost": false,
+                "supportsRawCapture": true
+            },
+            {
+                "hardwareLevel": "limited",
+                "hasFlash": false,
+                "hasTorch": false,
+                "id": "1",
+                "isMultiCam": false,
+                "maxExposure": 4,
+                "maxZoom": 4,
+                "minExposure": -4,
+                "minFocusDistance": 10,
+                "minZoom": 1,
+                "name": "FRONT (1)",
+                "neutralZoom": 1,
+                "physicalDevices": [
+                    "wide-angle-camera"
+                ],
+                "position": "front",
+                "sensorOrientation": "landscape-right",
+                "supportsFocus": true,
+                "supportsLowLightBoost": false,
+                "supportsRawCapture": false
+            }
+        ],
+        "duration": null,
+        "error": null,
+        "multiCamResult": [
+            {
+                "filePath": "/storage/emulated/0/Pictures/RapidMobileDiag/Camera_0_2024-06-16_11-05-11.jpg",
+                "result": "Pass",
+                "title": "BACK (0)"
+            },
+            {
+                "filePath": "/storage/emulated/0/Pictures/RapidMobileDiag/Camera_1_2024-06-16_11-05-16.jpg",
+                "result": "Pass",
+                "title": "FRONT (1)"
+            }
+        ],
+        "priority": 6,
+        "result": "Pass",
+        "showInfoBar": true,
+        "showProgress": true,
+        "showStepTitle": true,
+        "showTimer": true,
+        "text": "",
+        "title": "MultiCamera"
+    },
+    {
+        "duration": null,
+        "error": null,
+        "priority": 7,
+        "result": "Pass",
+        "showInfoBar": true,
+        "showProgress": true,
+        "showStepTitle": true,
+        "showTimer": true,
+        "text": "Please turn on the 'Auto Rotate' feature and rotate your device to check the auto-rotation sensor",
+        "title": "Rotation"
+    },
+    {
+        "duration": null,
+        "error": null,
+        "priority": 8,
+        "result": "Skip",
+        "showInfoBar": true,
+        "showProgress": true,
+        "showStepTitle": true,
+        "showTimer": true,
+        "text": "",
+        "title": "Brightness"
+    },
+    {
+        "duration": null,
+        "error": null,
+        "priority": 9,
+        "result": "fail",
+        "showInfoBar": true,
+        "showProgress": true,
+        "showStepTitle": true,
+        "showTimer": true,
+        "text": "",
+        "title": "Multitouch"
+    },
+    {
+        "Modaltext": "Please select the TouchScreen test result",
+        "duration": null,
+        "error": null,
+        "icon": "cellphone",
+        "priority": 10,
+        "result": "Skip",
+        "showInfoBar": false,
+        "showProgress": true,
+        "showStepTitle": true,
+        "showTimer": true,
+        "text": "",
+        "title": "TouchScreen"
+    },
+    {
+        "Modaltext": "Please select the Display test result",
+        "duration": null,
+        "error": null,
+        "icon": "circle-opacity",
+        "priority": 11,
+        "result": "Pass",
+        "showInfoBar": false,
+        "showProgress": true,
+        "showStepTitle": true,
+        "showTimer": true,
+        "text": "",
+        "title": "Display"
+    }
+]

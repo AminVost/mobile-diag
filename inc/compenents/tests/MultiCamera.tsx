@@ -1,42 +1,40 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, BackHandler, Modal } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, BackHandler } from 'react-native';
 import { Camera, useCameraDevices } from 'react-native-vision-camera';
 import { Button } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { DataContext } from '../../../App';
-import { formatTime } from '../../utils/formatTime';
+import Timer from '../Timer';
 import RNFS from 'react-native-fs';
+import useStepTimer from '../useStepTimer';
 import { requestPermissions, openAppSettings } from '../CameraPermission';
 
 const MultiCameraTest = () => {
-  const { testStep, setTestStep, testSteps, setTestsSteps, elapsedTime, setElapsedTime } = useContext(DataContext);
+  const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
   const [isCameraActive, setIsCameraActive] = useState(true);
   const [photoUri, setPhotoUri] = useState(null);
-  const [isAlertVisible, setAlertVisible] = useState(false);
   const cameraRef = useRef(null);
   const [permissionsGranted, setPermissionsGranted] = useState(false);
   const [photoPath, setPhotoPath] = useState(null);
   const [currentCameraIndex, setCurrentCameraIndex] = useState(0);
 
   const devices = useCameraDevices();
-  // console.log(devices);
-  const cameraDevices = devices || [];
+  const cameraDevices = devices ? Object.values(devices) : [];
   const FormattedCameraDevices = cameraDevices.length > 0 ? cameraDevices.map(({ formats, ...rest }) => rest) : [];
   const device = cameraDevices[currentCameraIndex];
+  const getDuration = useStepTimer();
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
     requestCameraPermission();
     return () => {
-      // console.log('testSteps', testSteps[0].devicesInfo);
-      console.log('unmount multiCamera')
+      console.log('unmount multiCamera' , testSteps[testStep - 1]);
       setIsCameraActive(false);
       backHandler.remove();
     };
   }, []);
 
   const handleBackButtonPress = () => {
-    setAlertVisible(!isAlertVisible);
     return true;
   };
 
@@ -65,8 +63,8 @@ const MultiCameraTest = () => {
       }
 
       const currentDate = new Date();
-      const formattedDate = currentDate.toISOString().split('T')[0]; // YYYY-MM-DD
-      const formattedTime = currentDate.toTimeString().split(' ')[0].replace(/:/g, '-'); // HH-MM-SS
+      const formattedDate = currentDate.toISOString().split('T')[0];
+      const formattedTime = currentDate.toTimeString().split(' ')[0].replace(/:/g, '-');
       const fileName = `Camera_${currentCameraIndex}_${formattedDate}_${formattedTime}.jpg`;
       const filePath = `${directoryPath}/${fileName}`;
       setPhotoPath(filePath);
@@ -87,12 +85,9 @@ const MultiCameraTest = () => {
     if (multiCameraStepIndex !== -1) {
       const multiCamResult = updatedTestSteps[multiCameraStepIndex].multiCamResult || [];
       const cameraResult = {
-        title: devices[currentCameraIndex].name, // Use the name of the camera
-        text: '',
+        title: devices[currentCameraIndex]?.name || 'Unknown Camera',
         result,
         filePath: photoPath,
-        error: null,
-        duration: null,
       };
 
       multiCamResult[currentCameraIndex] = cameraResult;
@@ -101,10 +96,9 @@ const MultiCameraTest = () => {
 
     if (currentCameraIndex < cameraDevices.length - 1) {
       setCurrentCameraIndex((prevIndex) => prevIndex + 1);
-      setPhotoUri(null); // Reset photoUri for the next camera
-      setPhotoPath(null); // Reset photoPath for the next camera
+      setPhotoUri(null);
+      setPhotoPath(null);
     } else {
-      // Determine the overall result
       const finalResults = updatedTestSteps[multiCameraStepIndex].multiCamResult.map(cam => cam.result);
       let finalResult = 'Pass';
       if (finalResults.includes('Fail')) {
@@ -113,50 +107,12 @@ const MultiCameraTest = () => {
         finalResult = 'Skip';
       }
       updatedTestSteps[multiCameraStepIndex].result = finalResult;
-      updatedTestSteps[multiCameraStepIndex].devicesInfo = FormattedCameraDevices
+      updatedTestSteps[multiCameraStepIndex].devicesInfo = FormattedCameraDevices;
+      updatedTestSteps[multiCameraStepIndex].duration = getDuration();
       setTestsSteps(updatedTestSteps);
-      console.log(testSteps[0].multiCamResult[0]);
-      console.log(testSteps[0].multiCamResult[1]);
       setTestStep((prevStep) => prevStep + 1);
-      setAlertVisible(false);
     }
   };
-
-  const toggleAlert = () => {
-    setAlertVisible(!isAlertVisible);
-  };
-
-  const CustomAlert = () => (
-    <Modal
-      visible={isAlertVisible}
-      transparent={true}
-      animationType="slide"
-      hardwareAccelerated={true}
-      onRequestClose={() => {
-        setAlertVisible(!isAlertVisible);
-      }}
-    >
-      <View style={styles.modalBackground}>
-        <View style={styles.customModalContent}>
-          <Text style={styles.customModalTitle}>Please select the test result for {devices[currentCameraIndex].name}</Text>
-          <View style={styles.customModalRow}>
-            <Icon name="camera-enhance-outline" size={100} color="#4908b0" />
-          </View>
-          <View style={styles.customModalBtns}>
-            <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Fail')}>
-              Fail
-            </Button>
-            <Button mode="elevated" buttonColor="#7f8fa6" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Skip')}>
-              Skip
-            </Button>
-            <Button mode="elevated" buttonColor="#44bd32" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Pass')}>
-              Pass
-            </Button>
-          </View>
-        </View>
-      </View>
-    </Modal>
-  );
 
   if (!permissionsGranted) {
     return (
@@ -175,42 +131,45 @@ const MultiCameraTest = () => {
   }
 
   return (
-    <View style={styles.container}>
-      {photoUri ? (
-        <>
-          <Image source={{ uri: `file://${photoUri}` }} style={styles.photo} />
-          <View style={styles.btnContainer}>
-            <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Fail')}>
-              Fail
-            </Button>
-            <Button mode="elevated" buttonColor="#7f8fa6" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Skip')}>
-              Skip
-            </Button>
-            <Button mode="elevated" buttonColor="#44bd32" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Pass')}>
-              Pass
-            </Button>
+    <>
+      <Timer />
+      <View style={styles.container}>
+        {photoUri ? (
+          <>
+            <Image source={{ uri: `file://${photoUri}` }} style={styles.photo} />
+            <View style={styles.btnContainer}>
+              <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Fail')}>
+                Fail
+              </Button>
+              <Button mode="elevated" buttonColor="#7f8fa6" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Skip')}>
+                Skip
+              </Button>
+              <Button mode="elevated" buttonColor="#44bd32" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Pass')}>
+                Pass
+              </Button>
+            </View>
+          </>
+        ) : (
+          <View style={styles.cameraContainer}>
+            <Camera
+              ref={cameraRef}
+              style={styles.preview}
+              device={device}
+              isActive={isCameraActive}
+              photo={true}
+            />
+            <TouchableOpacity style={styles.btnTakePic} onPress={takePicture}>
+              <Icon name="checkbox-blank-circle" size={70} color={"#fff"} />
+            </TouchableOpacity>
           </View>
-        </>
-      ) : (
-        <View style={styles.cameraContainer}>
-          <Camera
-            ref={cameraRef}
-            style={styles.preview}
-            device={device}
-            isActive={isCameraActive}
-            photo={true}
-          />
-          <TouchableOpacity style={styles.btnTakePic} onPress={takePicture}>
-            <Icon name="checkbox-blank-circle" size={70} color={"#fff"} />
-          </TouchableOpacity>
-          <Text style={styles.customModalTitle}> Timer : {formatTime(elapsedTime)}</Text>
-        </View>
-      )}
-      <CustomAlert visible={isAlertVisible} onClose={toggleAlert} />
-    </View>
+        )}
+      </View>
+    </>
   );
 };
+
 export default MultiCameraTest;
+
 
 
 const styles = StyleSheet.create({

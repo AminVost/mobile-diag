@@ -1,0 +1,22 @@
+{
+  "brand": "samsung",
+  "cpu": [
+    "arm64-v8a",
+    "armeabi-v7a",
+    "armeabi"
+  ],
+  "deviceName": "dreamlte",
+  "freeStorage": "49.80",
+  "hardWare": "samsungexynos8895",
+  "imei": "",
+  "manufacturer": "samsung",
+  "meid": "",
+  "memory": "3.59",
+  "model": "SM-G950F",
+  "oS": "",
+  "osVersion": "9",
+  "serialNumber": "R58M42HXCZW",
+  "storage": "58.09",
+  "usedMemory": "0.27",
+  "usedStorage": "8.29"
+}

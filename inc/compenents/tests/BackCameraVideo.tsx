@@ -4,7 +4,8 @@ import { Camera, useCameraDevice } from 'react-native-vision-camera';
 import { Button } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { DataContext, TimerContext } from '../../../App';
-// import { formatTime } from '../../utils/formatTime'; // Adjust the import path as needed
+import Timer from '../Timer';
+import useStepTimer from '../useStepTimer';
 import RNFS from 'react-native-fs';
 import { requestPermissions, openAppSettings } from '../CameraPermission';
 import Video from 'react-native-video';
@@ -13,13 +14,14 @@ const BackCameraVideoTest = () => {
   const { testStep, setTestStep, testSteps, setTestsSteps, elapsedTime, setElapsedTime } = useContext(DataContext);
   const { elapsedTimeRef } = useContext(TimerContext);
   const [videoUri, setVideoUri] = useState(null);
-  const [isAlertVisible, setAlertVisible] = useState(false);
   const cameraRef = useRef(null);
   const [permissionsGranted, setPermissionsGranted] = useState(false);
   const [videoPath, setVideoPath] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
   const [cameraActive, setCameraActive] = useState(true);
   const device = useCameraDevice('back');
+  const getDuration = useStepTimer();
+
 
   useEffect(() => {
     console.log('elapsedTimeRef.current', elapsedTimeRef.current)
@@ -27,14 +29,14 @@ const BackCameraVideoTest = () => {
     requestCameraPermission();
     return () => {
       console.log('unmounting... backCamera');
+      setCameraActive(false)
       backHandler.remove();
     };
   }, [elapsedTime, setElapsedTime]);
 
   const handleBackButtonPress = useCallback(() => {
-    setAlertVisible(!isAlertVisible);
     return true;
-  }, [isAlertVisible]);
+  }, []);
 
   const requestCameraPermission = async () => {
     const permissionStatus = await requestPermissions();
@@ -90,47 +92,15 @@ const BackCameraVideoTest = () => {
   const handleResult = useCallback((result) => {
     const updatedTestSteps = [...testSteps];
     updatedTestSteps[testStep - 1].result = result;
+    updatedTestSteps[testStep - 1].duration = getDuration();
     if (videoPath) {
       updatedTestSteps[testStep - 1].filePath = videoPath;
     }
     setTestsSteps(updatedTestSteps);
     setTestStep((prevStep) => prevStep + 1);
-    setAlertVisible(false);
   }, [testStep, testSteps, videoPath, setTestStep, setTestsSteps]);
 
-  const toggleAlert = useCallback(() => {
-    setAlertVisible(!isAlertVisible);
-  }, [isAlertVisible]);
 
-  const CustomAlert = useCallback(() => (
-    <Modal
-      visible={isAlertVisible}
-      transparent={true}
-      animationType="slide"
-      hardwareAccelerated={true}
-      onRequestClose={toggleAlert}
-    >
-      <View style={styles.modalBackground}>
-        <View style={styles.customModalContent}>
-          <Text style={styles.customModalTitle}>Please select the Back Camera test result</Text>
-          <View style={styles.customModalRow}>
-            <Icon name="camera-enhance-outline" size={100} color="#4908b0" />
-          </View>
-          <View style={styles.customModalBtns}>
-            <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Fail')}>
-              Fail
-            </Button>
-            <Button mode="elevated" buttonColor="#7f8fa6" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Skip')}>
-              Skip
-            </Button>
-            <Button mode="elevated" buttonColor="#44bd32" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Pass')}>
-              Pass
-            </Button>
-          </View>
-        </View>
-      </View>
-    </Modal>
-  ), [isAlertVisible, handleResult, toggleAlert]);
 
   if (!permissionsGranted) {
     return (
@@ -150,43 +120,38 @@ const BackCameraVideoTest = () => {
   }
 
   return (
-    <View style={styles.container}>
-      {videoUri ? (
-        <>
-          <Video source={{ uri: `file://${videoUri}` }} style={styles.video} controls={true} />
-          <View style={styles.btnContainer}>
-            <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Fail')}>
-              Fail
-            </Button>
-            <Button mode="elevated" buttonColor="#7f8fa6" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Skip')}>
-              Skip
-            </Button>
-            <Button mode="elevated" buttonColor="#44bd32" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Pass')}>
-              Pass
-            </Button>
+    <>
+      <Timer />
+      <View style={styles.container}>
+        {videoUri ? (
+          <>
+            <Video source={{ uri: `file://${videoUri}` }} style={styles.video} controls={true} />
+            <View style={styles.btnContainer}>
+              <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Fail')}>
+                Fail
+              </Button>
+              <Button mode="elevated" buttonColor="#7f8fa6" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Skip')}>
+                Skip
+              </Button>
+              <Button mode="elevated" buttonColor="#44bd32" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Pass')}>
+                Pass
+              </Button>
+            </View>
+          </>
+        ) : (
+          <View style={styles.cameraContainer}>
+            <Camera ref={cameraRef} style={styles.preview} device={device} isActive={cameraActive} video={true} />
+            <TouchableOpacity style={styles.btnTakeVid} onPress={isRecording ? stopRecording : startRecording}>
+              <Icon name={isRecording ? "stop-circle" : "checkbox-blank-circle"} size={70} color={"#fff"} />
+            </TouchableOpacity>
           </View>
-        </>
-      ) : (
-        <View style={styles.cameraContainer}>
-          <Camera ref={cameraRef} style={styles.preview} device={device} isActive={cameraActive} video={true} />
-          <TouchableOpacity style={styles.btnTakeVid} onPress={isRecording ? stopRecording : startRecording}>
-            <Icon name={isRecording ? "stop-circle" : "checkbox-blank-circle"} size={70} color={"#fff"} />
-          </TouchableOpacity>
-          <Text style={styles.customModalTitle}> Timer : {`Elapsed Time: ${formatTime(elapsedTimeRef.current)}`}</Text>
-        </View>
-      )}
-      <CustomAlert />
-    </View>
+        )}
+      </View>
+    </>
   );
 };
 
 export default BackCameraVideoTest;
-
-const formatTime = (time) => {
-  const minutes = Math.floor(time / 60);
-  const seconds = time % 60;
-  return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-};
 
 
 const styles = StyleSheet.create({
@@ -236,33 +201,6 @@ const styles = StyleSheet.create({
   modalBackground: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
-  },
-  customModalContent: {
-    backgroundColor: 'white',
-    padding: 20,
-    paddingTop: 15,
-    borderRadius: 10,
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  customModalTitle: {
-    textAlign: 'center',
-    paddingBottom: 5,
-    color: 'black',
-    fontWeight: '600',
-    fontSize: 16,
-    marginBottom: 10,
-  },
-  customModalRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 20,
-  },
-  customModalBtns: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
   },
 });

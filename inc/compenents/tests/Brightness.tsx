@@ -6,6 +6,9 @@ import DeviceBrightness from '@adrianso/react-native-device-brightness';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Slider from '@react-native-community/slider';
 import { DataContext } from '../../../App';
+import Timer from '../Timer';
+import useStepTimer from '../useStepTimer';
+
 
 const Brightness = () => {
   const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
@@ -13,6 +16,8 @@ const Brightness = () => {
   const [autoAdjust, setAutoAdjust] = useState(true);
   const autoAdjustRef = useRef(autoAdjust);
   const timeoutRef = useRef(null);
+  const getDuration = useStepTimer();
+
 
   useEffect(() => {
     hideNavigationBar();
@@ -86,12 +91,14 @@ const Brightness = () => {
   const handleResult = (result) => {
     const updatedTestSteps = [...testSteps];
     updatedTestSteps[testStep - 1].result = result;
+    updatedTestSteps[testStep - 1].duration = getDuration();
     setTestsSteps(updatedTestSteps);
     setTestStep((prevStep) => prevStep + 1);
   };
 
   return (
     <>
+      <Timer />
       <View style={styles.container}>
         <Text style={styles.text}>Adjust the screen brightness using the slider below:</Text>
         <Text style={styles.text}>Current Brightness: {Math.round(brightness * 100)}%</Text>

@@ -7,15 +7,18 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { DataContext } from '../../../App';
 import CustomAlert from './CustomAlert';
 import Timer from '../Timer';
+import useStepTimer from '../useStepTimer';
+
 
 
 const TouchScreenTest = ({ navigation, route }) => {
     const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
     const [isAlertVisible, setAlertVisible] = useState(false);
-    const [startTime, setStartTime] = useState(0);
-    const [endTime, setEndTime] = useState(0);
+    const getDuration = useStepTimer();
+    // const [startTime, setStartTime] = useState(0);
+    // const [endTime, setEndTime] = useState(0);
 
-    const heightBar = StatusBar.currentHeight;
+    // const heightBar = StatusBar.currentHeight;
     const [squares, setSquares] = useState([]);
     const [completed, setCompleted] = useState(false);
     const screenWidth = Dimensions.get('screen').width;
@@ -31,37 +34,28 @@ const TouchScreenTest = ({ navigation, route }) => {
     useEffect(() => {
         hideNavigationBar();
         generateSquares();
-        setStartTime(Date.now());
         const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
         return () => {
             backHandler.remove();
             showNavigationBar();
-            console.log('unmount..... touchScreen' , testSteps[testStep - 1])
+            console.log('unmount..... touchScreen', testSteps[testStep - 1])
         };
     }, []);
 
     const handleBackButtonPress = useCallback(() => {
         setAlertVisible(!isAlertVisible);
         return true; // Returning true prevents default back button behavior
-    },[isAlertVisible]);
+    }, [isAlertVisible]);
 
     const handleResult = useCallback((result) => {
-        setEndTime(Date.now());
-        // Calculate elapsedTimeStep when endTime updates
-        // Using setTimeout to ensure endTime has updated value
-        setTimeout(() => {
-            const elapsedTimeStep = Math.floor((endTime - startTime) / 1000);
-            console.log('result ', result);
-            const updatedTestSteps = [...testSteps];
-            updatedTestSteps[testStep - 1].result = result;
-            updatedTestSteps[testStep - 1].duration = elapsedTimeStep;
-            setTestsSteps(updatedTestSteps);
-            console.log('hereeeeeeeeeeeeeeeee',testSteps[testStep - 1])
-        }, 0);
-
+        console.log('result ', result);
+        const updatedTestSteps = [...testSteps];
+        updatedTestSteps[testStep - 1].result = result;
+        updatedTestSteps[testStep - 1].duration = getDuration();
+        setTestsSteps(updatedTestSteps);
         setTestStep((prevStep) => prevStep + 1);
         setAlertVisible(false);
-    }, [endTime, startTime, testStep, testSteps, setTestsSteps]);
+    }, [testStep, testSteps, setTestsSteps]);
 
     const toggleAlert = useCallback(() => {
         // setAlertVisible(!isAlertVisible);

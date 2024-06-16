@@ -4,12 +4,15 @@ import { hideNavigationBar, showNavigationBar } from 'react-native-navigation-ba
 import { Button } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { DataContext } from '../../../App';
+import Timer from '../Timer';
+import useStepTimer from '../useStepTimer';
 
 const Rotation = () => {
   const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
   const [orientation, setOrientation] = useState('Portrait');
   const [orientationChanges, setOrientationChanges] = useState(0);
   const [testPassed, setTestPassed] = useState(false);
+  const getDuration = useStepTimer();
 
   useEffect(() => {
     hideNavigationBar();
@@ -56,17 +59,21 @@ const Rotation = () => {
   const handleResult = (result) => {
     const updatedTestSteps = [...testSteps];
     updatedTestSteps[testStep - 1].result = result;
+    updatedTestSteps[testStep - 1].duration = getDuration();
     setTestsSteps(updatedTestSteps);
     setTestStep((prevStep) => prevStep + 1);
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Please turn on the 'Auto Rotate' feature and rotate your device to check the auto-rotation sensor</Text>
+      <Timer />
+      <Text style={styles.text}>
+        {testSteps[testStep - 1].text}
+      </Text>
       {testPassed ? (
         <>
           <Icon name="check-circle" size={130} color="#44bd32" />
-          <Text style={[styles.orientationText,styles.orientationSuccessText]}>Auto-rotation is working correctly</Text>
+          <Text style={[styles.orientationText, styles.orientationSuccessText]}>Auto-rotation is working correctly</Text>
         </>
       ) : (
         <>
@@ -157,5 +164,5 @@ const styles = StyleSheet.create({
   btnLabel: {
     fontFamily: 'Quicksand-Bold',
     fontSize: 17
-},
+  },
 });

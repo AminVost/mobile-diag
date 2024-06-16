@@ -8,6 +8,7 @@ import { DataContext, TimerContext } from '../../../App';
 import { formatTime } from '../../utils/formatTime';
 import CustomAlert from './CustomAlert';
 import Timer from '../Timer';
+import useStepTimer from '../useStepTimer';
 
 const { width, height } = Dimensions.get('screen');
 
@@ -20,6 +21,17 @@ const testPatterns = [
     { type: 'grid', value: 'black' },
     { type: 'gradient', value: 'black' },
 ];
+// function debounce(func, delay) {
+//     let timeoutId;
+//     return function (...args) {
+//         if (timeoutId) {
+//             clearTimeout(timeoutId);
+//         }
+//         timeoutId = setTimeout(() => {
+//             func(...args);
+//         }, delay);
+//     };
+// }
 
 const Display = () => {
     const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
@@ -29,6 +41,10 @@ const Display = () => {
     const [testComplete, setTestComplete] = useState(false);
     const [showText, setShowText] = useState(true);
     const opacity = useSharedValue(1);
+    const [stepDuration, _] = useState(Date.now());
+    const getDuration = useStepTimer();
+
+
 
     useEffect(() => {
         hideNavigationBar();
@@ -56,6 +72,7 @@ const Display = () => {
     const handleResult = useCallback((result) => {
         const updatedTestSteps = [...testSteps];
         updatedTestSteps[testStep - 1].result = result;
+        updatedTestSteps[testStep - 1].duration = getDuration();
         setTestsSteps(updatedTestSteps);
         setTestStep((prevStep) => prevStep + 1);
         setAlertVisible(false);
@@ -117,7 +134,7 @@ const Display = () => {
             default:
                 return null;
         }
-    }, [currentTestIndex , setCurrentTestIndex]);
+    }, [currentTestIndex, setCurrentTestIndex]);
 
     const renderCompletionPage = () => {
         return (

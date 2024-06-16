@@ -3,7 +3,9 @@ import { View, Text, StyleSheet, Image, Alert, TouchableOpacity, BackHandler, Mo
 import { Camera, useCameraDevices, useCameraDevice, useCameraFormat } from 'react-native-vision-camera';
 import { Button } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { DataContext,TimerContext } from '../../../App';
+import { DataContext, TimerContext } from '../../../App';
+import Timer from '../Timer';
+import useStepTimer from '../useStepTimer';
 import RNFS from 'react-native-fs';
 import { formatTime } from '../../utils/formatTime';
 import { requestPermissions, openAppSettings } from '../CameraPermission';
@@ -12,24 +14,26 @@ const BackCamera = () => {
   const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
   const { elapsedTimeRef } = useContext(TimerContext);
   const [photoUri, setPhotoUri] = useState(null);
-  const [isAlertVisible, setAlertVisible] = useState(false);
   const cameraRef = useRef(null);
+  const [isCameraActive, setIsCameraActive] = useState(true);
   const [permissionsGranted, setPermissionsGranted] = useState(false);
   const [photoPath, setPhotoPath] = useState<string | ((arg: any) => string)>(null);
   const device = useCameraDevice('back');
   const format = useCameraFormat(device, [
     { photoResolution: { width: 1280, height: 720 } }
   ])
+  const getDuration = useStepTimer();
+
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
     requestCameraPermission();
     return () => {
+      setIsCameraActive(false); // Deactivate camera on unmount
       backHandler.remove();
     };
   }, []);
 
   const handleBackButtonPress = () => {
-    setAlertVisible(!isAlertVisible);
     return true;
   };
 
@@ -77,50 +81,15 @@ const BackCamera = () => {
   const handleResult = (result) => {
     const updatedTestSteps = [...testSteps];
     updatedTestSteps[testStep - 1].result = result;
+    updatedTestSteps[testStep - 1].duration = getDuration();
     if (photoPath) {
       updatedTestSteps[testStep - 1].filePath = photoPath;
     }
     setTestsSteps(updatedTestSteps);
     setTestStep((prevStep) => prevStep + 1);
     console.log(testSteps);
-    setAlertVisible(false);
   };
 
-  const toggleAlert = () => {
-    setAlertVisible(!isAlertVisible);
-  };
-
-  const CustomAlert = () => (
-    <Modal
-      visible={isAlertVisible}
-      transparent={true}
-      animationType="slide"
-      hardwareAccelerated={true}
-      onRequestClose={() => {
-        setAlertVisible(!isAlertVisible);
-      }}
-    >
-      <View style={styles.modalBackground}>
-        <View style={styles.customModalContent}>
-          <Text style={styles.customModalTitle}>Please select the Back Camera test result</Text>
-          <View style={styles.customModalRow}>
-            <Icon name="camera-enhance-outline" size={100} color="#4908b0" />
-          </View>
-          <View style={styles.customModalBtns}>
-            <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Fail')}>
-              Fail
-            </Button>
-            <Button mode="elevated" buttonColor="#7f8fa6" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Skip')}>
-              Skip
-            </Button>
-            <Button mode="elevated" buttonColor="#44bd32" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Pass')}>
-              Pass
-            </Button>
-          </View>
-        </View>
-      </View>
-    </Modal>
-  );
 
   if (!permissionsGranted) {
     return (
@@ -140,32 +109,34 @@ const BackCamera = () => {
   }
 
   return (
-    <View style={styles.container}>
-      {photoUri ? (
-        <>
-          <Image source={{ uri: `file://${photoUri}` }} style={styles.photo} />
-          <View style={styles.btnContainer}>
-            <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Fail')}>
-              Fail
-            </Button>
-            <Button mode="elevated" buttonColor="#7f8fa6" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Skip')}>
-              Skip
-            </Button>
-            <Button mode="elevated" buttonColor="#44bd32" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Pass')}>
-              Pass
-            </Button>
+    <>
+      <Timer />
+      <View style={styles.container}>
+        {photoUri ? (
+          <>
+            <Image source={{ uri: `file://${photoUri}` }} style={styles.photo} />
+            <View style={styles.btnContainer}>
+              <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Fail')}>
+                Fail
+              </Button>
+              <Button mode="elevated" buttonColor="#7f8fa6" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Skip')}>
+                Skip
+              </Button>
+              <Button mode="elevated" buttonColor="#44bd32" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Pass')}>
+                Pass
+              </Button>
+            </View>
+          </>
+        ) : (
+          <View style={styles.cameraContainer}>
+            <Camera ref={cameraRef} style={styles.preview} device={device} isActive={isCameraActive} photo={true} format={format} />
+            <TouchableOpacity style={styles.btnTakePic} onPress={takePicture}>
+              <Icon name="checkbox-blank-circle" size={70} color={"#fff"} />
+            </TouchableOpacity>
           </View>
-        </>
-      ) : (
-        <View style={styles.cameraContainer}>
-          <Camera ref={cameraRef} style={styles.preview} device={device} isActive={true} photo={true} format={format} />
-          <TouchableOpacity style={styles.btnTakePic} onPress={takePicture}>
-            <Icon name="checkbox-blank-circle" size={70} color={"#fff"} />
-          </TouchableOpacity>
-        </View>
-      )}
-      <CustomAlert visible={isAlertVisible} onClose={toggleAlert} />
-    </View>
+        )}
+      </View >
+    </>
   );
 };
 

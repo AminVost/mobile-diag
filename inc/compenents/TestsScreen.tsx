@@ -8,7 +8,7 @@ const TestsScreens = ({ navigation, route }) => {
   const performTestStep = async () => {
     const sortedTestSteps = [...testSteps].sort((a, b) => a.priority - b.priority);
     setTestsSteps(sortedTestSteps);
-    if (testStep < sortedTestSteps.length) {
+    if (testStep <= sortedTestSteps.length) {
       const currentTest = sortedTestSteps[testStep - 1];
       // console.log('currentTest', currentTest);
       // console.log('currentTest.title', currentTest.title);
@@ -40,6 +40,12 @@ const TestsScreens = ({ navigation, route }) => {
         case 'BackCameraVideo':
           navigation.navigate('BackCameraVideo');
           break;
+        case 'NativeCameraPhoto':
+          navigation.navigate('NativeCameraPhoto');
+          break;
+        case 'NativeCameraVideo':
+          navigation.navigate('NativeCameraVideo');
+          break;
       }
     } else {
       console.log('step not found')
@@ -65,6 +71,7 @@ const TestsScreens = ({ navigation, route }) => {
     if (testStep <= testSteps.length) {
       performTestStep();
     } else {
+      console.log('hereeeeeee',testSteps);
       console.log('finished test')
       navigation.navigate('Report');
     }
