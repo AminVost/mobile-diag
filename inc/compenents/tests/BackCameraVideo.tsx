@@ -40,6 +40,7 @@ const BackCameraVideoTest = () => {
 
   const requestCameraPermission = async () => {
     const permissionStatus = await requestPermissions();
+    console.log('permissionStatus: ' , permissionStatus)
     if (permissionStatus === 'granted') {
       setPermissionsGranted(true);
     } else if (permissionStatus === 'never_ask_again' || permissionStatus === 'denied') {

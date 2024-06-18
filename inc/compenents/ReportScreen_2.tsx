@@ -3,12 +3,12 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Button, Tooltip } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { DataContext, TimerContext } from '../../App';
-import { formatTimeHms } from '../utils/formatTimeHms';
 import { formatTime } from '../utils/formatTime';
+import { ColorProperties } from 'react-native-reanimated/lib/typescript/reanimated2/Colors';
 
 export default function ReportScreen({ navigation }) {
     const { testSteps } = useContext(DataContext);
-    const { elapsedTimeRef } = useContext(TimerContext);
+    const { elapsedTimeRef, startTime } = useContext(TimerContext);
     console.log(elapsedTimeRef.current);
 
     useEffect(() => {
@@ -17,7 +17,7 @@ export default function ReportScreen({ navigation }) {
                 <Tooltip title="Total Duration Time" enterTouchDelay={10} leaveTouchDelay={1000}>
                     <View style={styles.headerRightContainer}>
                         <Icon style={styles.timerIcon} name="timer-outline" size={18} color="black" />
-                        <Text style={styles.headerRightText}>{formatTimeHms(elapsedTimeRef.current)}</Text>
+                        <Text style={styles.headerRightText}>{formatTime(elapsedTimeRef.current)}</Text>
                     </View>
                 </Tooltip>
             ),
@@ -37,15 +37,11 @@ export default function ReportScreen({ navigation }) {
         }
     };
 
-    const navigateToTest = (testName) => {
-        navigation.navigate(testName);
-    };
-
     return (
         <View style={styles.container}>
             <ScrollView contentContainerStyle={styles.scrollView}>
                 {testSteps.map((step, index) => (
-                    <View key={index} style={[styles.stepContainer, getResultColor(step.result)]} onPress={() => navigateToTest(step.screenName)}>
+                    <View key={index} style={[styles.stepContainer, getResultColor(step.result)]}>
                         <Icon name={step.icon} size={30} style={styles.icon} />
                         <View style={styles.textContainer}>
                             <Text style={styles.title}>{step.title}</Text>
@@ -57,27 +53,24 @@ export default function ReportScreen({ navigation }) {
                             </View>
                         </View>
                         <View style={styles.resultContainer}>
-                            {step.result === 'Pass' &&
+                            {/* <Text style={styles.resultText}>{step.result}</Text> */}
+                            {step.result == 'Pass' &&
                                 <Icon name='check-circle' size={30} style={[styles.iconPass]} />
                             }
-                            {step.result === 'Skip' &&
-                                <Icon name='reload' size={30} style={styles.iconSkip} />
+                            {step.result == 'Skip' &&
+                                <Icon name='skip-next-circle' size={30} style={styles.iconSkip} />
                             }
-                            {step.result === 'Fail' &&
+                            {step.result == 'Fail' &&
                                 <Icon name='close-circle' size={30} style={styles.iconFail} />
                             }
+
                         </View>
                     </View>
                 ))}
             </ScrollView>
-            <View style={styles.btnContainer}>
-                <Button mode="contained" labelStyle={styles.btnLabel} icon={() => <Icon name="home-import-outline" size={20} color="white" />} onPress={() => navigation.goBack()} style={[styles.button, {backgroundColor : '#4908b0'}]}>
-                    Go back home
-                </Button>
-                <Button mode="contained" labelStyle={styles.btnLabel} icon={() => <Icon name="export-variant" size={20} color="white" />} onPress={() => ''} style={[styles.button, { backgroundColor: '#2980b9' }]}>
-                    Send Result
-                </Button>
-            </View>
+            <Button mode="contained" onPress={() => navigation.goBack()} style={styles.button}>
+                Go back home
+            </Button>
         </View>
     );
 }
@@ -100,29 +93,21 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         position: 'relative',
     },
-    btnContainer: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignContent: 'center',
-        alignItems: 'center',
-        padding: 10,
-        columnGap: 15
-    },
     icon: {
         marginRight: 10,
-        color: 'black'
+        color: 'white'
     },
     iconPass: {
         marginRight: 10,
-        color: '#27ae60'
+        color: 'white'
     },
     iconSkip: {
         marginRight: 10,
-        color: '#2c3e50'
+        color: 'white'
     },
     iconFail: {
         marginRight: 10,
-        color: '#c0392b'
+        color: 'white'
     },
     textContainer: {
         flex: 1,
@@ -130,7 +115,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 18,
         fontFamily: 'Quicksand-Bold',
-        color: 'black'
+        color: 'white'
     },
     subTitle: {
         flexDirection: 'row',
@@ -138,41 +123,33 @@ const styles = StyleSheet.create({
     },
     stepInfo: {
         fontSize: 14,
-        color: 'black',
+        color: 'white',
         fontFamily: 'Quicksand-Regular'
     },
     pass: {
-        backgroundColor: '#d4edda',
+        backgroundColor: '#27ae60',
         borderColor: '#0000004f',
     },
     fail: {
-        backgroundColor: '#f8d7da',
+        backgroundColor: '#e74c3c',
         borderColor: '#0000004f',
     },
     skip: {
-        backgroundColor: '#e2e3e5',
+        backgroundColor: '#7f8c8d',
         borderColor: '#0000004f',
     },
     notStarted: {
-        backgroundColor: 'white',
-        borderColor: '#00000075',
+        backgroundColor: '#ffbfb8',
+        borderColor: '#ffbfb8',
     },
     button: {
-        // marginTop: 20,
+        marginTop: 20,
         alignSelf: 'center',
-        justifyContent: 'center',
-        flexGrow: 1,
-        padding: 5
-    },
-    btnLabel: {
-        fontSize: 15
     },
     headerRightContainer: {
         marginRight: 10,
         flexDirection: 'row',
-        columnGap: 5,
-        alignItems: 'center',
-        justifyContent: 'center',
+        columnGap: 5
     },
     headerRightText: {
         fontSize: 16,
@@ -190,12 +167,12 @@ const styles = StyleSheet.create({
         bottom: 0,
         justifyContent: 'center',
         alignItems: 'center',
+        // backgroundColor: 'red',
         alignSelf: 'center',
     },
     resultText: {
         fontSize: 18,
         fontWeight: 'bold',
         color: 'white',
-        alignItems: 'center'
     },
 });

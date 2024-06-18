@@ -1,58 +1,59 @@
-import { PermissionsAndroid, Alert, Linking } from 'react-native';
+import { PermissionsAndroid, Alert, Linking, Platform } from 'react-native';
+import DeviceInfo from 'react-native-device-info';
 import { Camera } from 'react-native-vision-camera';
 
 export const requestPermissions = async () => {
-  const writeGranted111 = await PermissionsAndroid.request(
-    PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
-    {
-      title: 'Storage Permission',
-      message: 'App needs access READ_MEDIA_IMAGES',
-      buttonNegative: 'Cancel',
-      buttonPositive: 'OK',
-    },
-  );
-  // console.log('writeGranted111' , writeGranted111)
-  
-  const writeGranted = await PermissionsAndroid.request(
-    PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-    {
-      title: 'Storage Permission',
-      message: 'App needs access WRITE_EXTERNAL_STORAGE',
-      buttonNegative: 'Cancel',
-      buttonPositive: 'OK',
-    },
-  );
-  // console.log('writeGranted' , writeGranted)
+  let systemVersion = parseFloat(DeviceInfo.getSystemVersion());
+  console.log('systemVersion', systemVersion);
 
-  const readGranted = await PermissionsAndroid.request(
-    PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-    {
-      title: 'Storage Permission',
-      message: 'App needs access READ_EXTERNAL_STORAGE',
-      buttonNegative: 'Cancel',
-      buttonPositive: 'OK',
-    },
-    );
-    // console.log('readGranted' , readGranted)
+  if (Platform.OS === 'android') {
+    const permissions = [
+      PermissionsAndroid.PERMISSIONS.CAMERA,
+      PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+      PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+      PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+      PermissionsAndroid.PERMISSIONS.ACCESS_MEDIA_LOCATION,
+    ];
 
-  if (writeGranted === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN || readGranted === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
-    return 'never_ask_again';
-  }
+    try {
+      const granted = await PermissionsAndroid.requestMultiple(permissions);
+      console.log('granted[] ', granted);
 
-  if (writeGranted === PermissionsAndroid.RESULTS.GRANTED && readGranted === PermissionsAndroid.RESULTS.GRANTED) {
-  // if (writeGranted111 === PermissionsAndroid.RESULTS.GRANTED) {
-    const cameraPermission = await Camera.requestCameraPermission();
-    const micPermission = await Camera.requestMicrophonePermission();
+      const cameraPermission = granted[PermissionsAndroid.PERMISSIONS.CAMERA] === PermissionsAndroid.RESULTS.GRANTED;
+      const audioPermission = granted[PermissionsAndroid.PERMISSIONS.RECORD_AUDIO] === PermissionsAndroid.RESULTS.GRANTED;
+      const writePermission = granted[PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE] === PermissionsAndroid.RESULTS.GRANTED;
+      console.log('writePermission : ', writePermission);
+      const readPermission = granted[PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE] === PermissionsAndroid.RESULTS.GRANTED;
+      console.log('readPermission : ', readPermission);
 
-    if (cameraPermission === 'granted' && micPermission === 'granted') {
-      return 'granted';
-    } else {
-      Alert.alert('Permission Required', 'Camera permission is required to take pictures.');
+      if (systemVersion >= 10) {
+        if (cameraPermission && audioPermission) {
+          return 'granted';
+        }
+      } else {
+        if (cameraPermission && audioPermission && writePermission && readPermission) {
+          return 'granted';
+        }
+      }
+
+      if (
+        granted[PermissionsAndroid.PERMISSIONS.CAMERA] === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN ||
+        granted[PermissionsAndroid.PERMISSIONS.RECORD_AUDIO] === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN ||
+        granted[PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE] === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN ||
+        granted[PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE] === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN ||
+        granted[PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES] === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN
+      ) {
+        return 'never_ask_again';
+      } else {
+        return 'denied';
+      }
+    } catch (err) {
+      console.warn(err);
       return 'denied';
     }
   } else {
-    console.log('EXTERNAL STORAGE permission denied');
-    return 'denied';
+    // Handle iOS permissions if needed
+    console.log('iOS Device');
   }
 };
 

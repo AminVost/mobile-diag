@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useRef, useMemo } from 'react';
-import { View, Text, StyleSheet, Image, Alert, TouchableOpacity, BackHandler, Modal, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Image, Alert, TouchableOpacity, BackHandler, Modal, ActivityIndicator, Dimensions } from 'react-native';
 import { Camera, useCameraDevices, useCameraDevice, useCameraFormat } from 'react-native-vision-camera';
 import { Button } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -7,7 +7,6 @@ import { DataContext, TimerContext } from '../../../App';
 import Timer from '../Timer';
 import useStepTimer from '../useStepTimer';
 import RNFS from 'react-native-fs';
-import { formatTime } from '../../utils/formatTime';
 import { requestPermissions, openAppSettings } from '../CameraPermission';
 
 const BackCamera = () => {
@@ -19,8 +18,11 @@ const BackCamera = () => {
   const [permissionsGranted, setPermissionsGranted] = useState(false);
   const [photoPath, setPhotoPath] = useState<string | ((arg: any) => string)>(null);
   const device = useCameraDevice('back');
+  // console.log(useCameraDevices());
+  const { width, height } = Dimensions.get('screen');
+  console.log('width ', width, ' ', 'height ', height)
   const format = useCameraFormat(device, [
-    { photoResolution: { width: 1280, height: 720 } }
+    { photoResolution: { width: width, height: height } }
   ])
   const getDuration = useStepTimer();
 
@@ -50,7 +52,7 @@ const BackCamera = () => {
   const takePicture = async () => {
     if (cameraRef.current) {
       const photo = await cameraRef.current.takePhoto({
-        flash: 'on',
+        flash: 'off',
         photoQualityBalance: 'speed', // You can use 'speed', 'quality', or 'balanced'
         enableShutterSound: true,
       });
@@ -128,12 +130,14 @@ const BackCamera = () => {
             </View>
           </>
         ) : (
-          <View style={styles.cameraContainer}>
-            <Camera ref={cameraRef} style={styles.preview} device={device} isActive={isCameraActive} photo={true} format={format} />
-            <TouchableOpacity style={styles.btnTakePic} onPress={takePicture}>
-              <Icon name="checkbox-blank-circle" size={70} color={"#fff"} />
-            </TouchableOpacity>
-          </View>
+          <>
+            <View style={styles.cameraContainer}>
+              <Camera ref={cameraRef} style={[styles.preview]} device={device} isActive={isCameraActive} photo={true} format={format} />
+              <TouchableOpacity style={styles.btnTakePic} onPress={takePicture}>
+                <Icon name="checkbox-blank-circle" size={70} color={"#fff"} />
+              </TouchableOpacity>
+            </View>
+          </>
         )}
       </View >
     </>
@@ -151,7 +155,7 @@ const styles = StyleSheet.create({
   },
   cameraContainer: {
     flex: 1,
-    width: '100%',
+    width: '80%',
     height: '100%'
   },
   btnTakePic: {

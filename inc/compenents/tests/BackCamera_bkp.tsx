@@ -1,71 +1,58 @@
-import React, { useState, useEffect, useContext, useRef } from 'react';
-import { View, Text, StyleSheet, Image, PermissionsAndroid, Platform, Alert, TouchableOpacity, BackHandler, Modal } from 'react-native';
-import { Camera, useCameraDevices, useCameraDevice } from 'react-native-vision-camera';
+import React, { useState, useEffect, useContext, useRef, useMemo } from 'react';
+import { View, Text, StyleSheet, Image, Alert, TouchableOpacity, BackHandler, Modal, ActivityIndicator } from 'react-native';
+import { Camera, useCameraDevices, useCameraDevice, useCameraFormat } from 'react-native-vision-camera';
 import { Button } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { DataContext } from '../../../App';
+import { DataContext, TimerContext } from '../../../App';
+import Timer from '../Timer';
+import useStepTimer from '../useStepTimer';
 import RNFS from 'react-native-fs';
+import { formatTime } from '../../utils/formatTime';
+import { requestPermissions, openAppSettings } from '../CameraPermission';
 
 const BackCamera = () => {
   const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
+  const { elapsedTimeRef } = useContext(TimerContext);
   const [photoUri, setPhotoUri] = useState(null);
-  const [isAlertVisible, setAlertVisible] = useState(false);
   const cameraRef = useRef(null);
+  const [isCameraActive, setIsCameraActive] = useState(true);
   const [permissionsGranted, setPermissionsGranted] = useState(false);
-  const devices = useCameraDevices();
+  const [photoPath, setPhotoPath] = useState<string | ((arg: any) => string)>(null);
   const device = useCameraDevice('back');
+  const format = useCameraFormat(device, [
+    { photoResolution: { width: 1280, height: 720 } }
+  ])
+  const getDuration = useStepTimer();
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
     requestCameraPermission();
     return () => {
+      setIsCameraActive(false); // Deactivate camera on unmount
       backHandler.remove();
     };
   }, []);
 
   const handleBackButtonPress = () => {
-    setAlertVisible(!isAlertVisible);
-    return true; // Returning true prevents default back button behavior
+    return true;
   };
 
   const requestCameraPermission = async () => {
-    const writeGranted = await PermissionsAndroid.request(
-      PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-      {
-        title: 'Storage Permission',
-        message: 'App needs access WRITE_EXTERNAL_STORAGE',
-        buttonNegative: 'Cancel',
-        buttonPositive: 'OK',
-      },
-    );
-    const readGranted = await PermissionsAndroid.request(
-      PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-      {
-        title: 'Storage Permission',
-        message: 'App needs access READ_EXTERNAL_STORAGE',
-        buttonNegative: 'Cancel',
-        buttonPositive: 'OK',
-      },
-    );
-
-    if (writeGranted === PermissionsAndroid.RESULTS.GRANTED && readGranted === PermissionsAndroid.RESULTS.GRANTED) {
-      const cameraPermission = await Camera.requestCameraPermission();
-      const micPermission = await Camera.requestMicrophonePermission();
-
-      if (cameraPermission === 'granted' && micPermission === 'granted') {
-        setPermissionsGranted(true);
-      } else {
-        Alert.alert('Permission Required', 'Camera permission is required to take pictures.');
-      }
-    } else {
-      console.log('EXTERNAL STORAGE permission denied');
+    const permissionStatus = await requestPermissions();
+    console.log('permissionStatus', permissionStatus)
+    if (permissionStatus === 'granted') {
+      setPermissionsGranted(true);
+    } else if (permissionStatus === 'never_ask_again' || permissionStatus == 'denied') {
+      openAppSettings();
     }
   };
 
   const takePicture = async () => {
     if (cameraRef.current) {
       const photo = await cameraRef.current.takePhoto({
-        flash: 'off',
+        flash: 'on',
+        photoQualityBalance: 'speed', // You can use 'speed', 'quality', or 'balanced'
+        enableShutterSound: true,
       });
 
       const directoryPath = `${RNFS.PicturesDirectoryPath}/RapidMobileDiag`;
@@ -80,6 +67,7 @@ const BackCamera = () => {
       const formattedTime = currentDate.toTimeString().split(' ')[0].replace(/:/g, '-'); // HH-MM-SS
       const fileName = `BackCamera_${formattedDate}_${formattedTime}.jpg`;
       const filePath = `${directoryPath}/${fileName}`;
+      setPhotoPath(filePath);
 
       try {
         await RNFS.copyFile(photo.path, filePath);
@@ -93,53 +81,21 @@ const BackCamera = () => {
   const handleResult = (result) => {
     const updatedTestSteps = [...testSteps];
     updatedTestSteps[testStep - 1].result = result;
+    updatedTestSteps[testStep - 1].duration = getDuration();
+    if (photoPath) {
+      updatedTestSteps[testStep - 1].filePath = photoPath;
+    }
     setTestsSteps(updatedTestSteps);
     setTestStep((prevStep) => prevStep + 1);
-    setAlertVisible(false);
+    console.log(testSteps);
   };
 
-  const toggleAlert = () => {
-    setAlertVisible(!isAlertVisible);
-  };
-  const CustomAlert = () => {
-    return (
-      <Modal
-        visible={isAlertVisible}
-        transparent={true}
-        animationType="slide"
-        hardwareAccelerated={true}
-        onRequestClose={() => {
-          setAlertVisible(!isAlertVisible);
-        }}
-      >
-        <View style={styles.modalBackground}>
-          <View style={styles.customModalContent}>
-            <Text style={styles.customModalTitle}>Please select the Back Camera test result</Text>
-
-            <View style={styles.customModalRow}>
-              <Icon name="camera-enhance-outline" size={100} color="#4908b0" />
-            </View>
-            <View style={styles.customModalBtns}>
-              <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.stepTestBtn} onPress={() => handleResult('fail')}>
-                fail
-              </Button>
-              <Button mode="elevated" buttonColor="#7f8fa6" textColor="white" style={styles.stepTestBtn} onPress={() => handleResult('Skip')}>
-                Skip
-              </Button>
-              <Button mode="elevated" buttonColor="#44bd32" textColor="white" style={styles.stepTestBtn} onPress={() => handleResult('Pass')}>
-                Pass
-              </Button>
-            </View>
-          </View>
-        </View>
-      </Modal>
-    );
-  };
 
   if (!permissionsGranted) {
     return (
       <View style={styles.container}>
         <Text style={styles.text}>Requesting permissions...</Text>
+        <ActivityIndicator size="large" color="#4908b0" />
       </View>
     );
   }
@@ -153,59 +109,36 @@ const BackCamera = () => {
   }
 
   return (
-    <View style={styles.container}>
-      {photoUri ? (
-        <>
-          <Image source={{ uri: `file://${photoUri}` }} style={styles.photo} />
-          <View style={styles.btnContainer}>
-            <Button
-              mode="elevated"
-              buttonColor="#e84118"
-              textColor="white"
-              style={styles.btns}
-              labelStyle={styles.btnLabel}
-              onPress={() => handleResult('Fail')}
-            >
-              Fail
-            </Button>
-            <Button
-              mode="elevated"
-              buttonColor="#7f8fa6"
-              textColor="white"
-              style={styles.btns}
-              labelStyle={styles.btnLabel}
-              onPress={() => handleResult('Skip')}
-            >
-              Skip
-            </Button>
-            <Button
-              mode="elevated"
-              buttonColor="#44bd32"
-              textColor="white"
-              style={styles.btns}
-              labelStyle={styles.btnLabel}
-              onPress={() => handleResult('Pass')}
-            >
-              Pass
-            </Button>
-          </View>
-        </>
-      ) : (
-        <View style={styles.cameraContainer}>
-          <Camera
-            ref={cameraRef}
-            style={styles.preview}
-            device={device}
-            isActive={true}
-            photo={true}
-          />
-          <TouchableOpacity style={styles.btnTakePic} onPress={takePicture}>
-            <Icon name="checkbox-blank-circle" size={70} color={"#fff"} />
-          </TouchableOpacity>
-        </View>
-      )}
-      <CustomAlert visible={isAlertVisible} onClose={toggleAlert} />
-    </View>
+    <>
+      <Timer />
+      <View style={styles.container}>
+        {photoUri ? (
+          <>
+            <Image source={{ uri: `file://${photoUri}` }} style={styles.photo} />
+            <View style={styles.btnContainer}>
+              <Button mode="elevated" buttonColor="#e84118" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Fail')}>
+                Fail
+              </Button>
+              <Button mode="elevated" buttonColor="#7f8fa6" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Skip')}>
+                Skip
+              </Button>
+              <Button mode="elevated" buttonColor="#44bd32" textColor="white" style={styles.btns} labelStyle={styles.btnLabel} onPress={() => handleResult('Pass')}>
+                Pass
+              </Button>
+            </View>
+          </>
+        ) : (
+          <>
+            <View style={styles.cameraContainer}>
+              <Camera ref={cameraRef} style={styles.preview} device={device} isActive={isCameraActive} photo={true} format={format} />
+              <TouchableOpacity style={styles.btnTakePic} onPress={takePicture}>
+                <Icon name="checkbox-blank-circle" size={70} color={"#fff"} />
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
+      </View >
+    </>
   );
 };
 
@@ -246,6 +179,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
     width: '100%',
+    backgroundColor: 'white',
     height: '10%'
   },
   photo: {
@@ -257,14 +191,14 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   btns: {
-    padding: 7,
+    padding: 8,
   },
   btnLabel: {
-    fontSize: 16
+    fontFamily: 'Quicksand-Bold',
+    fontSize: 17
   },
   modalBackground: {
     flex: 1,
-    // backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -295,9 +229,6 @@ const styles = StyleSheet.create({
     gap: 10,
     marginBottom: 20
   },
-  customModalText: {
-    fontSize: 13,
-  },
   customModalBtns: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -305,3 +236,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row'
   },
 });
+
+

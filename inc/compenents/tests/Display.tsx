@@ -21,17 +21,6 @@ const testPatterns = [
     { type: 'grid', value: 'black' },
     { type: 'gradient', value: 'black' },
 ];
-// function debounce(func, delay) {
-//     let timeoutId;
-//     return function (...args) {
-//         if (timeoutId) {
-//             clearTimeout(timeoutId);
-//         }
-//         timeoutId = setTimeout(() => {
-//             func(...args);
-//         }, delay);
-//     };
-// }
 
 const Display = () => {
     const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
