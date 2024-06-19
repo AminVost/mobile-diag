@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, BackHandler, Modal } from 'react-native';
-import { Camera, useCameraDevices } from 'react-native-vision-camera';
+import { View, Text, StyleSheet, Image, TouchableOpacity, BackHandler } from 'react-native';
+import { Camera, useCameraDevices , useCameraFormat } from 'react-native-vision-camera';
 import { Button } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { DataContext } from '../../../App';
 import Timer from '../Timer';
 import RNFS from 'react-native-fs';
+import useStepTimer from '../useStepTimer';
 import { requestPermissions, openAppSettings } from '../CameraPermission';
 
 const MultiCameraTest = () => {
-  const { testStep, setTestStep, testSteps, setTestsSteps, elapsedTime, setElapsedTime } = useContext(DataContext);
+  const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
   const [isCameraActive, setIsCameraActive] = useState(true);
   const [photoUri, setPhotoUri] = useState(null);
   const cameraRef = useRef(null);
@@ -18,17 +19,19 @@ const MultiCameraTest = () => {
   const [currentCameraIndex, setCurrentCameraIndex] = useState(0);
 
   const devices = useCameraDevices();
-  // console.log(devices);
-  const cameraDevices = devices || [];
+  const cameraDevices = devices ? Object.values(devices) : [];
   const FormattedCameraDevices = cameraDevices.length > 0 ? cameraDevices.map(({ formats, ...rest }) => rest) : [];
   const device = cameraDevices[currentCameraIndex];
+  const getDuration = useStepTimer();
+
+  const format = device ? useCameraFormat(device, [{ photoResolution: { width: 640, height: 480 } }]) : null;
+
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
     requestCameraPermission();
     return () => {
-      // console.log('testSteps', testSteps[0].devicesInfo);
-      console.log('unmount multiCamera')
+      console.log('unmount multiCamera' , testSteps[testStep - 1]);
       setIsCameraActive(false);
       backHandler.remove();
     };
@@ -50,7 +53,7 @@ const MultiCameraTest = () => {
   const takePicture = async () => {
     if (cameraRef.current) {
       const photo = await cameraRef.current.takePhoto({
-        flash: 'on',
+        flash: 'off',
         qualityPrioritization: 'speed',
         enableShutterSound: true,
       });
@@ -63,8 +66,8 @@ const MultiCameraTest = () => {
       }
 
       const currentDate = new Date();
-      const formattedDate = currentDate.toISOString().split('T')[0]; // YYYY-MM-DD
-      const formattedTime = currentDate.toTimeString().split(' ')[0].replace(/:/g, '-'); // HH-MM-SS
+      const formattedDate = currentDate.toISOString().split('T')[0];
+      const formattedTime = currentDate.toTimeString().split(' ')[0].replace(/:/g, '-');
       const fileName = `Camera_${currentCameraIndex}_${formattedDate}_${formattedTime}.jpg`;
       const filePath = `${directoryPath}/${fileName}`;
       setPhotoPath(filePath);
@@ -85,12 +88,9 @@ const MultiCameraTest = () => {
     if (multiCameraStepIndex !== -1) {
       const multiCamResult = updatedTestSteps[multiCameraStepIndex].multiCamResult || [];
       const cameraResult = {
-        title: devices[currentCameraIndex].name, // Use the name of the camera
-        text: '',
+        title: devices[currentCameraIndex]?.name || 'Unknown Camera',
         result,
         filePath: photoPath,
-        error: null,
-        duration: null,
       };
 
       multiCamResult[currentCameraIndex] = cameraResult;
@@ -99,10 +99,9 @@ const MultiCameraTest = () => {
 
     if (currentCameraIndex < cameraDevices.length - 1) {
       setCurrentCameraIndex((prevIndex) => prevIndex + 1);
-      setPhotoUri(null); // Reset photoUri for the next camera
-      setPhotoPath(null); // Reset photoPath for the next camera
+      setPhotoUri(null);
+      setPhotoPath(null);
     } else {
-      // Determine the overall result
       const finalResults = updatedTestSteps[multiCameraStepIndex].multiCamResult.map(cam => cam.result);
       let finalResult = 'Pass';
       if (finalResults.includes('Fail')) {
@@ -111,12 +110,12 @@ const MultiCameraTest = () => {
         finalResult = 'Skip';
       }
       updatedTestSteps[multiCameraStepIndex].result = finalResult;
-      updatedTestSteps[multiCameraStepIndex].devicesInfo = FormattedCameraDevices
+      updatedTestSteps[multiCameraStepIndex].devicesInfo = FormattedCameraDevices;
+      updatedTestSteps[multiCameraStepIndex].duration = getDuration();
       setTestsSteps(updatedTestSteps);
       setTestStep((prevStep) => prevStep + 1);
     }
   };
-
 
   if (!permissionsGranted) {
     return (
@@ -137,7 +136,6 @@ const MultiCameraTest = () => {
   return (
     <>
       <Timer />
-
       <View style={styles.container}>
         {photoUri ? (
           <>
@@ -162,6 +160,7 @@ const MultiCameraTest = () => {
               device={device}
               isActive={isCameraActive}
               photo={true}
+              format={format}
             />
             <TouchableOpacity style={styles.btnTakePic} onPress={takePicture}>
               <Icon name="checkbox-blank-circle" size={70} color={"#fff"} />
@@ -172,7 +171,9 @@ const MultiCameraTest = () => {
     </>
   );
 };
+
 export default MultiCameraTest;
+
 
 
 const styles = StyleSheet.create({
@@ -215,6 +216,7 @@ const styles = StyleSheet.create({
   photo: {
     width: '100%',
     height: '90%',
+    objectFit: 'contain'
   },
   text: {
     fontSize: 18,

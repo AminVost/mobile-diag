@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
-import { View, Text, StyleSheet, Image, BackHandler, Alert,ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Image, BackHandler, Alert, ActivityIndicator } from 'react-native';
 import { Button } from 'react-native-paper';
 import { launchCamera } from 'react-native-image-picker';
 import RNFS from 'react-native-fs';
@@ -10,6 +10,7 @@ import useStepTimer from '../useStepTimer';
 const NativeCameraPhoto = () => {
   const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
   const [photoUri, setPhotoUri] = useState(null);
+  const [fileBase64, setFileBase64] = useState(null);
   const getDuration = useStepTimer();
 
   useEffect(() => {
@@ -38,7 +39,8 @@ const NativeCameraPhoto = () => {
           Alert.alert('Camera error', response.errorMessage);
           handleResult('Fail');
         } else {
-          const photoPath = await savePhoto(response.assets[0].uri);
+          const { uri } = response.assets[0];
+          const photoPath = await savePhoto(uri);
           if (photoPath) {
             setPhotoUri(photoPath);
           } else {
@@ -66,6 +68,11 @@ const NativeCameraPhoto = () => {
 
     try {
       await RNFS.copyFile(uri, filePath);
+
+      // Convert the photo to base64
+      const fileBase64String = await RNFS.readFile(filePath, 'base64');
+      setFileBase64(fileBase64String);
+
       return filePath;
     } catch (err) {
       console.error('Error saving photo:', err);
@@ -82,13 +89,14 @@ const NativeCameraPhoto = () => {
       updatedTestSteps[nativeCameraStepIndex].duration = getDuration();
       if (photoPath) {
         updatedTestSteps[nativeCameraStepIndex].filePath = photoPath;
+        updatedTestSteps[nativeCameraStepIndex].fileBase64 = fileBase64;
       }
       setTestsSteps(updatedTestSteps);
       setTestStep((prevStep) => prevStep + 1);
     } else {
       console.log('No step found');
     }
-  }, [testSteps, setTestsSteps, setTestStep]);
+  }, [testSteps, setTestsSteps, setTestStep, fileBase64, getDuration]);
 
   return (
     <>
@@ -120,6 +128,9 @@ const NativeCameraPhoto = () => {
   );
 };
 
+export default NativeCameraPhoto;
+
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -136,7 +147,7 @@ const styles = StyleSheet.create({
   photo: {
     width: '100%',
     height: '90%',
-    objectFit: 'contain'    
+    objectFit: 'contain',
   },
   text: {
     fontSize: 18,
@@ -158,5 +169,3 @@ const styles = StyleSheet.create({
     fontSize: 17,
   },
 });
-
-export default NativeCameraPhoto;

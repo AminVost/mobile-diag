@@ -19,7 +19,7 @@ const Stack = createNativeStackNavigator();
 function HomeScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
 
-  const { isInternetConnected, websocketConnected, receivedSerialNumber } = useContext(DataContext);
+  const { isInternetConnected, websocketConnected, receivedSerialNumber , deviceDetails, setDeviceDetails } = useContext(DataContext);
 
   const checklistItems = [
     "Any Bluetooth Device",
@@ -51,28 +51,10 @@ function HomeScreen({ navigation, route }) {
     "SD Card",
     "OTG Connector",
   ];
-  const [deviceDetails, setDeviceDetails] = React.useState({
-    deviceName: '',
-    model: '',
-    brand: DeviceInfo.getBrand(),
-    oS: Platform.OS,
-    osVersion: '',
-    imei: '',
-    meid: '',
-    serialNumber: '',
-    cpu: '',
-    hardWare: '',
-    storage: '',
-    memory: '',
-    usedMemory: '',
-    freeStorage: '',
-    usedStorage: '',
-    phoneNumber: '',
-    manufacturer: '',
-  });
-  const [isSwitchDiag, setisSwitchDiag] = React.useState(true);
 
-  const [modalVisible, setModalVisible] = React.useState(false);
+  const [isSwitchDiag, setisSwitchDiag] = useState(true);
+
+  const [modalVisible, setModalVisible] = useState(false);
 
   const [isAlertVisible, setAlertVisible] = useState(false);
 
@@ -83,26 +65,15 @@ function HomeScreen({ navigation, route }) {
     setAlertVisible(!isAlertVisible);
   };
 
-  // useEffect(() => {
-  //   console.log('in HomeScreen')
-  //   return () => {
-  //     console.log('Unmount HomeScreen');
-  //     console.log(deviceDetails);
-
-  //   };
-  // }, [deviceDetails]);
-
   const sendPhoneNumber = async () => {
     const hasPhoneStatePermission = await PermissionsAndroid.request(
       PermissionsAndroid.PERMISSIONS.READ_PHONE_STATE,
     );
 
-    // console.log('hasPhoneStatePermission', hasPhoneStatePermission)
 
     const hasReadSMSPermission = await PermissionsAndroid.request(
       PermissionsAndroid.PERMISSIONS.READ_SMS,
     );
-    // console.log('hasReadSMSPermission', hasReadSMSPermission)
 
     if (
       hasPhoneStatePermission === PermissionsAndroid.RESULTS.GRANTED &&
@@ -117,12 +88,6 @@ function HomeScreen({ navigation, route }) {
       }
     }
   };
-
-  // return {
-  //   sendPhoneNumber,
-  // };
-
-
 
   const CustomAlert = () => {
     return (
@@ -161,47 +126,6 @@ function HomeScreen({ navigation, route }) {
     );
   };
 
-  useEffect(() => {
-    Promise.all([
-      DeviceInfo.getDevice(),
-      DeviceInfo.getModel(),
-      DeviceInfo.supportedAbis(),
-      DeviceInfo.getTotalMemory(),
-      DeviceInfo.getUsedMemory(),
-      DeviceInfo.getHardware(),
-      DeviceInfo.getTotalDiskCapacity(),
-      DeviceInfo.getFreeDiskStorage(),
-      DeviceInfo.getPhoneNumber(),
-      DeviceInfo.getSystemVersion(),
-      DeviceInfo.getManufacturer(),
-    ]).then(([device, model, abis, memory, usedMemory, hardWare, storage, free, phoneNumber, osVersion, manufacturer]) => {
-      setDeviceDetails({
-        ...deviceDetails,
-        deviceName: device,
-        model: model,
-        serialNumber: receivedSerialNumber,
-        cpu: abis,
-        memory: (memory / (1024 ** 3)).toFixed(2),
-        usedMemory: (usedMemory / (1024 ** 3)).toFixed(2),
-        hardWare: hardWare,
-        freeStorage: (free / (1024 ** 3)).toFixed(2),
-        phoneNumber: phoneNumber,
-        osVersion: osVersion,
-        storage: (storage / (1024 ** 3)).toFixed(2),
-        usedStorage: ((storage - free) / (1024 ** 3)).toFixed(2),
-        manufacturer: manufacturer,
-      });
-      console.log('deviceDetails.....', deviceDetails)
-    }).catch(error => {
-      console.error('Error retrieving device information:', error);
-    });
-    sendPhoneNumber();
-
-    return () => {
-      console.log('unmount HomeScreen')
-        // console.log('deviceDetails', deviceDetails)
-    }
-  }, [])
 
   return (
     <>
@@ -336,15 +260,6 @@ function HomeScreen({ navigation, route }) {
       </View></>
   );
 }
-
-// const Dashboard = ({ navigation, route }) => {
-//   return (
-//     <Stack.Navigator >
-//       <Stack.Screen name="HomeScreen" component={HomeScreen} options={{ title: 'Home Screen', headerShown: false }} />
-//       <Stack.Screen name="TestsScreen" component={TestsScreen} options={{ title: 'Tests Screen', headerShown: false }} />
-//     </Stack.Navigator>
-//   );
-// };
 
 export default HomeScreen;
 

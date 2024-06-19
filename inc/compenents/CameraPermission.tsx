@@ -17,7 +17,7 @@ export const requestPermissions = async () => {
 
     try {
       const granted = await PermissionsAndroid.requestMultiple(permissions);
-      console.log('granted[] ', granted);
+      // console.log('granted[] ', granted);
 
       const cameraPermission = granted[PermissionsAndroid.PERMISSIONS.CAMERA] === PermissionsAndroid.RESULTS.GRANTED;
       const audioPermission = granted[PermissionsAndroid.PERMISSIONS.RECORD_AUDIO] === PermissionsAndroid.RESULTS.GRANTED;

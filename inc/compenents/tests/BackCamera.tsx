@@ -13,16 +13,15 @@ const BackCamera = () => {
   const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
   const { elapsedTimeRef } = useContext(TimerContext);
   const [photoUri, setPhotoUri] = useState(null);
+  const [photoBase64, setPhotoBase64] = useState(null);
   const cameraRef = useRef(null);
   const [isCameraActive, setIsCameraActive] = useState(true);
   const [permissionsGranted, setPermissionsGranted] = useState(false);
   const [photoPath, setPhotoPath] = useState<string | ((arg: any) => string)>(null);
   const device = useCameraDevice('back');
-  // console.log(useCameraDevices());
   const { width, height } = Dimensions.get('screen');
-  console.log('width ', width, ' ', 'height ', height)
   const format = useCameraFormat(device, [
-    { photoResolution: { width: width, height: height } }
+    { photoResolution: { width: 640, height: 480  } }
   ])
   const getDuration = useStepTimer();
 
@@ -53,7 +52,7 @@ const BackCamera = () => {
     if (cameraRef.current) {
       const photo = await cameraRef.current.takePhoto({
         flash: 'off',
-        photoQualityBalance: 'speed', // You can use 'speed', 'quality', or 'balanced'
+        photoQualityBalance: 'speed',
         enableShutterSound: true,
       });
 
@@ -74,6 +73,10 @@ const BackCamera = () => {
       try {
         await RNFS.copyFile(photo.path, filePath);
         setPhotoUri(filePath);
+
+        // Read the file and convert to base64
+        const fileBase64 = await RNFS.readFile(filePath, 'base64');
+        setPhotoBase64(fileBase64);
       } catch (err) {
         console.error('Error saving photo:', err);
       }
@@ -86,6 +89,7 @@ const BackCamera = () => {
     updatedTestSteps[testStep - 1].duration = getDuration();
     if (photoPath) {
       updatedTestSteps[testStep - 1].filePath = photoPath;
+      updatedTestSteps[testStep - 1].fileBase64 = photoBase64; // Save the base64 string
     }
     setTestsSteps(updatedTestSteps);
     setTestStep((prevStep) => prevStep + 1);
@@ -155,7 +159,7 @@ const styles = StyleSheet.create({
   },
   cameraContainer: {
     flex: 1,
-    width: '80%',
+    width: '100%',
     height: '100%'
   },
   btnTakePic: {
@@ -181,12 +185,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
     width: '100%',
-    backgroundColor: 'white',
+    backgroundColor: '#f0f0f0',
     height: '10%'
   },
   photo: {
     width: '100%',
     height: '90%',
+    objectFit: 'contain'
   },
   text: {
     fontSize: 18,

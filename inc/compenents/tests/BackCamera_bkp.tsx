@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useRef, useMemo } from 'react';
-import { View, Text, StyleSheet, Image, Alert, TouchableOpacity, BackHandler, Modal, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Image, Alert, TouchableOpacity, BackHandler, Modal, ActivityIndicator, Dimensions } from 'react-native';
 import { Camera, useCameraDevices, useCameraDevice, useCameraFormat } from 'react-native-vision-camera';
 import { Button } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -7,7 +7,6 @@ import { DataContext, TimerContext } from '../../../App';
 import Timer from '../Timer';
 import useStepTimer from '../useStepTimer';
 import RNFS from 'react-native-fs';
-import { formatTime } from '../../utils/formatTime';
 import { requestPermissions, openAppSettings } from '../CameraPermission';
 
 const BackCamera = () => {
@@ -19,8 +18,9 @@ const BackCamera = () => {
   const [permissionsGranted, setPermissionsGranted] = useState(false);
   const [photoPath, setPhotoPath] = useState<string | ((arg: any) => string)>(null);
   const device = useCameraDevice('back');
+  const { width, height } = Dimensions.get('screen');
   const format = useCameraFormat(device, [
-    { photoResolution: { width: 1280, height: 720 } }
+    { photoResolution: { width: 640, height: 480  } }
   ])
   const getDuration = useStepTimer();
 
@@ -50,8 +50,8 @@ const BackCamera = () => {
   const takePicture = async () => {
     if (cameraRef.current) {
       const photo = await cameraRef.current.takePhoto({
-        flash: 'on',
-        photoQualityBalance: 'speed', // You can use 'speed', 'quality', or 'balanced'
+        flash: 'off',
+        photoQualityBalance: 'speed',
         enableShutterSound: true,
       });
 
@@ -130,7 +130,7 @@ const BackCamera = () => {
         ) : (
           <>
             <View style={styles.cameraContainer}>
-              <Camera ref={cameraRef} style={styles.preview} device={device} isActive={isCameraActive} photo={true} format={format} />
+              <Camera ref={cameraRef} style={[styles.preview]} device={device} isActive={isCameraActive} photo={true} format={format} />
               <TouchableOpacity style={styles.btnTakePic} onPress={takePicture}>
                 <Icon name="checkbox-blank-circle" size={70} color={"#fff"} />
               </TouchableOpacity>
@@ -179,12 +179,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
     width: '100%',
-    backgroundColor: 'white',
+    backgroundColor: '#f0f0f0',
     height: '10%'
   },
   photo: {
     width: '100%',
     height: '90%',
+    objectFit: 'contain'
   },
   text: {
     fontSize: 18,

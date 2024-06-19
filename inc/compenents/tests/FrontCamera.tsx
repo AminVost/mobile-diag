@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { View, Text, StyleSheet, Image, Alert, TouchableOpacity, BackHandler, Modal } from 'react-native';
-import { Camera, useCameraDevice } from 'react-native-vision-camera';
+import { Camera, useCameraDevice, useCameraFormat } from 'react-native-vision-camera';
 import { Button } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { DataContext } from '../../../App';
@@ -12,6 +12,7 @@ import { requestPermissions, openAppSettings } from '../CameraPermission';
 const FrontCamera = () => {
   const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
   const [photoUri, setPhotoUri] = useState(null);
+  const [photoBase64, setPhotoBase64] = useState(null);
   const cameraRef = useRef(null);
   const [isCameraActive, setIsCameraActive] = useState(true);
   const [permissionsGranted, setPermissionsGranted] = useState(false);
@@ -19,6 +20,9 @@ const FrontCamera = () => {
   const [photoPath, setPhotoPath] = useState<string | ((arg: any) => string)>(null);
 
   const device = useCameraDevice('front');
+  const format = useCameraFormat(device, [
+    { photoResolution: { width: 640, height: 480 } }
+  ])
   const getDuration = useStepTimer();
 
 
@@ -50,8 +54,10 @@ const FrontCamera = () => {
   const takePicture = async () => {
     if (cameraRef.current) {
       const photo = await cameraRef.current.takePhoto({
-        quality: 1,
-        skipMetadata: true,
+        flash: 'off',
+        photoQualityBalance: 'speed',
+        enableShutterSound: true,
+        // skipMetadata: true,
       });
 
       const directoryPath = `${RNFS.PicturesDirectoryPath}/RapidMobileDiag`;
@@ -71,6 +77,9 @@ const FrontCamera = () => {
       try {
         await RNFS.copyFile(photo.path, filePath);
         setPhotoUri(filePath);
+        // Read the file and convert to base64
+        const fileBase64 = await RNFS.readFile(filePath, 'base64');
+        setPhotoBase64(fileBase64);
       } catch (err) {
         console.error('Error saving photo:', err);
       }
@@ -83,6 +92,7 @@ const FrontCamera = () => {
     updatedTestSteps[testStep - 1].duration = getDuration();
     if (photoPath) {
       updatedTestSteps[testStep - 1].filePath = photoPath;
+      updatedTestSteps[testStep - 1].fileBase64 = photoBase64; // Save the base64 string
     }
     setTestsSteps(updatedTestSteps);
     setTestStep((prevStep) => prevStep + 1);
@@ -126,7 +136,7 @@ const FrontCamera = () => {
           </>
         ) : (
           <View style={styles.cameraContainer}>
-            <Camera ref={cameraRef} style={styles.preview} device={device} isActive={isCameraActive} photo={true} />
+            <Camera ref={cameraRef} style={styles.preview} device={device} isActive={isCameraActive} photo={true} format={format} />
             <TouchableOpacity style={styles.btnTakePic} onPress={takePicture}>
               <Icon name="checkbox-blank-circle" size={70} color={"#fff"} />
             </TouchableOpacity>
@@ -179,7 +189,7 @@ const styles = StyleSheet.create({
   photo: {
     width: '100%',
     height: '90%',
-    resizeMode: 'contain',
+    objectFit: 'contain'
   },
   text: {
     fontSize: 18,

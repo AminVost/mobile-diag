@@ -15,8 +15,6 @@ const TouchScreenTest = ({ navigation, route }) => {
     const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
     const [isAlertVisible, setAlertVisible] = useState(false);
     const getDuration = useStepTimer();
-    // const [startTime, setStartTime] = useState(0);
-    // const [endTime, setEndTime] = useState(0);
 
     // const heightBar = StatusBar.currentHeight;
     const [squares, setSquares] = useState([]);
@@ -62,15 +60,17 @@ const TouchScreenTest = ({ navigation, route }) => {
         setAlertVisible(prev => !prev);
     }, []);
 
-    useEffect(() => {
-        if (completed) {
-            // Update the result for the current test step
-            const updatedTestSteps = [...testSteps];
-            updatedTestSteps[testStep].result = 'pass'; // or whatever your result is
-            setTestsSteps(updatedTestSteps);
-            setTestStep((prevStep) => prevStep + 1);
-        }
-    }, [completed]);
+    // useEffect(() => {
+    //     if (completed) {
+    //         Update the result for the current test step
+    //         const updatedTestSteps = [...testSteps];
+    //         console.log('updatedTestSteps[testStep - 1]' , updatedTestSteps[testStep - 1]);
+    //         updatedTestSteps[testStep - 1].result = 'pass'; // or whatever your result is
+    //         setTestsSteps(updatedTestSteps);
+    //         setTestStep((prevStep) => prevStep + 1);
+    //         handleResult('Pass');
+    //     }
+    // }, [completed]);
 
     const generateSquares = () => {
         const newSquares = [];
@@ -89,6 +89,7 @@ const TouchScreenTest = ({ navigation, route }) => {
         setSquares(updatedSquares);
         if (updatedSquares.length === 0) {
             setCompleted(true);
+            handleResult('Pass');
         }
     };
 

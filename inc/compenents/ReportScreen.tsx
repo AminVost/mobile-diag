@@ -1,15 +1,20 @@
-import React, { useContext, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { Button, Tooltip } from 'react-native-paper';
+import React, { useContext, useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
+import { Button, Tooltip, Modal, Portal, ProgressBar, MD3Colors } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import axios from 'axios';
 import { DataContext, TimerContext } from '../../App';
 import { formatTimeHms } from '../utils/formatTimeHms';
-import { formatTime } from '../utils/formatTime';
 
 export default function ReportScreen({ navigation }) {
-    const { testSteps } = useContext(DataContext);
+    const { testSteps, deviceDetails } = useContext(DataContext);
     const { elapsedTimeRef } = useContext(TimerContext);
-    console.log(elapsedTimeRef.current);
+
+    const [loading, setLoading] = useState(false);
+    const [response, setResponse] = useState(null);
+    const [progress, setProgress] = useState(0);
+    const [isModalVisible, setModalVisible] = useState(false);
+    const [uploadMessage, setUploadMessage] = useState('');
 
     useEffect(() => {
         navigation.setOptions({
@@ -39,6 +44,45 @@ export default function ReportScreen({ navigation }) {
 
     const navigateToTest = (testName) => {
         navigation.navigate(testName);
+    };
+
+    const handleSendResult = async () => {
+        setLoading(true);
+        setModalVisible(true);
+        setProgress(0);
+        const inventoryId = 123; // Replace with the actual inventory_id
+        try {
+            const formData = new FormData();
+            formData.append('duration', JSON.stringify(elapsedTimeRef.current));
+            formData.append('testSteps', JSON.stringify(testSteps));
+            formData.append('deviceDetails', JSON.stringify(deviceDetails));
+
+            const response = await axios.post(`https://source-code.ir/testapi/api.php?inventory_id=${inventoryId}`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+                onUploadProgress: (progressEvent) => { 
+                    const percentage = (progressEvent.loaded / progressEvent.total);
+                    setProgress(percentage);
+                },
+            });
+
+            // Check if the response status is success
+            if (response.data.status === 'success') {
+                console.log('Data saved successfully:', response.data);
+                setUploadMessage('Data saved successfully.');
+            } else {
+                console.error('Error response from server:', response.data);
+                setUploadMessage(`Error: ${response.data.message}`);
+            }
+        } catch (error) {
+            console.error('Error sending result:', error);
+            setUploadMessage('Error sending result. Please try again.');
+        } finally {
+            setLoading(false);
+            setModalVisible(false);
+            Alert.alert('Upload Status', uploadMessage);
+        }
     };
 
     return (
@@ -71,13 +115,25 @@ export default function ReportScreen({ navigation }) {
                 ))}
             </ScrollView>
             <View style={styles.btnContainer}>
-                <Button mode="contained" labelStyle={styles.btnLabel} icon={() => <Icon name="home-import-outline" size={20} color="white" />} onPress={() => navigation.goBack()} style={[styles.button, {backgroundColor : '#4908b0'}]}>
+                <Button mode="contained" labelStyle={styles.btnLabel} icon={() => <Icon name="home-import-outline" size={20} color="white" />} onPress={() => navigation.goBack()} style={[styles.button, { backgroundColor: '#4908b0' }]}>
                     Go back home
                 </Button>
-                <Button mode="contained" labelStyle={styles.btnLabel} icon={() => <Icon name="export-variant" size={20} color="white" />} onPress={() => ''} style={[styles.button, { backgroundColor: '#2980b9' }]}>
+                <Button mode="contained" labelStyle={styles.btnLabel} icon={() => <Icon name="export-variant" size={20} color="white" />} onPress={handleSendResult} style={[styles.button, { backgroundColor: '#2980b9' }]}>
                     Send Result
                 </Button>
             </View>
+            <Portal>
+                <Modal visible={!isModalVisible} onDismiss={() => setModalVisible(false)} contentContainerStyle={styles.modalContainer}>
+                    <Text style={styles.modalTitle}>Uploading Results...</Text>
+                    <ProgressBar progress={0.5} color={MD3Colors.primary50} style={styles.progressBar} />
+                    <Text style={styles.progressText}>{(progress * 100).toFixed(2)}%</Text>
+                </Modal>
+            </Portal>
+            {response && (
+                <View style={styles.responseContainer}>
+                    <Text style={styles.responseText}>{response}</Text>
+                </View>
+            )}
         </View>
     );
 }
@@ -106,23 +162,23 @@ const styles = StyleSheet.create({
         alignContent: 'center',
         alignItems: 'center',
         padding: 10,
-        columnGap: 15
+        columnGap: 15,
     },
     icon: {
         marginRight: 10,
-        color: 'black'
+        color: 'black',
     },
     iconPass: {
         marginRight: 10,
-        color: '#27ae60'
+        color: '#27ae60',
     },
     iconSkip: {
         marginRight: 10,
-        color: '#2c3e50'
+        color: '#2c3e50',
     },
     iconFail: {
         marginRight: 10,
-        color: '#c0392b'
+        color: '#c0392b',
     },
     textContainer: {
         flex: 1,
@@ -130,7 +186,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 18,
         fontFamily: 'Quicksand-Bold',
-        color: 'black'
+        color: 'black',
     },
     subTitle: {
         flexDirection: 'row',
@@ -139,7 +195,7 @@ const styles = StyleSheet.create({
     stepInfo: {
         fontSize: 14,
         color: 'black',
-        fontFamily: 'Quicksand-Regular'
+        fontFamily: 'Quicksand-Regular',
     },
     pass: {
         backgroundColor: '#d4edda',
@@ -158,14 +214,13 @@ const styles = StyleSheet.create({
         borderColor: '#00000075',
     },
     button: {
-        // marginTop: 20,
         alignSelf: 'center',
         justifyContent: 'center',
         flexGrow: 1,
-        padding: 5
+        padding: 5,
     },
     btnLabel: {
-        fontSize: 15
+        fontSize: 15,
     },
     headerRightContainer: {
         marginRight: 10,
@@ -177,7 +232,7 @@ const styles = StyleSheet.create({
     headerRightText: {
         fontSize: 16,
         color: '#000',
-        fontFamily: 'Quicksand-SemiBold'
+        fontFamily: 'Quicksand-SemiBold',
     },
     timerIcon: {
         alignSelf: 'center',
@@ -196,6 +251,35 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
         color: 'white',
-        alignItems: 'center'
+        alignItems: 'center',
+    },
+    responseContainer: {
+        padding: 10,
+        backgroundColor: '#f0f0f0',
+        borderRadius: 5,
+        marginTop: 10,
+    },
+    responseText: {
+        fontSize: 16,
+    },
+    modalContainer: {
+        backgroundColor: 'white',
+        padding: 20,
+        borderRadius: 10,
+        alignItems: 'center',
+    },
+    modalTitle: {
+        fontSize: 18,
+        marginBottom: 20,
+    },
+    progressBar: {
+        width: '100%',
+        height: 40,
+        borderRadius: 5,
+    },
+    progressText: {
+        marginTop: 10,
+        fontSize: 16,
     },
 });
+
