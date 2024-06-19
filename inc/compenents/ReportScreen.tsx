@@ -123,7 +123,7 @@ export default function ReportScreen({ navigation }) {
                 </Button>
             </View>
             <Portal>
-                <Modal visible={!isModalVisible} onDismiss={() => setModalVisible(false)} contentContainerStyle={styles.modalContainer}>
+                <Modal visible={isModalVisible} onDismiss={() => setModalVisible(false)} contentContainerStyle={styles.modalContainer}>
                     <Text style={styles.modalTitle}>Uploading Results...</Text>
                     <ProgressBar progress={0.5} color={MD3Colors.primary50} style={styles.progressBar} />
                     <Text style={styles.progressText}>{(progress * 100).toFixed(2)}%</Text>
