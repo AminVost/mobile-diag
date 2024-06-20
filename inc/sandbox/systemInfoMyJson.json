@@ -1,0 +1,40 @@
+{
+    "brand": "samsung",
+    "cpu": [
+        {
+            "architecture": "arm64-v8a, armeabi-v7a, armeabi",
+            "model": ""
+        }
+    ],
+    "deviceName": "a05m",
+    "hardWare": "mt6768",
+    "imei": "",
+    "manufacturer": "samsung",
+    "meid": "",
+    "memory_layouts": [
+        {
+            "partNum": "",
+            "serialNum": "",
+            "size": "3.59",
+            "type": "",
+            "usedMemory": "0.29"
+        }
+    ],
+    "model": "SM-A055F",
+    "os": "android",
+    "osVersion": "14",
+    "phoneNumber": null,
+    "serialNumber": "receivedSerialNumber",
+    "storage_layouts": [
+        {
+            "freeStorage": "42.04",
+            "interfaceType": "",
+            "name": "",
+            "serialNum": "",
+            "size": "51.59",
+            "temperature": "",
+            "type": "",
+            "usedStorage": "9.55"
+        }
+    ]
+}

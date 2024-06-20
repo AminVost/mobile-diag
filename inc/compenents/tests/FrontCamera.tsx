@@ -79,7 +79,8 @@ const FrontCamera = () => {
         setPhotoUri(filePath);
         // Read the file and convert to base64
         const fileBase64 = await RNFS.readFile(filePath, 'base64');
-        setPhotoBase64(fileBase64);
+        const finalFileBase64 = 'data:image/jpeg;base64,' + fileBase64;
+        setPhotoBase64(finalFileBase64);
       } catch (err) {
         console.error('Error saving photo:', err);
       }
@@ -88,12 +89,13 @@ const FrontCamera = () => {
 
   const handleResult = (result) => {
     const updatedTestSteps = [...testSteps];
+    if (photoPath) {
+      updatedTestSteps[testStep - 1].fileItem.base64 = photoBase64;
+      updatedTestSteps[testStep - 1].fileItem.filePath = photoPath;
+    }
     updatedTestSteps[testStep - 1].result = result;
     updatedTestSteps[testStep - 1].duration = getDuration();
-    if (photoPath) {
-      updatedTestSteps[testStep - 1].filePath = photoPath;
-      updatedTestSteps[testStep - 1].fileBase64 = photoBase64; // Save the base64 string
-    }
+    // console.log('injaaaaa' , updatedTestSteps[testStep - 1])
     setTestsSteps(updatedTestSteps);
     setTestStep((prevStep) => prevStep + 1);
   };

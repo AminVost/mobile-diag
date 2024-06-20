@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, BackHandler } from 'react-native';
-import { Camera, useCameraDevices , useCameraFormat } from 'react-native-vision-camera';
+import { Camera, useCameraDevices, useCameraFormat } from 'react-native-vision-camera';
 import { Button } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { DataContext } from '../../../App';
@@ -17,6 +17,7 @@ const MultiCameraTest = () => {
   const [permissionsGranted, setPermissionsGranted] = useState(false);
   const [photoPath, setPhotoPath] = useState(null);
   const [currentCameraIndex, setCurrentCameraIndex] = useState(0);
+  const [fileBase64, setFileBase64] = useState(null);
 
   const devices = useCameraDevices();
   const cameraDevices = devices ? Object.values(devices) : [];
@@ -26,12 +27,11 @@ const MultiCameraTest = () => {
 
   const format = device ? useCameraFormat(device, [{ photoResolution: { width: 640, height: 480 } }]) : null;
 
-
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
     requestCameraPermission();
     return () => {
-      console.log('unmount multiCamera' , testSteps[testStep - 1]);
+      console.log('unmount multiCamera', testSteps[testStep - 1]);
       setIsCameraActive(false);
       backHandler.remove();
     };
@@ -75,6 +75,10 @@ const MultiCameraTest = () => {
       try {
         await RNFS.copyFile(photo.path, filePath);
         setPhotoUri(filePath);
+
+        // Convert the photo to base64
+        const fileBase64String = await RNFS.readFile(photo.path, 'base64');
+        setFileBase64(fileBase64String);
       } catch (err) {
         console.error('Error saving photo:', err);
       }
@@ -91,6 +95,7 @@ const MultiCameraTest = () => {
         title: devices[currentCameraIndex]?.name || 'Unknown Camera',
         result,
         filePath: photoPath,
+        fileBase64: fileBase64,
       };
 
       multiCamResult[currentCameraIndex] = cameraResult;
@@ -101,6 +106,7 @@ const MultiCameraTest = () => {
       setCurrentCameraIndex((prevIndex) => prevIndex + 1);
       setPhotoUri(null);
       setPhotoPath(null);
+      setFileBase64(null);
     } else {
       const finalResults = updatedTestSteps[multiCameraStepIndex].multiCamResult.map(cam => cam.result);
       let finalResult = 'Pass';
@@ -172,9 +178,8 @@ const MultiCameraTest = () => {
   );
 };
 
+
 export default MultiCameraTest;
-
-
 
 const styles = StyleSheet.create({
   container: {

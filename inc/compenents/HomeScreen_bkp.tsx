@@ -7,6 +7,7 @@ import { RNCamera } from 'react-native-camera';
 import { Button, PaperProvider, Switch, Tooltip } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import DeviceInfo from 'react-native-device-info';
+import { appConfig } from '../../config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   SafeAreaProvider,
@@ -19,7 +20,7 @@ const Stack = createNativeStackNavigator();
 function HomeScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
 
-  const { isInternetConnected, websocketConnected, receivedSerialNumber , deviceInfo, setDeviceInfo } = useContext(DataContext);
+  const { isInternetConnected, websocketConnected, receivedSerialNumber, deviceDetails, setDeviceDetails } = useContext(DataContext);
 
   const checklistItems = [
     "Any Bluetooth Device",
@@ -51,25 +52,7 @@ function HomeScreen({ navigation, route }) {
     "SD Card",
     "OTG Connector",
   ];
-  const [deviceDetails, setDeviceDetails] = useState({
-    deviceName: '',
-    model: '',
-    brand: DeviceInfo.getBrand(),
-    oS: Platform.OS,
-    osVersion: '',
-    imei: '',
-    meid: '',
-    serialNumber: '',
-    cpu: '',
-    hardWare: '',
-    storage: '',
-    memory: '',
-    usedMemory: '',
-    freeStorage: '',
-    usedStorage: '',
-    phoneNumber: '',
-    manufacturer: '',
-  });
+
   const [isSwitchDiag, setisSwitchDiag] = useState(true);
 
   const [modalVisible, setModalVisible] = useState(false);
@@ -144,47 +127,6 @@ function HomeScreen({ navigation, route }) {
     );
   };
 
-  useEffect(() => {
-    Promise.all([
-      DeviceInfo.getDevice(),
-      DeviceInfo.getModel(),
-      DeviceInfo.supportedAbis(),
-      DeviceInfo.getTotalMemory(),
-      DeviceInfo.getUsedMemory(),
-      DeviceInfo.getHardware(),
-      DeviceInfo.getTotalDiskCapacity(),
-      DeviceInfo.getFreeDiskStorage(),
-      DeviceInfo.getPhoneNumber(),
-      DeviceInfo.getSystemVersion(),
-      DeviceInfo.getManufacturer(),
-    ]).then(([device, model, abis, memory, usedMemory, hardWare, storage, free, phoneNumber, osVersion, manufacturer]) => {
-      setDeviceDetails({
-        ...deviceDetails,
-        deviceName: device,
-        model: model,
-        serialNumber: receivedSerialNumber,
-        cpu: abis,
-        memory: (memory / (1024 ** 3)).toFixed(2),
-        usedMemory: (usedMemory / (1024 ** 3)).toFixed(2),
-        hardWare: hardWare,
-        freeStorage: (free / (1024 ** 3)).toFixed(2),
-        phoneNumber: phoneNumber,
-        osVersion: osVersion,
-        storage: (storage / (1024 ** 3)).toFixed(2),
-        usedStorage: ((storage - free) / (1024 ** 3)).toFixed(2),
-        manufacturer: manufacturer,
-      });
-      setDeviceInfo(deviceDetails);
-    }).catch(error => {
-      console.error('Error retrieving device information:', error);
-    });
-    sendPhoneNumber();
-
-    return () => {
-      console.log('unmount HomeScreen')
-        // console.log('deviceDetails', deviceDetails)
-    }
-  }, [])
 
   return (
     <>
@@ -290,7 +232,8 @@ function HomeScreen({ navigation, route }) {
           </View>
         </View>
         <Text style={styles.versionText}>
-          Version : 1.0.0
+          {/* Version : 1.0.0 */}
+          Version : {appConfig.version}
         </Text>
         <Modal
           animationType="slide"

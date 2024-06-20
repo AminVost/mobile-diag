@@ -85,12 +85,13 @@ const BackCamera = () => {
 
   const handleResult = (result) => {
     const updatedTestSteps = [...testSteps];
+    if (photoPath) {
+      updatedTestSteps[testStep - 1].fileItem.base64 = photoBase64;
+      updatedTestSteps[testStep - 1].fileItem.filePath = photoPath;
+    }
     updatedTestSteps[testStep - 1].result = result;
     updatedTestSteps[testStep - 1].duration = getDuration();
-    if (photoPath) {
-      updatedTestSteps[testStep - 1].filePath = photoPath;
-      updatedTestSteps[testStep - 1].fileBase64 = photoBase64; // Save the base64 string
-    }
+    // console.log('injaaa' , updatedTestSteps[testStep - 1])
     setTestsSteps(updatedTestSteps);
     setTestStep((prevStep) => prevStep + 1);
     console.log(testSteps);

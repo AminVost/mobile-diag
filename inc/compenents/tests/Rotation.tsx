@@ -67,24 +67,28 @@ const Rotation = () => {
   return (
     <View style={styles.container}>
       <Timer />
-      <Text style={styles.text}>
-        {testSteps[testStep - 1].text}
-      </Text>
-      {testPassed ? (
-        <>
-          <Icon name="check-circle" size={130} color="#44bd32" />
-          <Text style={[styles.orientationText, styles.orientationSuccessText]}>Auto-rotation is working correctly</Text>
-        </>
-      ) : (
-        <>
-          <Icon
-            name={orientation === 'Portrait' ? 'phone-rotate-landscape' : 'phone-rotate-portrait'}
-            size={140}
-            color="#4908b0"
-          />
-          <Text style={[styles.orientationText]}>Current Orientation: {orientation}</Text>
-        </>
-      )}
+      {testSteps[testStep - 1]?.text &&
+        < Text style={styles.text}>
+          {testSteps[testStep - 1].text}
+        </Text>
+      }
+      {
+        testPassed ? (
+          <>
+            <Icon name="check-circle" size={130} color="#44bd32" />
+            <Text style={[styles.orientationText, styles.orientationSuccessText]}>Auto-rotation is working correctly</Text>
+          </>
+        ) : (
+          <>
+            <Icon
+              name={orientation === 'Portrait' ? 'phone-rotate-landscape' : 'phone-rotate-portrait'}
+              size={140}
+              color="#4908b0"
+            />
+            <Text style={[styles.orientationText]}>Current Orientation: {orientation}</Text>
+          </>
+        )
+      }
       <View style={styles.btnContainer}>
         <Button
           mode="elevated"
@@ -117,7 +121,7 @@ const Rotation = () => {
           Pass
         </Button>
       </View>
-    </View>
+    </View >
   );
 };
 

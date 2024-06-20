@@ -85,12 +85,13 @@ const NativeCameraPhoto = () => {
     const nativeCameraStepIndex = updatedTestSteps.findIndex((step) => step.title === 'NativeCameraPhoto');
 
     if (nativeCameraStepIndex !== -1) {
+      if (photoPath) {
+        updatedTestSteps[nativeCameraStepIndex].fileItem.base64 = fileBase64;
+        updatedTestSteps[nativeCameraStepIndex].fileItem.filePath = photoPath;
+      }
       updatedTestSteps[nativeCameraStepIndex].result = result;
       updatedTestSteps[nativeCameraStepIndex].duration = getDuration();
-      if (photoPath) {
-        updatedTestSteps[nativeCameraStepIndex].filePath = photoPath;
-        updatedTestSteps[nativeCameraStepIndex].fileBase64 = fileBase64;
-      }
+      // console.log('injaaaa', updatedTestSteps[nativeCameraStepIndex])
       setTestsSteps(updatedTestSteps);
       setTestStep((prevStep) => prevStep + 1);
     } else {

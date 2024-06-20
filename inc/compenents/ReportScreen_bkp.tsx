@@ -1,10 +1,11 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
-import { Button, Tooltip } from 'react-native-paper';
+import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
+import { Button, Tooltip, Modal, Portal, ProgressBar, MD3Colors } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import axios from 'axios';
 import { DataContext, TimerContext } from '../../App';
 import { formatTimeHms } from '../utils/formatTimeHms';
+import { appConfig } from '../../config';
 
 export default function ReportScreen({ navigation }) {
     const { testSteps, deviceDetails } = useContext(DataContext);
@@ -12,6 +13,9 @@ export default function ReportScreen({ navigation }) {
 
     const [loading, setLoading] = useState(false);
     const [response, setResponse] = useState(null);
+    const [progress, setProgress] = useState(0);
+    const [isModalVisible, setModalVisible] = useState(false);
+    const [uploadMessage, setUploadMessage] = useState('');
 
     useEffect(() => {
         navigation.setOptions({
@@ -45,39 +49,49 @@ export default function ReportScreen({ navigation }) {
 
     const handleSendResult = async () => {
         setLoading(true);
-        const inventoryId = 123; // Replace with the actual inventory_id
+        setModalVisible(true);
+        setProgress(0);
+        const token = 'ccae4581-0a34-11ec-a792-fa163e6a962cY'; // Replace with the actual inventory_id
+        const platform = 'linux';
+        const appVersion = appConfig.version;
+        const inventoryId = 202406162653;
         try {
             const formData = new FormData();
+            formData.append('token', JSON.stringify(token));
+            formData.append('platform', JSON.stringify(platform));
+            formData.append('appVersion', JSON.stringify(appVersion));
             formData.append('duration', JSON.stringify(elapsedTimeRef.current));
-            formData.append('testSteps', JSON.stringify(testSteps));
-            formData.append('deviceDetails', JSON.stringify(deviceDetails));
-    
+            formData.append('system_info', JSON.stringify(deviceDetails));
+            formData.append('steps', JSON.stringify(testSteps));
+
+            console.log('deviceDetails= ', deviceDetails)
             const response = await axios.post(`https://source-code.ir/testapi/api.php?inventory_id=${inventoryId}`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
-                onUploadProgress: (progress) => { 
-                    console.log('progress', (progress.loaded / progress.total) * 100); 
+                onUploadProgress: (progressEvent) => {
+                    const percentage = (progressEvent.loaded / progressEvent.total);
+                    setProgress(percentage);
                 },
             });
-    
+
             // Check if the response status is success
             if (response.data.status === 'success') {
                 console.log('Data saved successfully:', response.data);
-                setResponse('Data saved successfully.');
+                setUploadMessage('Data saved successfully.');
             } else {
                 console.error('Error response from server:', response.data);
-                setResponse(`Error: ${response.data.message}`);
+                setUploadMessage(`Error: ${response.data.message}`);
             }
         } catch (error) {
             console.error('Error sending result:', error);
-            setResponse('Error sending result. Please try again.');
+            setUploadMessage('Error sending result. Please try again.');
         } finally {
             setLoading(false);
+            setModalVisible(false);
+            Alert.alert('Upload Status', uploadMessage);
         }
     };
-    
-
 
     return (
         <View style={styles.container}>
@@ -116,12 +130,13 @@ export default function ReportScreen({ navigation }) {
                     Send Result
                 </Button>
             </View>
-            {loading && (
-                <View style={styles.loaderContainer}>
-                    <ActivityIndicator size="large" color="#0000ff" />
-                    <Text style={styles.loadingText}>Sending results...</Text>
-                </View>
-            )}
+            <Portal>
+                <Modal visible={isModalVisible} onDismiss={() => setModalVisible(false)} contentContainerStyle={styles.modalContainer}>
+                    <Text style={styles.modalTitle}>Uploading Results...</Text>
+                    <ProgressBar progress={0.5} color={MD3Colors.primary50} style={styles.progressBar} />
+                    <Text style={styles.progressText}>{(progress * 100).toFixed(2)}%</Text>
+                </Modal>
+            </Portal>
             {response && (
                 <View style={styles.responseContainer}>
                     <Text style={styles.responseText}>{response}</Text>
@@ -130,7 +145,6 @@ export default function ReportScreen({ navigation }) {
         </View>
     );
 }
-
 
 const styles = StyleSheet.create({
     container: {
@@ -156,23 +170,23 @@ const styles = StyleSheet.create({
         alignContent: 'center',
         alignItems: 'center',
         padding: 10,
-        columnGap: 15
+        columnGap: 15,
     },
     icon: {
         marginRight: 10,
-        color: 'black'
+        color: 'black',
     },
     iconPass: {
         marginRight: 10,
-        color: '#27ae60'
+        color: '#27ae60',
     },
     iconSkip: {
         marginRight: 10,
-        color: '#2c3e50'
+        color: '#2c3e50',
     },
     iconFail: {
         marginRight: 10,
-        color: '#c0392b'
+        color: '#c0392b',
     },
     textContainer: {
         flex: 1,
@@ -180,7 +194,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 18,
         fontFamily: 'Quicksand-Bold',
-        color: 'black'
+        color: 'black',
     },
     subTitle: {
         flexDirection: 'row',
@@ -189,7 +203,7 @@ const styles = StyleSheet.create({
     stepInfo: {
         fontSize: 14,
         color: 'black',
-        fontFamily: 'Quicksand-Regular'
+        fontFamily: 'Quicksand-Regular',
     },
     pass: {
         backgroundColor: '#d4edda',
@@ -208,14 +222,13 @@ const styles = StyleSheet.create({
         borderColor: '#00000075',
     },
     button: {
-        // marginTop: 20,
         alignSelf: 'center',
         justifyContent: 'center',
         flexGrow: 1,
-        padding: 5
+        padding: 5,
     },
     btnLabel: {
-        fontSize: 15
+        fontSize: 15,
     },
     headerRightContainer: {
         marginRight: 10,
@@ -227,7 +240,7 @@ const styles = StyleSheet.create({
     headerRightText: {
         fontSize: 16,
         color: '#000',
-        fontFamily: 'Quicksand-SemiBold'
+        fontFamily: 'Quicksand-SemiBold',
     },
     timerIcon: {
         alignSelf: 'center',
@@ -246,18 +259,7 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
         color: 'white',
-        alignItems: 'center'
-    },
-    loaderContainer: {
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        transform: [{ translateX: -50 }, { translateY: -50 }],
         alignItems: 'center',
-    },
-    loadingText: {
-        marginTop: 10,
-        fontSize: 16,
     },
     responseContainer: {
         padding: 10,
@@ -268,4 +270,24 @@ const styles = StyleSheet.create({
     responseText: {
         fontSize: 16,
     },
+    modalContainer: {
+        backgroundColor: 'white',
+        padding: 20,
+        borderRadius: 10,
+        alignItems: 'center',
+    },
+    modalTitle: {
+        fontSize: 18,
+        marginBottom: 20,
+    },
+    progressBar: {
+        width: '100%',
+        height: 40,
+        borderRadius: 5,
+    },
+    progressText: {
+        marginTop: 10,
+        fontSize: 16,
+    },
 });
+

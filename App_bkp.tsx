@@ -48,163 +48,75 @@ export default function App() {
   const [testStep, setTestStep] = useState(1);
   const [startTime, setStartTime] = useState(null);
   const elapsedTimeRef = useRef(0);
-  const [deviceInfo, setDeviceInfo] = useState({});
-
-  // const [testSteps, setTestsSteps] = useState([
-  //   {
-  //     title: 'Display',
-  //     text: '',
-  //     Modaltext: 'Please select the Display test result',
-  //     icon: 'circle-opacity',
-  //     showInfoBar: false,
-  //     showTimer: true,
-  //     showStepTitle: true,
-  //     showProgress: true,
-  //     result: null,
-  //     error: null,
-  //     duration: null,
-  //     priority: 11,
-  //   },
-  //   {
-  //     title: 'TouchScreen',
-  //     text: '',
-  //     Modaltext: 'Please select the TouchScreen test result',
-  //     icon: 'cellphone',
-  //     showInfoBar: false,
-  //     showTimer: true,
-  //     showStepTitle: true,
-  //     showProgress: true,
-  //     result: null,
-  //     error: null,
-  //     duration: null,
-  //     priority: 10,
-  //   },
-  //   {
-  //     title: 'Multitouch',
-  //     text: '',
-  //     icon: 'hand-clap',
-  //     showInfoBar: true,
-  //     showTimer: true,
-  //     showStepTitle: true,
-  //     showProgress: true,
-  //     result: null,
-  //     error: null,
-  //     duration: null,
-  //     priority: 9,
-  //   },
-  //   {
-  //     title: 'Brightness',
-  //     text: '',
-  //     icon: 'brightness-6',
-  //     showInfoBar: true,
-  //     showTimer: true,
-  //     showStepTitle: true,
-  //     showProgress: true,
-  //     result: null,
-  //     error: null,
-  //     duration: null,
-  //     priority: 8,
-  //   },
-  //   {
-  //     title: 'Rotation',
-  //     text: `Please turn on the 'Auto Rotate' feature and rotate your device to check the auto-rotation sensor`,
-  //     icon: 'screen-rotation',
-  //     showInfoBar: true,
-  //     showTimer: true,
-  //     showStepTitle: true,
-  //     showProgress: true,
-  //     result: null,
-  //     error: null,
-  //     duration: null,
-  //     priority: 7,
-  //   },
-  //   {
-  //     title: 'BackCamera',
-  //     text: '',
-  //     icon: 'camera-rear-variant',
-  //     showInfoBar: true,
-  //     showTimer: true,
-  //     showStepTitle: true,
-  //     showProgress: true,
-  //     result: null,
-  //     filePath: null,
-  //     error: null,
-  //     duration: null,
-  //     priority: 4,
-  //   },
-  //   {
-  //     title: 'FrontCamera',
-  //     text: '',
-  //     icon: 'camera-front-variant',
-  //     showInfoBar: true,
-  //     showTimer: true,
-  //     showStepTitle: true,
-  //     showProgress: true,
-  //     result: null,
-  //     filePath: null,
-  //     error: null,
-  //     duration: null,
-  //     priority: 5,
-  //   },
-  //   {
-  //     title: 'MultiCamera',
-  //     text: '',
-  //     icon: 'camera-flip-outline',
-  //     showInfoBar: true,
-  //     showTimer: true,
-  //     showStepTitle: true,
-  //     showProgress: true,
-  //     result: null,
-  //     multiCamResult: [],
-  //     devicesInfo: null,
-  //     error: null,
-  //     duration: null,
-  //     priority: 6,
-  //   },
-  //   {
-  //     title: 'BackCameraVideo',
-  //     text: '',
-  //     icon: 'video-outline',
-  //     showInfoBar: true,
-  //     showTimer: true,
-  //     showStepTitle: true,
-  //     showProgress: true,
-  //     result: null,
-  //     filePath: null,
-  //     error: null,
-  //     duration: null,
-  //     priority: 1,
-  //   },
-  //   {
-  //     title: 'NativeCameraVideo',
-  //     text: '',
-  //     icon: 'video-check-outline',
-  //     showInfoBar: true,
-  //     showTimer: true,
-  //     showStepTitle: true,
-  //     showProgress: true,
-  //     result: null,
-  //     error: null,
-  //     duration: null,
-  //     priority: 2,
-  //   },
-  //   {
-  //     title: 'NativeCameraPhoto',
-  //     text: '',
-  //     icon: 'camera-enhance',
-  //     showInfoBar: true,
-  //     showTimer: true,
-  //     showStepTitle: true,
-  //     showProgress: true,
-  //     result: null,
-  //     filePath: null,
-  //     error: null,
-  //     duration: null,
-  //     priority: 3,
-  //   },
-  // ]);
 
   const [testSteps, setTestsSteps] = useState([
+    {
+      title: 'Display',
+      text: '',
+      Modaltext: 'Please select the Display test result',
+      icon: 'circle-opacity',
+      showInfoBar: false,
+      showTimer: true,
+      showStepTitle: true,
+      showProgress: true,
+      result: null,
+      error: null,
+      duration: null,
+      priority: 11,
+    },
+    {
+      title: 'TouchScreen',
+      text: '',
+      Modaltext: 'Please select the TouchScreen test result',
+      icon: 'cellphone',
+      showInfoBar: false,
+      showTimer: true,
+      showStepTitle: true,
+      showProgress: true,
+      result: null,
+      error: null,
+      duration: null,
+      priority: 10,
+    },
+    {
+      title: 'Multitouch',
+      text: '',
+      icon: 'hand-clap',
+      showInfoBar: true,
+      showTimer: true,
+      showStepTitle: true,
+      showProgress: true,
+      result: null,
+      error: null,
+      duration: null,
+      priority: 9,
+    },
+    {
+      title: 'Brightness',
+      text: '',
+      icon: 'brightness-6',
+      showInfoBar: true,
+      showTimer: true,
+      showStepTitle: true,
+      showProgress: true,
+      result: null,
+      error: null,
+      duration: null,
+      priority: 8,
+    },
+    {
+      title: 'Rotation',
+      text: `Please turn on the 'Auto Rotate' feature and rotate your device to check the auto-rotation sensor`,
+      icon: 'screen-rotation',
+      showInfoBar: true,
+      showTimer: true,
+      showStepTitle: true,
+      showProgress: true,
+      result: null,
+      error: null,
+      duration: null,
+      priority: 7,
+    },
     {
       title: 'BackCamera',
       text: '',
@@ -217,7 +129,7 @@ export default function App() {
       filePath: null,
       error: null,
       duration: null,
-      priority: 2,
+      priority: 4,
     },
     {
       title: 'FrontCamera',
@@ -231,7 +143,7 @@ export default function App() {
       filePath: null,
       error: null,
       duration: null,
-      priority: 3,
+      priority: 5,
     },
     {
       title: 'MultiCamera',
@@ -246,7 +158,7 @@ export default function App() {
       devicesInfo: null,
       error: null,
       duration: null,
-      priority: 4,
+      priority: 6,
     },
     {
       title: 'BackCameraVideo',
@@ -260,7 +172,7 @@ export default function App() {
       filePath: null,
       error: null,
       duration: null,
-      priority: 5,
+      priority: 1,
     },
     {
       title: 'NativeCameraVideo',
@@ -273,7 +185,7 @@ export default function App() {
       result: null,
       error: null,
       duration: null,
-      priority: 6,
+      priority: 2,
     },
     {
       title: 'NativeCameraPhoto',
@@ -287,12 +199,217 @@ export default function App() {
       filePath: null,
       error: null,
       duration: null,
-      priority: 1,
+      priority: 3,
     },
   ]);
 
+  // const [testSteps, setTestsSteps] = useState([
+  //   // {
+  //   //   title: 'BackCamera',
+  //   //   text: '',
+  //   //   icon: 'camera-rear-variant',
+  //   //   showInfoBar: true,
+  //   //   showTimer: true,
+  //   //   showStepTitle: true,
+  //   //   showProgress: true,
+  //   //   result: null,
+  //   //   filePath: null,
+  //   //   fileBase64: null,
+  //   //   error: null,
+  //   //   duration: null,
+  //   //   priority: 1,
+  //   // },
+  //   // {
+  //   //   title: 'FrontCamera',
+  //   //   text: '',
+  //   //   icon: 'camera-front-variant',
+  //   //   showInfoBar: true,
+  //   //   showTimer: true,
+  //   //   showStepTitle: true,
+  //   //   showProgress: true,
+  //   //   result: null,
+  //   //   filePath: null,
+  //   //   fileBase64: null,
+  //   //   error: null,
+  //   //   duration: null,
+  //   //   priority: 2,
+  //   // },
+  //   // {
+  //   //   title: 'MultiCamera',
+  //   //   text: '',
+  //   //   icon: 'camera-flip-outline',
+  //   //   showInfoBar: true,
+  //   //   showTimer: true,
+  //   //   showStepTitle: true,
+  //   //   showProgress: true,
+  //   //   result: null,
+  //   //   multiCamResult: [],
+  //   //   devicesInfo: null,
+  //   //   error: null,
+  //   //   duration: null,
+  //   //   priority: 3,
+  //   // },
+  //   // {
+  //   //   title: 'BackCameraVideo',
+  //   //   text: '',
+  //   //   icon: 'video-outline',
+  //   //   showInfoBar: true,
+  //   //   showTimer: true,
+  //   //   showStepTitle: true,
+  //   //   showProgress: true,
+  //   //   result: null,
+  //   //   filePath: null,
+  //   //   error: null,
+  //   //   duration: null,
+  //   //   priority: 4,
+  //   // },
+  //   // {
+  //   //   title: 'NativeCameraVideo',
+  //   //   text: '',
+  //   //   icon: 'video-check-outline',
+  //   //   showInfoBar: true,
+  //   //   showTimer: true,
+  //   //   showStepTitle: true,
+  //   //   showProgress: true,
+  //   //   result: null,
+  //   //   error: null,
+  //   //   duration: null,
+  //   //   priority: 5,
+  //   // },
+  //   // {
+  //   //   title: 'NativeCameraPhoto',
+  //   //   text: '',
+  //   //   icon: 'camera-enhance',
+  //   //   showInfoBar: true,
+  //   //   showTimer: true,
+  //   //   showStepTitle: true,
+  //   //   showProgress: true,
+  //   //   result: null,
+  //   //   filePath: null,
+  //   //   fileBase64: null,
+  //   //   error: null,
+  //   //   duration: null,
+  //   //   priority: 6,
+  //   // },
+  //   // {
+  //   //   title: 'TouchScreen',
+  //   //   text: '',
+  //   //   Modaltext: 'Please select the TouchScreen test result',
+  //   //   icon: 'cellphone',
+  //   //   showInfoBar: false,
+  //   //   showTimer: true,
+  //   //   showStepTitle: true,
+  //   //   showProgress: true,
+  //   //   result: null,
+  //   //   error: null,
+  //   //   duration: null,
+  //   //   priority: 10,
+  //   // },
+  // ]);
 
+  const [deviceDetails, setDeviceDetails] = useState({
+    brand: DeviceInfo.getBrand(),
+    deviceName: '',
+    hardWare: '',
+    imei: '',
+    manufacturer: '',
+    meid: '',
+    model: '',
+    oS: Platform.OS,
+    osVersion: '',
+    serialNumber: '',
+    storage: '',
+    cpu: '',
+    memory: '',
+    usedMemory: '',
+    freeStorage: '',
+    usedStorage: '',
+    phoneNumber: '',
+  });
 
+  useEffect(() => {
+    const fetchDeviceDetails = async () => {
+      try {
+        const [
+          device,
+          hardWare,
+          manufacturer,
+          model,
+          osVersion,
+          storage,
+          memory,
+          abis,
+          usedMemory,
+          freeStorage,
+          phoneNumber,
+        ] = await Promise.all([
+          DeviceInfo.getDevice(),
+          DeviceInfo.getHardware(),
+          DeviceInfo.getManufacturer(),
+          DeviceInfo.getModel(),
+          DeviceInfo.getSystemVersion(),
+          DeviceInfo.getTotalDiskCapacity(),
+          DeviceInfo.getTotalMemory(),
+          DeviceInfo.supportedAbis(),
+          DeviceInfo.getUsedMemory(),
+          DeviceInfo.getFreeDiskStorage(),
+          DeviceInfo.getPhoneNumber(),
+        ]);
+
+        const updatedDeviceDetails = {
+          brand: DeviceInfo.getBrand(),
+          deviceName: device,
+          hardWare: hardWare,
+          imei: '',
+          manufacturer: manufacturer,
+          meid: '',
+          model: model,
+          oS: Platform.OS,
+          osVersion: osVersion,
+          serialNumber: 'receivedSerialNumber', // Adjust if you can fetch the actual serial number
+          storage: (storage / (1024 ** 3)).toFixed(2), // Convert bytes to GB
+          memory: (memory / (1024 ** 3)).toFixed(2), // Convert bytes to GB
+          cpu: abis.join(', '), // Assuming you want a string of supported ABIs
+          freeStorage: (freeStorage / (1024 ** 3)).toFixed(2), // Convert bytes to GB
+          phoneNumber: phoneNumber,
+          usedMemory: (usedMemory / (1024 ** 3)).toFixed(2), // Convert bytes to GB
+          usedStorage: ((storage - freeStorage) / (1024 ** 3)).toFixed(2), // Convert bytes to GB
+        };
+
+        // Ensure the order matches the required order
+        const orderedDeviceDetails = {
+          brand: updatedDeviceDetails.brand,
+          deviceName: updatedDeviceDetails.deviceName,
+          hardWare: updatedDeviceDetails.hardWare,
+          imei: updatedDeviceDetails.imei,
+          manufacturer: updatedDeviceDetails.manufacturer,
+          meid: updatedDeviceDetails.meid,
+          model: updatedDeviceDetails.model,
+          oS: updatedDeviceDetails.oS,
+          osVersion: updatedDeviceDetails.osVersion,
+          serialNumber: updatedDeviceDetails.serialNumber,
+          storage: updatedDeviceDetails.storage,
+          memory: updatedDeviceDetails.memory,
+          cpu: updatedDeviceDetails.cpu,
+          freeStorage: updatedDeviceDetails.freeStorage,
+          phoneNumber: updatedDeviceDetails.phoneNumber,
+          usedMemory: updatedDeviceDetails.usedMemory,
+          usedStorage: updatedDeviceDetails.usedStorage,
+        };
+
+        setDeviceDetails(orderedDeviceDetails);
+      } catch (error) {
+        console.error('Error retrieving device information:', error);
+      }
+    };
+
+    fetchDeviceDetails();
+
+    return () => {
+      console.log('unmount App');
+    };
+  }, []);
+  
   interface MyExpectedArgs {
     serialNumber?: string;
     wsIp?: string;
@@ -418,9 +535,8 @@ export default function App() {
 
   return (
 
-    // <DataContext.Provider value={{ isInternetConnected, setIsNetConnected, websocketConnected, setWebsocketConnected, receivedSerialNumber, testStep, setTestStep, testSteps, setTestsSteps, elapsedTime, setElapsedTime }}>
     <PaperProvider>
-      <DataContext.Provider value={{ isInternetConnected, setIsNetConnected, websocketConnected, setWebsocketConnected, receivedSerialNumber, testStep, setTestStep, testSteps, setTestsSteps, deviceInfo, setDeviceInfo }}>
+      <DataContext.Provider value={{ isInternetConnected, setIsNetConnected, websocketConnected, setWebsocketConnected, receivedSerialNumber, testStep, setTestStep, testSteps, setTestsSteps, deviceDetails, setDeviceDetails }}>
         <TimerContext.Provider value={{ startTime, setStartTime, elapsedTimeRef }}>
           <SafeAreaProvider>
             <NavigationContainer>
@@ -435,7 +551,6 @@ export default function App() {
                   overlayColor: 'transparent',
                 }}
               >
-                {/* <Drawer.Screen name="ScanQrCode" component={ScanQrCode} options={{ headerShown: false }} /> */}
                 <Drawer.Screen name="Home" component={HomeScreen} options={{ headerShown: false, unmountOnBlur: true }} />
                 <Drawer.Screen name="DeviceInfo" component={DeviceInfoScreen} />
                 <Drawer.Screen name="Setting" component={SettingScreen} />

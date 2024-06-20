@@ -7,6 +7,7 @@ import { RNCamera } from 'react-native-camera';
 import { Button, PaperProvider, Switch, Tooltip } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import DeviceInfo from 'react-native-device-info';
+import { appConfig } from '../../config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   SafeAreaProvider,
@@ -19,7 +20,7 @@ const Stack = createNativeStackNavigator();
 function HomeScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
 
-  const { isInternetConnected, websocketConnected, receivedSerialNumber , deviceDetails, setDeviceDetails } = useContext(DataContext);
+  const { isInternetConnected, websocketConnected, receivedSerialNumber, deviceDetails, setDeviceDetails } = useContext(DataContext);
 
   const checklistItems = [
     "Any Bluetooth Device",
@@ -201,7 +202,7 @@ function HomeScreen({ navigation, route }) {
             <View style={styles.deviceContainer}>
               <View style={styles.detailsItem}>
                 <Text style={styles.detailsTextLabel}>Device:</Text>
-                <Text style={styles.detailsTextValue}>{deviceDetails.brand} {deviceDetails.deviceName}  ({deviceDetails.model})</Text>
+                <Text style={styles.detailsTextValue}>{deviceDetails.brand} {deviceDetails.deviceName} ({deviceDetails.model})</Text>
               </View>
               <View style={styles.detailsItem}>
                 <Text style={styles.detailsTextLabel}>Serial Number:</Text>
@@ -209,7 +210,7 @@ function HomeScreen({ navigation, route }) {
               </View>
               <View style={styles.detailsItem}>
                 <Text style={styles.detailsTextLabel}>OS:</Text>
-                <Text style={styles.detailsTextValue}>{deviceDetails.oS}  {deviceDetails.osVersion}</Text>
+                <Text style={styles.detailsTextValue}>{deviceDetails.os} {deviceDetails.osVersion}</Text>
               </View>
               <View style={styles.detailsItem}>
                 <Text style={styles.detailsTextLabel}>CPU Model:</Text>
@@ -217,21 +218,39 @@ function HomeScreen({ navigation, route }) {
               </View>
               <View style={styles.detailsItem}>
                 <Text style={styles.detailsTextLabel}>CPU Architectures:</Text>
-                <Text style={styles.detailsTextValue}>{deviceDetails.cpu}</Text>
+                <View>
+                  {deviceDetails.cpu.map((cpuInfo, index) => (
+                    <Text key={index} style={styles.detailsTextValue}>{cpuInfo.architecture}</Text>
+                  ))}
+                </View>
               </View>
               <View style={styles.detailsItem}>
                 <Text style={styles.detailsTextLabel}>Storage:</Text>
-                <Text style={styles.detailsTextValue}>{(deviceDetails.storage)} GB (used {deviceDetails.usedStorage} GB)</Text>
+                <View>
+                  {deviceDetails.storage_layouts.map((storage, index) => (
+                    <Text key={index} style={styles.detailsTextValue}>
+                      {storage.size} GB (used {storage.usedStorage} GB, free {storage.freeStorage} GB)
+                    </Text>
+                  ))}
+                </View>
               </View>
               <View style={styles.detailsItem}>
                 <Text style={styles.detailsTextLabel}>RAM:</Text>
-                <Text style={styles.detailsTextValue}>{(deviceDetails.memory)} GB  (used {deviceDetails.usedMemory} GB)</Text>
+                <View>
+                  {deviceDetails.memory_layouts.map((memory, index) => (
+                    <Text key={index} style={styles.detailsTextValue}>
+                      {memory.size} GB (used {memory.usedMemory} GB)
+                    </Text>
+                  ))}
+                </View>
               </View>
             </View>
           </View>
+
         </View>
         <Text style={styles.versionText}>
-          Version : 1.0.0
+          {/* Version : 1.0.0 */}
+          Version : {appConfig.version}
         </Text>
         <Modal
           animationType="slide"

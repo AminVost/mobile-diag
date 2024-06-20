@@ -5,6 +5,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import axios from 'axios';
 import { DataContext, TimerContext } from '../../App';
 import { formatTimeHms } from '../utils/formatTimeHms';
+import { appConfig } from '../../config';
 
 export default function ReportScreen({ navigation }) {
     const { testSteps, deviceDetails } = useContext(DataContext);
@@ -50,18 +51,60 @@ export default function ReportScreen({ navigation }) {
         setLoading(true);
         setModalVisible(true);
         setProgress(0);
-        const inventoryId = 123; // Replace with the actual inventory_id
-        try {
-            const formData = new FormData();
-            formData.append('duration', JSON.stringify(elapsedTimeRef.current));
-            formData.append('testSteps', JSON.stringify(testSteps));
-            formData.append('deviceDetails', JSON.stringify(deviceDetails));
+        const apiUrl = 'https://myrapidtrack.com/final_acc/_apps/diag_mobile/submitData';
+        const token = 'ccae4581-0a34-11ec-a792-fa163e6a962cY'; // Replace with the actual token
+        const platform = 'linux';
+        const appVersion = appConfig.version;
+        const inventoryId = '202406162653'; // Replace with the actual inventory_id
 
-            const response = await axios.post(`https://source-code.ir/testapi/api.php?inventory_id=${inventoryId}`, formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
+        // Construct the JSON object
+        const payload = {
+            token,
+            platform,
+            appVersion,
+            inventoryId,
+            fileData: {
+                duration: elapsedTimeRef.current,
+                system_info: {
+                    brand: deviceDetails.brand,
+                    deviceName: deviceDetails.deviceName,
+                    hardWare: deviceDetails.hardWare,
+                    imei: deviceDetails.imei,
+                    manufacturer: deviceDetails.manufacturer,
+                    meid: deviceDetails.meid,
+                    model: deviceDetails.model,
+                    os: deviceDetails.os,
+                    osVersion: deviceDetails.osVersion,
+                    serialNumber: deviceDetails.serialNumber,
+                    storage_layouts: deviceDetails.storage_layouts,
+                    memory_layouts: deviceDetails.memory_layouts,
+                    cpu: deviceDetails.cpu
                 },
-                onUploadProgress: (progressEvent) => { 
+                steps: testSteps.map(step => ({
+                    duration: step.duration || null,
+                    error: step.error || null,
+                    ...(step.fileItem && { fileItem: step.fileItem }),
+                    priority: step.priority,
+                    result: step.result,
+                    showInfoBar: step.showInfoBar,
+                    showProgress: step.showProgress,
+                    showStepTitle: step.showStepTitle,
+                    showTimer: step.showTimer,
+                    text: step.text,
+                    title: step.title,
+                    ...(step.multiCamResult && { multiCamResult: step.multiCamResult }),
+                    ...(step.devicesInfo && { devicesInfo: step.devicesInfo })
+                }))
+            }
+        };
+        console.log('payload.......', payload.fileData.steps)
+
+        try {
+            const response = await axios.post(apiUrl, payload, {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                onUploadProgress: (progressEvent) => {
                     const percentage = (progressEvent.loaded / progressEvent.total);
                     setProgress(percentage);
                 },
@@ -84,6 +127,7 @@ export default function ReportScreen({ navigation }) {
             Alert.alert('Upload Status', uploadMessage);
         }
     };
+
 
     return (
         <View style={styles.container}>

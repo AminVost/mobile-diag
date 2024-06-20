@@ -71,7 +71,6 @@ const TestsScreens = ({ navigation, route }) => {
     if (testStep <= testSteps.length) {
       performTestStep();
     } else {
-      console.log('hereeeeeee',testSteps);
       console.log('finished test')
       navigation.navigate('Report');
     }

@@ -91,16 +91,21 @@ const MultiCameraTest = () => {
 
     if (multiCameraStepIndex !== -1) {
       const multiCamResult = updatedTestSteps[multiCameraStepIndex].multiCamResult || [];
+
       const cameraResult = {
-        title: devices[currentCameraIndex]?.name || 'Unknown Camera',
-        result,
-        filePath: photoPath,
-        fileBase64: fileBase64,
+        fileItem: {
+          ext: "jpg",
+          base64: fileBase64,
+          filePath: photoPath,
+        },
+        result: result,
+        title: devices[currentCameraIndex]?.name || `Unknown Camera (${currentCameraIndex})`,
       };
 
       multiCamResult[currentCameraIndex] = cameraResult;
       updatedTestSteps[multiCameraStepIndex].multiCamResult = multiCamResult;
     }
+
 
     if (currentCameraIndex < cameraDevices.length - 1) {
       setCurrentCameraIndex((prevIndex) => prevIndex + 1);
@@ -118,6 +123,7 @@ const MultiCameraTest = () => {
       updatedTestSteps[multiCameraStepIndex].result = finalResult;
       updatedTestSteps[multiCameraStepIndex].devicesInfo = FormattedCameraDevices;
       updatedTestSteps[multiCameraStepIndex].duration = getDuration();
+      // console.log('injaaaaa', updatedTestSteps[multiCameraStepIndex].multiCamResult)
       setTestsSteps(updatedTestSteps);
       setTestStep((prevStep) => prevStep + 1);
     }
