@@ -28,6 +28,7 @@ const FrontCamera = () => {
 
 
   useEffect(() => {
+    console.log('FrontCameraaaaaa')
     const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
     requestCameraPermission();
     return () => {

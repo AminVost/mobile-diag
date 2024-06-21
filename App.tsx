@@ -44,6 +44,7 @@ export default function App() {
   const [isInternetConnected, setIsNetConnected] = useState(false);
   const [websocketConnected, setWebsocketConnected] = useState(false);
   const [receivedSerialNumber, setReceivedSerialNumber] = useState(null);
+  const [token, setToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [testStep, setTestStep] = useState(1);
   const [startTime, setStartTime] = useState(null);
@@ -341,11 +342,12 @@ export default function App() {
 
   interface MyExpectedArgs {
     serialNumber?: string;
+    token?: string;
     wsIp?: string;
   }
 
   const paramss = LaunchArguments.value<MyExpectedArgs>();
-  const paramsTest = { "wsIp": "192.168.1.22", "serialNumber": "R58M42HXCZW" };//TODO
+  const paramsTest = { "wsIp": "192.168.1.22", "serialNumber": "R58M42HXCZW" , "token": "ccae4581-0a34-11ec-a792-fa163e6a962" };//TODO
 
   useEffect(() => {
     if (paramsTest) {
@@ -356,8 +358,14 @@ export default function App() {
       } else {
         console.log('serial number is Undefiend')
       }
+      if (paramsTest.token) {
+        // const serialNumber = paramsTest?.serialNumber;
+        setToken(paramsTest.token);
+      } else {
+        console.log('serial number is Undefiend')
+      }
     }
-  }, []);
+  }, [paramss]);
 
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener((state) => {
@@ -452,15 +460,6 @@ export default function App() {
       </DrawerContentScrollView>
     );
   }
-
-  const ReportHeader = () => {
-    return (
-      <View style={styles.headerRightContainer}>
-        <Text style={styles.headerRightText}>{formatTime(elapsedTimeRef.current)}</Text>
-      </View>
-    );
-  };
-
 
   return (
 

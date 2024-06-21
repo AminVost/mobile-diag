@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect, useRef, useContext } from 'react';
+import { View, ActivityIndicator, StyleSheet, Text } from 'react-native';
 import { DataContext, TimerContext } from '../../App';
 
 const TestsScreens = ({ navigation, route }) => {
@@ -6,6 +7,7 @@ const TestsScreens = ({ navigation, route }) => {
   const { startTime, setStartTime } = useContext(TimerContext);
 
   const performTestStep = async () => {
+    console.log('performTestStep');
     const sortedTestSteps = [...testSteps].sort((a, b) => a.priority - b.priority);
     setTestsSteps(sortedTestSteps);
     if (testStep <= sortedTestSteps.length) {
@@ -52,22 +54,18 @@ const TestsScreens = ({ navigation, route }) => {
     }
   };
 
-  const sendTestResults = async () => {
-    try {
-      // await sendTestDataToAPI(testResults);
-      console.log('Test data sent successfully!');
-    } catch (error) {
-      console.error('Error sending test data:', error);
-    } finally {
-      console.log('Finally sending test data');
-    }
-  };
+  // const sendTestResults = async () => {
+  //   try {
+  //     // await sendTestDataToAPI(testResults);
+  //     console.log('Test data sent successfully!');
+  //   } catch (error) {
+  //     console.error('Error sending test data:', error);
+  //   } finally {
+  //     console.log('Finally sending test data');
+  //   }
+  // };
 
   useEffect(() => {
-    if (!startTime) {
-      setStartTime(Date.now());
-    }
-
     if (testStep <= testSteps.length) {
       performTestStep();
     } else {
@@ -77,7 +75,28 @@ const TestsScreens = ({ navigation, route }) => {
 
     return () => '';
   }, [testStep]);
+  return (
+    <View style={styles.container}>
 
+      <ActivityIndicator size="large" color="#4908b0" />
+      <Text style={styles.text}>Preparing test procedures</Text>
+    </View>
+  );
 };
 
 export default TestsScreens;
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+    padding: 10,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  text: {
+    textAlign: 'center',
+    marginTop: 20,
+    fontFamily: 'Quicksand-SemiBold'
+  }
+});

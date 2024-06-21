@@ -76,7 +76,8 @@ const BackCamera = () => {
 
         // Read the file and convert to base64
         const fileBase64 = await RNFS.readFile(filePath, 'base64');
-        setPhotoBase64(fileBase64);
+        const finalFileBase64 = 'data:image/jpeg;base64,' + fileBase64;
+        setPhotoBase64(finalFileBase64);
       } catch (err) {
         console.error('Error saving photo:', err);
       }

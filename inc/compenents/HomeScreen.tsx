@@ -14,13 +14,15 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import { DataContext } from '../../App';
+import { TimerContext } from '../../App';
 
 const Stack = createNativeStackNavigator();
 
 function HomeScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
 
-  const { isInternetConnected, websocketConnected, receivedSerialNumber, deviceDetails, setDeviceDetails } = useContext(DataContext);
+  const { isInternetConnected, websocketConnected, receivedSerialNumber, deviceDetails, testStep, setTestStep } = useContext(DataContext);
+  const { startTime, setStartTime } = useContext(TimerContext);
 
   const checklistItems = [
     "Any Bluetooth Device",
@@ -127,6 +129,15 @@ function HomeScreen({ navigation, route }) {
     );
   };
 
+  const handleStartDiagBtn = () => {
+    if (isSwitchDiag) {
+      setTestStep(1);
+      setStartTime(Date.now());
+      navigation.navigate('TestsScreen')
+    } else {
+      Alert.alert('Rapid Mobile Wipe Coming Soon...');
+    }
+  }
 
   return (
     <>
@@ -164,7 +175,7 @@ function HomeScreen({ navigation, route }) {
               <Icon name="wifi-check" size={40} style={[isInternetConnected]} color="#44bd32" />}
         </TouchableOpacity>
         <View style={styles.upperPart}>
-          <TouchableOpacity style={isSwitchDiag ? styles.startButtonDiag : styles.startButtonWipe} onPress={() => isSwitchDiag ? navigation.navigate('TestsScreen') : ''}>
+          <TouchableOpacity style={isSwitchDiag ? styles.startButtonDiag : styles.startButtonWipe} onPress={handleStartDiagBtn}>
             {isSwitchDiag ?
               <Icon name={'cog-play-outline'} style={styles.startIconDiag} />
               :

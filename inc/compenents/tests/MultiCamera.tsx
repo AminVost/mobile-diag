@@ -78,7 +78,10 @@ const MultiCameraTest = () => {
 
         // Convert the photo to base64
         const fileBase64String = await RNFS.readFile(photo.path, 'base64');
-        setFileBase64(fileBase64String);
+        
+        const finalFileBase64 = 'data:image/jpeg;base64,' + fileBase64String;
+
+        setFileBase64(finalFileBase64);
       } catch (err) {
         console.error('Error saving photo:', err);
       }

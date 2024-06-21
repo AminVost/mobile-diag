@@ -4,7 +4,7 @@ export const formatTimeHms = (elapsedTime) => {
   const minutes = Math.floor(totalSeconds / 60) % 60;
   const hours = Math.floor(totalSeconds / 3600);
 
-  console.log('seconds:', seconds, 'minutes:', minutes, 'hours:', hours, 'elapsedTime:', elapsedTime);
+  // console.log('seconds:', seconds, 'minutes:', minutes, 'hours:', hours, 'elapsedTime:', elapsedTime);
 
   if (hours > 0) {
     return `${hours}h ${minutes}m ${seconds}s`;

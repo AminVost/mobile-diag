@@ -1,5 +1,6 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useContext, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { Button, Tooltip, Modal, Portal, ProgressBar, MD3Colors } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import axios from 'axios';
@@ -8,14 +9,14 @@ import { formatTimeHms } from '../utils/formatTimeHms';
 import { appConfig } from '../../config';
 
 export default function ReportScreen({ navigation }) {
-    const { testSteps, deviceDetails } = useContext(DataContext);
+    const { testSteps, deviceDetails, isInternetConnected } = useContext(DataContext);
     const { elapsedTimeRef } = useContext(TimerContext);
-
+    const [storedDeviceParams, setStoredDeviceParams] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [response, setResponse] = useState(null);
     const [progress, setProgress] = useState(0);
     const [isModalVisible, setModalVisible] = useState(false);
     const [uploadMessage, setUploadMessage] = useState('');
+    const [isSuccess, setIsSuccess] = useState(null);
 
     useEffect(() => {
         navigation.setOptions({
@@ -29,6 +30,20 @@ export default function ReportScreen({ navigation }) {
             ),
         });
     }, [navigation, elapsedTimeRef.current]);
+
+    useEffect(() => {
+        const getData = async () => {
+            try {
+                const jsonValue = await AsyncStorage.getItem('deviceparams');
+                if (jsonValue != null) {
+                    setStoredDeviceParams(JSON.parse(jsonValue));
+                }
+            } catch (error) {
+                console.log('Error reading data:', error);
+            }
+        };
+        getData();
+    }, []);
 
     const getResultColor = (result) => {
         switch (result) {
@@ -48,16 +63,20 @@ export default function ReportScreen({ navigation }) {
     };
 
     const handleSendResult = async () => {
+        if (!isInternetConnected) {
+            Alert.alert('No Internet Connection', 'Please check your internet connection and try again.');
+            return;
+        }
         setLoading(true);
         setModalVisible(true);
         setProgress(0);
+
         const apiUrl = 'https://myrapidtrack.com/final_acc/_apps/diag_mobile/submitData';
-        const token = 'ccae4581-0a34-11ec-a792-fa163e6a962cY'; // Replace with the actual token
+        const token = storedDeviceParams.token ? storedDeviceParams.token : 'ccae4581-0a34-11ec-a792-fa163e6a962cY';
         const platform = 'linux';
         const appVersion = appConfig.version;
-        const inventoryId = '202406162653'; // Replace with the actual inventory_id
+        const inventoryId = '202406162653';
 
-        // Construct the JSON object
         const payload = {
             token,
             platform,
@@ -97,7 +116,6 @@ export default function ReportScreen({ navigation }) {
                 }))
             }
         };
-        console.log('payload.......', payload.fileData.steps)
 
         try {
             const response = await axios.post(apiUrl, payload, {
@@ -105,29 +123,34 @@ export default function ReportScreen({ navigation }) {
                     'Content-Type': 'application/json',
                 },
                 onUploadProgress: (progressEvent) => {
-                    const percentage = (progressEvent.loaded / progressEvent.total);
+                    const percentage = progressEvent.loaded / progressEvent.total;
                     setProgress(percentage);
                 },
             });
 
-            // Check if the response status is success
             if (response.data.status === 'success') {
-                console.log('Data saved successfully:', response.data);
-                setUploadMessage('Data saved successfully.');
+                setUploadMessage(response.data.message);
+                setIsSuccess(true);
             } else {
-                console.error('Error response from server:', response.data);
-                setUploadMessage(`Error: ${response.data.message}`);
+                setUploadMessage(response.data.message);
+                setIsSuccess(false);
             }
         } catch (error) {
-            console.error('Error sending result:', error);
-            setUploadMessage('Error sending result. Please try again.');
+            setUploadMessage(error.message);
+            setIsSuccess(false);
         } finally {
             setLoading(false);
-            setModalVisible(false);
-            Alert.alert('Upload Status', uploadMessage);
+            setModalVisible(true);
         }
     };
 
+    const handleModalButtonPress = () => {
+        if (isSuccess) {
+            setModalVisible(false); // Close modal on success
+        } else {
+            handleSendResult(); // Retry on failure
+        }
+    };
 
     return (
         <View style={styles.container}>
@@ -162,26 +185,38 @@ export default function ReportScreen({ navigation }) {
                 <Button mode="contained" labelStyle={styles.btnLabel} icon={() => <Icon name="home-import-outline" size={20} color="white" />} onPress={() => navigation.goBack()} style={[styles.button, { backgroundColor: '#4908b0' }]}>
                     Go back home
                 </Button>
-                <Button mode="contained" labelStyle={styles.btnLabel} icon={() => <Icon name="export-variant" size={20} color="white" />} onPress={handleSendResult} style={[styles.button, { backgroundColor: '#2980b9' }]}>
+                <Button
+                    mode="contained"
+                    labelStyle={styles.btnLabel}
+                    icon={() => <Icon name="export-variant" size={20} color="white" />}
+                    onPress={handleSendResult}
+                    style={[styles.button, { backgroundColor: !isInternetConnected ? '#d3d3d3' : '#2980b9' }]}
+                >
                     Send Result
                 </Button>
             </View>
             <Portal>
                 <Modal visible={isModalVisible} onDismiss={() => setModalVisible(false)} contentContainerStyle={styles.modalContainer}>
-                    <Text style={styles.modalTitle}>Uploading Results...</Text>
-                    <ProgressBar progress={0.5} color={MD3Colors.primary50} style={styles.progressBar} />
-                    <Text style={styles.progressText}>{(progress * 100).toFixed(2)}%</Text>
+                    <Text style={styles.modalTitle}>{loading ? 'Uploading Results...' : 'Upload Status'}</Text>
+                    {loading ? (
+                        <>
+                            <ActivityIndicator size="large" color="#4908b0" />
+                            <Text style={styles.progressText}>{(progress * 100).toFixed(2)}%</Text>
+                        </>
+                    ) : (
+                        <>
+                            <Icon name={isSuccess ? 'check-circle' : 'alert-circle'} size={70} style={isSuccess ? styles.iconSuccess : styles.iconFail} />
+                            <Text style={styles.uploadMessage}>{uploadMessage}</Text>
+                            <Button mode="contained" onPress={handleModalButtonPress} style={styles.modalButton}>
+                                {isSuccess ? 'OK' : 'Try Again'}
+                            </Button>
+                        </>
+                    )}
                 </Modal>
             </Portal>
-            {response && (
-                <View style={styles.responseContainer}>
-                    <Text style={styles.responseText}>{response}</Text>
-                </View>
-            )}
         </View>
     );
 }
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -311,10 +346,14 @@ const styles = StyleSheet.create({
         padding: 20,
         borderRadius: 10,
         alignItems: 'center',
+        marginRight: 10,
+        marginLeft: 10
     },
     modalTitle: {
         fontSize: 18,
         marginBottom: 20,
+        fontFamily: 'Quicksand-Bold',
+        color: 'black'
     },
     progressBar: {
         width: '100%',
@@ -325,5 +364,20 @@ const styles = StyleSheet.create({
         marginTop: 10,
         fontSize: 16,
     },
+    uploadMessage: {
+        fontSize: 16,
+        textAlign: 'center',
+        marginTop: 10,
+        fontFamily: 'Quicksand-SemiBold',
+        lineHeight: 30
+    },
+    iconSuccess: {
+        color: '#27ae60',
+        marginBottom: 10,
+    },
+    modalButton: {
+        marginTop: 20,
+        width: '100%'
+    }
 });
 
