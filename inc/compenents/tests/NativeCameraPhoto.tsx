@@ -71,7 +71,8 @@ const NativeCameraPhoto = () => {
 
       // Convert the photo to base64
       const fileBase64String = await RNFS.readFile(filePath, 'base64');
-      setFileBase64(fileBase64String);
+      const finalFileBase64 = 'data:image/jpeg;base64,' + fileBase64String;
+      setFileBase64(finalFileBase64);
 
       return filePath;
     } catch (err) {
