@@ -238,6 +238,7 @@ const styles = StyleSheet.create({
   },
   btns: {
     padding: 7,
+    borderRadius: 6
   },
   btnLabel: {
     fontSize: 16,

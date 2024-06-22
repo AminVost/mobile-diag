@@ -21,7 +21,7 @@ const Stack = createNativeStackNavigator();
 function HomeScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
 
-  const { isInternetConnected, websocketConnected, receivedSerialNumber, deviceDetails, testStep, setTestStep } = useContext(DataContext);
+  const { isInternetConnected, websocketConnected, receivedSerialNumber, deviceDetails, testStep, setTestStep,isDiagStart, setIsDiagStart ,setIsSubmitResult,setTestsSteps} = useContext(DataContext);
   const { startTime, setStartTime } = useContext(TimerContext);
 
   const checklistItems = [
@@ -68,29 +68,22 @@ function HomeScreen({ navigation, route }) {
     setAlertVisible(!isAlertVisible);
   };
 
-  const sendPhoneNumber = async () => {
-    const hasPhoneStatePermission = await PermissionsAndroid.request(
-      PermissionsAndroid.PERMISSIONS.READ_PHONE_STATE,
-    );
-
-
-    const hasReadSMSPermission = await PermissionsAndroid.request(
-      PermissionsAndroid.PERMISSIONS.READ_SMS,
-    );
-
-    if (
-      hasPhoneStatePermission === PermissionsAndroid.RESULTS.GRANTED &&
-      hasReadSMSPermission === PermissionsAndroid.RESULTS.GRANTED
-    ) {
-      const phoneNumber = await DeviceInfo.getPhoneNumber();
-
-      if (phoneNumber) {
-        DeviceInfo.getPhoneNumber().then((phoneNumber) => {
-          // console.log('phoneNumber', phoneNumber)
-        });
+  const resetSteps = async () => {
+    try {
+      const jsonValue = await AsyncStorage.getItem('refTestSteps');
+      if (jsonValue !== null) {
+        const data = JSON.parse(jsonValue);
+        setTestsSteps(data);
+        console.log('retrieved and set test steps:', data);
+      } else {
+        console.log('No data found for refTestSteps');
+        setTestsSteps([]); // Optionally set an empty array if no data is found
       }
+    } catch (error) {
+      console.log('Error retrieving refTestSteps:', error);
     }
   };
+
 
   const CustomAlert = () => {
     return (
@@ -133,6 +126,8 @@ function HomeScreen({ navigation, route }) {
     if (isSwitchDiag) {
       setTestStep(1);
       setStartTime(Date.now());
+      setIsDiagStart(true)
+      setIsSubmitResult(false);
       navigation.navigate('TestsScreen')
     } else {
       Alert.alert('Rapid Mobile Wipe Coming Soon...');
@@ -206,6 +201,9 @@ function HomeScreen({ navigation, route }) {
             <View style={styles.middlePartBtnsCon}>
               <Button textColor='white' icon="clipboard-pulse-outline" mode="outlined" style={styles.preTestBtn} onPress={() => navigation.navigate('Report')}>
                 Diag Report
+              </Button>
+              <Button textColor='white' mode="outlined" style={styles.preTestBtn} onPress={resetSteps}>
+               reset
               </Button>
             </View>}
           <View style={styles.middlePartDeviceInfo}>

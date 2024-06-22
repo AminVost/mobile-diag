@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         // backgroundColor: '#ffffff21',
         backgroundColor: 'white',
-        padding: 3
+        padding: 5
     },
     progressContainer: {
         display: 'flex',

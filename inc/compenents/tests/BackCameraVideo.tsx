@@ -52,7 +52,7 @@ const BackCameraVideoTest = () => {
     if (cameraRef.current) {
       setIsRecording(true);
       const video = await cameraRef.current.startRecording({
-        flash: 'on',
+        flash: 'off',
         onRecordingFinished: (video) => handleVideoSaved(video),
         onRecordingError: (error) => console.error(error),
       });

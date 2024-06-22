@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext,useCallback } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { View, Text, StyleSheet, PanResponder, Dimensions, BackHandler, StatusBar } from 'react-native';
 import { hideNavigationBar, showNavigationBar } from 'react-native-navigation-bar-color';
 import { Button } from 'react-native-paper';
@@ -64,12 +64,13 @@ const MultiTouchTest = ({ navigation }) => {
     useEffect(() => {
         if (maxTouches > 2) {
             // If multi-touch is detected, mark the test as passed
-            const updatedTestSteps = [...testSteps];
-            updatedTestSteps[testStep - 1].result = 'pass';
-            setTestsSteps(updatedTestSteps);
+            handleResult('Pass');
+            // const updatedTestSteps = [...testSteps];
+            // updatedTestSteps[testStep - 1].result = 'pass';
+            // setTestsSteps(updatedTestSteps);
 
-            // Move to the next test step
-            setTestStep((prevStep) => prevStep + 1);
+            // // Move to the next test step
+            // setTestStep((prevStep) => prevStep + 1);
         }
     }, [maxTouches]);
 

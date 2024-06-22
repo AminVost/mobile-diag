@@ -7,9 +7,10 @@ import axios from 'axios';
 import { DataContext, TimerContext } from '../../App';
 import { formatTimeHms } from '../utils/formatTimeHms';
 import { appConfig } from '../../config';
+const controller = new AbortController();
 
 export default function ReportScreen({ navigation }) {
-    const { testSteps, deviceDetails, isInternetConnected, isDiagStart, isSubmitResult, setIsSubmitResult } = useContext(DataContext);
+    const { testSteps, deviceDetails, isInternetConnected, isDiagStart } = useContext(DataContext);
     const { elapsedTimeRef } = useContext(TimerContext);
     const [storedDeviceParams, setStoredDeviceParams] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -17,7 +18,7 @@ export default function ReportScreen({ navigation }) {
     const [isModalVisible, setModalVisible] = useState(false);
     const [uploadMessage, setUploadMessage] = useState('');
     const [isSuccess, setIsSuccess] = useState(null);
-    const [abortController, setAbortController] = useState(null);
+    const [cancelTokenSource, setCancelTokenSource] = useState(null);
 
     useEffect(() => {
         navigation.setOptions({
@@ -72,10 +73,6 @@ export default function ReportScreen({ navigation }) {
             Alert.alert('No test has been done yet', 'Please complete the test steps first to send information.');
             return;
         }
-        if (isSubmitResult) {
-            Alert.alert('It is not possible to resend the test result', 'Please repeat the test steps to resend the test results.');
-            return;
-        }
         setLoading(true);
         setModalVisible(true);
         setProgress(0);
@@ -126,33 +123,24 @@ export default function ReportScreen({ navigation }) {
         };
         // const payloadString = JSON.stringify(payload);
         // console.log(`Payload size: ${payloadString.length} bytes`);
-
-        const controller = new AbortController();
-        setAbortController(controller);
-
         try {
-            console.log('try To send Result');
             const response = await axios.post(apiUrl, payload, {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                signal: controller.signal,
+                signal: controller.signal
             });
 
             if (response.data.status === 'success') {
-                console.log('success send Result= ', response.data.message)
-                setIsSubmitResult(true);
                 setUploadMessage(response.data.message);
                 setIsSuccess(true);
             } else {
-                console.log('error else send Result= ', response.data.message)
                 setUploadMessage(response.data.message);
                 setIsSuccess(false);
             }
         } catch (error) {
-            console.log('catch send Result= ', error.message)
             if (axios.isCancel(error)) {
-                setUploadMessage('Upload canceled by user');
+                setUploadMessage('Upload canceled');
             } else {
                 setUploadMessage(error.message);
             }
@@ -167,17 +155,8 @@ export default function ReportScreen({ navigation }) {
         if (isSuccess) {
             setModalVisible(false); // Close modal on success
         } else {
+            console.log('handleSendResult');
             handleSendResult(); // Retry on failure
-        }
-    };
-
-    const handleCloseModal = () => {
-        setModalVisible(false);
-    };
-
-    const handleCancelUpload = () => {
-        if (abortController) {
-            abortController.abort();
         }
     };
 
@@ -192,7 +171,7 @@ export default function ReportScreen({ navigation }) {
                             <View style={styles.subTitle}>
                                 <Text style={styles.stepInfo}>Priority: {step.priority}</Text>
                                 {step.duration &&
-                                    <Text style={styles.stepInfo}>Duration: {step.duration}s</Text>
+                                    <Text style={styles.stepInfo}>Duration: {step.duration}</Text>
                                 }
                             </View>
                         </View>
@@ -219,7 +198,7 @@ export default function ReportScreen({ navigation }) {
                     labelStyle={styles.btnLabel}
                     icon={() => <Icon name="export-variant" size={20} color="white" />}
                     onPress={handleSendResult}
-                    style={[styles.button, { backgroundColor: !isInternetConnected || !isDiagStart || isSubmitResult ? '#d3d3d3' : '#2980b9' }]}
+                    style={[styles.button, { backgroundColor: !isInternetConnected || !isDiagStart ? '#d3d3d3' : '#2980b9' }]}
                 >
                     Send Result
                 </Button>
@@ -230,7 +209,9 @@ export default function ReportScreen({ navigation }) {
                     {loading ? (
                         <>
                             <ActivityIndicator size="large" color="#4908b0" />
-                            <Button mode="contained" onPress={handleCancelUpload} style={styles.modalButton}>
+                            <Button mode="contained" onPress={() => {
+                                controller.abort()
+                            }} style={styles.modalButton}>
                                 Cancel Upload
                             </Button>
                         </>
@@ -238,16 +219,9 @@ export default function ReportScreen({ navigation }) {
                         <>
                             <Icon name={isSuccess ? 'check-circle' : 'alert-circle'} size={70} style={isSuccess ? styles.iconSuccess : styles.iconFail} />
                             <Text style={styles.uploadMessage}>{uploadMessage}</Text>
-                            <View style={styles.modalButtonContainer}>
-                                <Button mode="contained" onPress={handleModalButtonPress} icon={isSuccess ? null : 'refresh'} style={[styles.modalButton]}>
-                                    {isSuccess ? 'OK' : 'Try Again'}
-                                </Button>
-                                {!isSuccess && (
-                                    <Button mode="contained" onPress={handleCloseModal} style={[styles.modalButton, { backgroundColor: '#e74c3c' }]}>
-                                        Close
-                                    </Button>
-                                )}
-                            </View>
+                            <Button mode="contained" onPress={handleModalButtonPress} style={styles.modalButton}>
+                                {isSuccess ? 'OK' : 'Try Again'}
+                            </Button>
                         </>
                     )}
                 </Modal>
@@ -415,13 +389,7 @@ const styles = StyleSheet.create({
     },
     modalButton: {
         marginTop: 20,
-        // width: '100%'
-        flexGrow: 1
-    },
-    modalButtonContainer: {
-        display: 'flex',
-        flexDirection: 'row',
-        columnGap: 7
+        width: '100%'
     }
 });
 
