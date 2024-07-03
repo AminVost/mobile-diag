@@ -50,7 +50,97 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [testStep, setTestStep] = useState(1);
   const [startTime, setStartTime] = useState(null);
+  const [startContinue, setStartContinue] = useState(false);
+  const [isFinishedTests, setIsFinishedTests] = useState(false);
   const elapsedTimeRef = useRef(0);
+  
+  interface MyExpectedArgs {
+    wsIp?: string;
+    serialNumber?: string;
+    token?: string;
+  }
+  const paramss = LaunchArguments.value<MyExpectedArgs>();
+  // const paramsTest = { "wsIp": "192.168.1.22", "serialNumber": "R58M42HXCZW", "token": "9259af73-c1da-4786-aa6b-c4a788525889" };//TODO
+  
+  console.log('paramss' , paramss);
+
+  useEffect(() => {
+    if (paramss) {
+      storeData(paramss);
+      if (paramss.serialNumber) {
+        // const serialNumber = paramss?.serialNumber;
+        setReceivedSerialNumber(paramss.serialNumber);
+      } else {
+        console.log('serial number is Undefiend')
+      }
+      if (paramss.token) {
+        // const serialNumber = paramss?.serialNumber;
+        setToken(paramss.token);
+      } else {
+        console.log('serial number is Undefiend')
+      }
+    }
+  }, [paramss]);
+
+
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener((state) => {
+      setIsNetConnected(state.isConnected);
+    })
+    return () => unsubscribe();
+  }, []);
+
+
+  useEffect(() => {
+    let ws;
+    const wsPort = '2552';
+    if (!websocketConnected) {
+      const connectWebSocket = () => {
+        if (paramss.wsIp) {
+          const wsUrl = 'ws://' + paramss?.wsIp + ':' + wsPort + '?uuid=' + receivedSerialNumber; // WebSocket server URL
+          console.log('wsUrl' , wsUrl)
+          ws = new WebSocket(wsUrl);
+
+          ws.onopen = () => {
+            setWebsocketConnected(true);
+            console.log('WebSocket connected');
+          };
+
+          ws.onmessage = (event) => {
+            console.log('Received message:', event.data);
+          };
+
+          ws.onerror = (error) => {
+            setWebsocketConnected(false);
+            console.log('WebSocket error:', error?.message);
+          };
+
+          ws.onclose = (msg) => {
+            setWebsocketConnected(false);
+            console.log('WebSocket closed' , msg?.message);
+            //Auto Recconect
+            // setTimeout(connectWebSocket, 2000);
+          };
+        } else {
+          Alert.alert('Ws Url not Defined.');
+          return;
+        }
+      };
+
+      if (!websocketConnected) {
+        connectWebSocket();
+      }
+
+      return () => {
+        if (ws) {
+          ws.close();
+        }
+      };
+    } else {
+      console.log('webSocket Already Connected.')
+    }
+  }, [isInternetConnected]);
+
 
   // const [testSteps, setTestsSteps] = useState([
   //   {
@@ -233,20 +323,20 @@ export default function App() {
       duration: null,
       priority: 5,
     },
-    // {
-    //   title: 'Display',
-    //   text: '',
-    //   Modaltext: 'Please select the Display test result',
-    //   icon: 'circle-opacity',
-    //   showInfoBar: false,
-    //   showTimer: true,
-    //   showStepTitle: true,
-    //   showProgress: true,
-    //   result: null,
-    //   error: null,
-    //   duration: null,
-    //   priority: 1,
-    // },
+    {
+      title: 'Display',
+      text: '',
+      Modaltext: 'Please select the Display test result',
+      icon: 'circle-opacity',
+      showInfoBar: false,
+      showTimer: true,
+      showStepTitle: true,
+      showProgress: true,
+      result: null,
+      error: null,
+      duration: null,
+      priority: 1,
+    },
     // {
     //   title: 'NativeCameraPhoto',
     //   text: '',
@@ -263,7 +353,7 @@ export default function App() {
     //   },
     //   error: null,
     //   duration: null,
-    //   priority: 1,
+    //   priority: 2,
     // },
     // {
     //   title: 'BackCamera',
@@ -281,7 +371,7 @@ export default function App() {
     //   },
     //   error: null,
     //   duration: null,
-    //   priority: 2,
+    //   priority: 1,
     // },
     // {
     //   title: 'FrontCamera',
@@ -424,92 +514,6 @@ export default function App() {
   }, []);
 
 
-  interface MyExpectedArgs {
-    serialNumber?: string;
-    token?: string;
-    wsIp?: string;
-  }
-
-  const paramss = LaunchArguments.value<MyExpectedArgs>();
-  const paramsTest = { "wsIp": "192.168.1.22", "serialNumber": "R58M42HXCZW", "token": "9259af73-c1da-4786-aa6b-c4a788525889" };//TODO
-
-  useEffect(() => {
-    if (paramsTest) {
-      storeData(paramsTest);
-      if (paramsTest.serialNumber) {
-        // const serialNumber = paramsTest?.serialNumber;
-        setReceivedSerialNumber(paramsTest.serialNumber);
-      } else {
-        console.log('serial number is Undefiend')
-      }
-      if (paramsTest.token) {
-        // const serialNumber = paramsTest?.serialNumber;
-        setToken(paramsTest.token);
-      } else {
-        console.log('serial number is Undefiend')
-      }
-    }
-  }, [paramss]);
-
-
-  useEffect(() => {
-    const unsubscribe = NetInfo.addEventListener((state) => {
-      setIsNetConnected(state.isConnected);
-    })
-    return () => unsubscribe();
-  }, []);
-
-
-  // useEffect(() => {
-  //   let ws;
-  //   const wsPort = '3655';
-  //   if (!websocketConnected) {
-  //     const connectWebSocket = () => {
-  //       if (paramsTest.wsIp) {
-  //         const wsUrl = 'ws://' + paramsTest?.wsIp + ':' + wsPort; // WebSocket server URL
-  //         ws = new WebSocket(wsUrl);
-
-  //         ws.onopen = () => {
-  //           setWebsocketConnected(true);
-  //           console.log('WebSocket connected');
-  //         };
-
-  //         ws.onmessage = (event) => {
-  //           console.log('Received message:', event.data);
-  //         };
-
-  //         ws.onerror = (error) => {
-  //           setWebsocketConnected(false);
-  //           console.log('WebSocket error:', error.message);
-  //         };
-
-  //         ws.onclose = () => {
-  //           setWebsocketConnected(false);
-  //           console.log('WebSocket closed');
-  //           //Auto Recconect
-  //           setTimeout(connectWebSocket, 2000);
-  //         };
-  //       } else {
-  //         Alert.alert('Ws Url not Defined.');
-  //         return;
-  //       }
-  //     };
-
-  //     if (!websocketConnected) {
-  //       connectWebSocket();
-  //     }
-
-  //     return () => {
-  //       if (ws) {
-  //         ws.close();
-  //       }
-  //     };
-  //   }else{
-  //     console.log('webSocket Already Connected.')
-  //   }
-  // }, [isInternetConnected]);
-
-
   useEffect(() => {
     const timeout = setTimeout(() => {
       setIsLoading(false);
@@ -549,7 +553,7 @@ export default function App() {
   return (
 
     <PaperProvider>
-      <DataContext.Provider value={{ isInternetConnected, setIsNetConnected, websocketConnected, setWebsocketConnected, receivedSerialNumber, testStep, setTestStep, testSteps, setTestsSteps, deviceDetails, setDeviceDetails, isDiagStart, setIsDiagStart, isSubmitResult, setIsSubmitResult }}>
+      <DataContext.Provider value={{ isInternetConnected, setIsNetConnected, websocketConnected, setWebsocketConnected, receivedSerialNumber, testStep, setTestStep, testSteps, setTestsSteps, deviceDetails, setDeviceDetails, isDiagStart, setIsDiagStart, isSubmitResult, setIsSubmitResult, startContinue, setStartContinue, isFinishedTests, setIsFinishedTests }}>
         <TimerContext.Provider value={{ startTime, setStartTime, elapsedTimeRef }}>
           <SafeAreaProvider>
             <NavigationContainer>
@@ -571,21 +575,23 @@ export default function App() {
                 <Drawer.Screen name="CheckList" component={CheckList} />
                 <Drawer.Screen name="Requirements" component={Requirements} />
                 <Drawer.Screen name="Help" component={HelpScreen} />
-                <Drawer.Screen name="TouchScreen" component={TouchScreen} options={{ title: 'TouchScreen', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
-                <Drawer.Screen name="MultiTouch" component={MultiTouch} options={{ title: 'MultiTouch', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
-                <Drawer.Screen name="Display" component={Display} options={{ title: 'Display', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
-                <Drawer.Screen name="Brightness" component={Brightness} options={{ title: 'Brightness', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
-                <Drawer.Screen name="Rotation" component={Rotation} options={{ title: 'Rotation', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
-                <Drawer.Screen name="BackCamera" component={BackCamera} options={{ title: 'BackCamera', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
-                <Drawer.Screen name="FrontCamera" component={FrontCamera} options={{ title: 'FrontCamera', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
-                <Drawer.Screen name="MultiCamera" component={MultiCamera} options={{ title: 'MultiCamera', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
-                <Drawer.Screen name="BackCameraVideo" component={BackCameraVideo} options={{ title: 'BackCameraVideo', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
-                <Drawer.Screen name="NativeCameraPhoto" component={NativeCameraPhoto} options={{ title: 'NativeCameraPhoto', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
-                <Drawer.Screen name="NativeCameraVideo" component={NativeCameraVideo} options={{ title: 'NativeCameraVideo', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
                 <Drawer.Screen name="TestsScreen" component={TestsScreen} options={{
                   drawerLabel: () => null,
-                  headerShown: false
+                  headerShown: false,
+                  drawerItemStyle: { display: 'none' }
                 }} />
+
+                <Drawer.Screen name="TouchScreen" component={TouchScreen} options={{ title: 'TouchScreen', headerShown: false, drawerLabel: () => null, unmountOnBlur: true, drawerItemStyle: { display: 'none' } }} />
+                <Drawer.Screen name="MultiTouch" component={MultiTouch} options={{ title: 'MultiTouch', headerShown: false, drawerLabel: () => null, unmountOnBlur: true, drawerItemStyle: { display: 'none' } }} />
+                <Drawer.Screen name="Display" component={Display} options={{ title: 'Display', headerShown: false, drawerLabel: () => null, unmountOnBlur: true, drawerItemStyle: { display: 'none' } }} />
+                <Drawer.Screen name="Brightness" component={Brightness} options={{ title: 'Brightness', headerShown: false, drawerLabel: () => null, unmountOnBlur: true, drawerItemStyle: { display: 'none' } }} />
+                <Drawer.Screen name="Rotation" component={Rotation} options={{ title: 'Rotation', headerShown: false, drawerLabel: () => null, unmountOnBlur: true, drawerItemStyle: { display: 'none' } }} />
+                <Drawer.Screen name="BackCamera" component={BackCamera} options={{ title: 'BackCamera', headerShown: false, drawerLabel: () => null, unmountOnBlur: true, drawerItemStyle: { display: 'none' } }} />
+                <Drawer.Screen name="FrontCamera" component={FrontCamera} options={{ title: 'FrontCamera', headerShown: false, drawerLabel: () => null, unmountOnBlur: true, drawerItemStyle: { display: 'none' } }} />
+                <Drawer.Screen name="MultiCamera" component={MultiCamera} options={{ title: 'MultiCamera', headerShown: false, drawerLabel: () => null, unmountOnBlur: true, drawerItemStyle: { display: 'none' } }} />
+                <Drawer.Screen name="BackCameraVideo" component={BackCameraVideo} options={{ title: 'BackCameraVideo', headerShown: false, drawerLabel: () => null, unmountOnBlur: true, drawerItemStyle: { display: 'none' } }} />
+                <Drawer.Screen name="NativeCameraPhoto" component={NativeCameraPhoto} options={{ title: 'NativeCameraPhoto', headerShown: false, drawerLabel: () => null, unmountOnBlur: true, drawerItemStyle: { display: 'none' } }} />
+                <Drawer.Screen name="NativeCameraVideo" component={NativeCameraVideo} options={{ title: 'NativeCameraVideo', headerShown: false, drawerLabel: () => null, unmountOnBlur: true, drawerItemStyle: { display: 'none' } }} />
 
               </Drawer.Navigator>
 

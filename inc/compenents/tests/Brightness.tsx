@@ -8,10 +8,13 @@ import Slider from '@react-native-community/slider';
 import { DataContext } from '../../../App';
 import Timer from '../Timer';
 import useStepTimer from '../useStepTimer';
+import sendWsMessage from '../../utils/wsSendMsg'
+import AnimatedIcon from '../../utils/AnimatedIcon'
 
 
 const Brightness = () => {
-  const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
+  const [isTimerVisible, setIsTimerVisible] = useState(true);
+  const { testStep, setTestStep, testSteps, setTestsSteps, wsSocket, receivedUuid } = useContext(DataContext);
   const [brightness, setBrightness] = useState(1);
   const [autoAdjust, setAutoAdjust] = useState(true);
   const autoAdjustRef = useRef(autoAdjust);
@@ -20,6 +23,12 @@ const Brightness = () => {
 
 
   useEffect(() => {
+    sendWsMessage(wsSocket, {
+      uuid: receivedUuid,
+      type: 'progress',
+      step: testStep + '/' + testSteps.length,
+      currentStep: testSteps[testStep - 1].title
+    });
     hideNavigationBar();
     const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
 
@@ -42,6 +51,13 @@ const Brightness = () => {
       backHandler.remove();
       showNavigationBar();
       clearTimeout(timeoutRef.current);
+      setIsTimerVisible(false);
+      sendWsMessage(wsSocket, {
+        uuid: receivedUuid,
+        type: 'progress',
+        status: 'pause',
+        currentStep: testSteps[testStep - 1].title
+    });
     };
   }, []);
 
@@ -98,7 +114,9 @@ const Brightness = () => {
 
   return (
     <>
-      <Timer />
+
+      {isTimerVisible && <Timer />}
+      <AnimatedIcon />
       <View style={styles.container}>
         <Text style={styles.text}>Adjust the screen brightness using the slider below:</Text>
         <Text style={styles.text}>Current Brightness: {Math.round(brightness * 100)}%</Text>
@@ -164,6 +182,7 @@ const styles = StyleSheet.create({
   },
   btns: {
     padding: 8,
+    borderRadius: 8
   },
   btnLabel: {
     fontFamily: 'Quicksand-Bold',

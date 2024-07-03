@@ -34,7 +34,6 @@ import MultiCamera from './inc/compenents/tests/MultiCamera';
 import BackCameraVideo from './inc/compenents/tests/BackCameraVideo';
 import NativeCameraPhoto from './inc/compenents/tests/NativeCameraPhoto';
 import NativeCameraVideo from './inc/compenents/tests/NativeCameraVideo';
-import { formatTime } from './inc/utils/formatTime';
 
 export const DataContext = createContext(false);
 export const TimerContext = createContext({});
@@ -43,15 +42,21 @@ const Drawer = createDrawerNavigator();
 export default function App() {
   // hideNavigationBar();
   const [isInternetConnected, setIsNetConnected] = useState(false);
+  const [wsSocket, setWsSocket] = useState(null);
   const [websocketConnected, setWebsocketConnected] = useState(false);
   const [receivedSerialNumber, setReceivedSerialNumber] = useState(null);
+  const [receivedUuid, setReceivedUuid] = useState(null);
   const [isDiagStart, setIsDiagStart] = useState(false);
   const [isSubmitResult, setIsSubmitResult] = useState(false);
   const [token, setToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [testStep, setTestStep] = useState(1);
+  const [testStep, setTestStep] = useState(0);
   const [startTime, setStartTime] = useState(null);
+  const [startContinue, setStartContinue] = useState(false);
+  const [isFinishedTests, setIsFinishedTests] = useState(false);
   const elapsedTimeRef = useRef(0);
+
+
 
   const [testSteps, setTestsSteps] = useState([
     {
@@ -66,7 +71,7 @@ export default function App() {
       result: null,
       error: null,
       duration: null,
-      priority: 1,
+      priority: 3,
     },
     {
       title: 'TouchScreen',
@@ -93,7 +98,7 @@ export default function App() {
       result: null,
       error: null,
       duration: null,
-      priority: 3,
+      priority: 1,
     },
     {
       title: 'Brightness',
@@ -219,8 +224,77 @@ export default function App() {
     },
   ]);
 
-
   // const [testSteps, setTestsSteps] = useState([
+  //   {
+  //     title: 'Multitouch',
+  //     text: '',
+  //     icon: 'hand-clap',
+  //     showInfoBar: true,
+  //     showTimer: true,
+  //     showStepTitle: true,
+  //     showProgress: true,
+  //     result: null,
+  //     error: null,
+  //     duration: null,
+  //     priority: 1,
+  //   },
+  //   {
+  //     title: 'Brightness',
+  //     text: '',
+  //     icon: 'brightness-6',
+  //     showInfoBar: true,
+  //     showTimer: true,
+  //     showStepTitle: true,
+  //     showProgress: true,
+  //     result: null,
+  //     error: null,
+  //     duration: null,
+  //     priority: 2,
+  //   },
+  //   {
+  //     title: 'Rotation',
+  //     text: `Please turn on the 'Auto Rotate' feature and rotate your device to check the auto-rotation sensor`,
+  //     icon: 'screen-rotation',
+  //     showInfoBar: true,
+  //     showTimer: true,
+  //     showStepTitle: true,
+  //     showProgress: true,
+  //     result: null,
+  //     error: null,
+  //     duration: null,
+  //     priority: 3,
+  //   },
+  //   {
+  //     title: 'FrontCamera',
+  //     text: '',
+  //     icon: 'camera-front-variant',
+  //     showInfoBar: true,
+  //     showTimer: true,
+  //     showStepTitle: true,
+  //     showProgress: true,
+  //     result: null,
+  //     fileItem: {
+  //       ext: "jpg",
+  //       base64: null,
+  //       filePath: null,
+  //     },
+  //     error: null,
+  //     duration: null,
+  //     priority: 4,
+  //   },
+  //   {
+  //     title: 'NativeCameraVideo',
+  //     text: '',
+  //     icon: 'video-check-outline',
+  //     showInfoBar: true,
+  //     showTimer: true,
+  //     showStepTitle: true,
+  //     showProgress: true,
+  //     result: null,
+  //     error: null,
+  //     duration: null,
+  //     priority: 5,
+  //   },
   //   {
   //     title: 'NativeCameraPhoto',
   //     text: '',
@@ -237,60 +311,115 @@ export default function App() {
   //     },
   //     error: null,
   //     duration: null,
-  //     priority: 1,
+  //     priority: 6,
   //   },
-  //   // {
-  //   //   title: 'BackCamera',
-  //   //   text: '',
-  //   //   icon: 'camera-rear-variant',
-  //   //   showInfoBar: true,
-  //   //   showTimer: true,
-  //   //   showStepTitle: true,
-  //   //   showProgress: true,
-  //   //   result: null,
-  //   //   fileItem: {
-  //   //     ext: "jpg",
-  //   //     base64: null,
-  //   //     filePath: null,
-  //   //   },
-  //   //   error: null,
-  //   //   duration: null,
-  //   //   priority: 2,
-  //   // },
-  //   // {
-  //   //   title: 'FrontCamera',
-  //   //   text: '',
-  //   //   icon: 'camera-front-variant',
-  //   //   showInfoBar: true,
-  //   //   showTimer: true,
-  //   //   showStepTitle: true,
-  //   //   showProgress: true,
-  //   //   result: null,
-  //   //   fileItem: {
-  //   //     ext: "jpg",
-  //   //     base64: null,
-  //   //     filePath: null,
-  //   //   },
-  //   //   error: null,
-  //   //   duration: null,
-  //   //   priority: 3,
-  //   // },
-  //   // {
-  //   //   title: 'MultiCamera',
-  //   //   text: '',
-  //   //   icon: 'camera-flip-outline',
-  //   //   showInfoBar: true,
-  //   //   showTimer: true,
-  //   //   showStepTitle: true,
-  //   //   showProgress: true,
-  //   //   result: null,
-  //   //   multiCamResult: [],
-  //   //   devicesInfo: null,
-  //   //   error: null,
-  //   //   duration: null,
-  //   //   priority: 4,
-  //   // },
   // ]);
+
+
+
+  interface MyExpectedArgs {
+    wsIp?: string;
+    serialNumber?: string;
+    token?: string;
+    uuid?: string;
+  }
+  const paramss = LaunchArguments.value<MyExpectedArgs>();
+  // const paramsTest = { "wsIp": "192.168.1.22", "serialNumber": "R58M42HXCZW", "token": "9259af73-c1da-4786-aa6b-c4a788525889" };//TODO
+
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener((state) => {
+      setIsNetConnected(state.isConnected);
+    })
+    return () => unsubscribe();
+  }, []);
+
+
+  useEffect(() => {
+    console.log('paramss', paramss);
+    if (paramss) {
+      storeData(paramss);
+      if (paramss.serialNumber) {
+        // const serialNumber = paramss?.serialNumber;
+        console.log('paramss.serialNumber', paramss.serialNumber)
+        setReceivedSerialNumber(paramss.serialNumber);
+      } else {
+        console.log('serial number is Undefiend')
+      }
+      if (paramss.uuid) {
+        // const serialNumber = paramss?.serialNumber;
+        console.log('paramss.serialNumber', paramss.uuid)
+        setReceivedUuid(paramss.uuid);
+      } else {
+        console.log('uuidr is Undefiend')
+      }
+      if (paramss.token) {
+        // const serialNumber = paramss?.serialNumber;
+        setToken(paramss.token);
+      } else {
+        console.log('serial number is Undefiend')
+      }
+    }
+  }, [paramss]);
+
+
+
+  useEffect(() => {
+    let ws;
+    const wsPort = '2552';
+    if (!websocketConnected) {
+      const connectWebSocket = () => {
+        if (paramss.wsIp && receivedUuid) {
+          const wsUrl = 'ws://' + paramss?.wsIp + ':' + wsPort + '?uuid=' + receivedUuid; // WebSocket server URL
+          console.log('wsUrl', wsUrl)
+          ws = new WebSocket(wsUrl);
+          setWsSocket(ws);
+
+          ws.onopen = () => {
+            setWebsocketConnected(true);
+            console.log('WebSocket connected');
+            // ws.send(('0' + '/' + testSteps.length).toString());
+            ws.send(JSON.stringify({
+              uuid: receivedUuid,
+              type: 'progress',
+              status: 'ready',
+              currentStep: 'Not Started'
+            }));
+
+          };
+
+          ws.onmessage = (event) => {
+            console.log('Received message:', event.data);
+          };
+
+          ws.onerror = (error) => {
+            setWebsocketConnected(false);
+            console.log('WebSocket error:', error?.message);
+          };
+
+          ws.onclose = (msg) => {
+            setWebsocketConnected(false);
+            console.log('WebSocket closed', msg?.message);
+            //Auto Recconect
+            // setTimeout(connectWebSocket, 2000);
+          };
+        }else{
+          console.log('wsIp Or uuId not defined')
+        }
+      };
+
+      if (!websocketConnected) {
+        connectWebSocket();
+      }
+
+      return () => {
+        if (ws) {
+          ws.close();
+        }
+      };
+    } else {
+      console.log('webSocket Already Connected.')
+    }
+  }, [isInternetConnected]);
 
 
   const [deviceDetails, setDeviceDetails] = useState({
@@ -314,9 +443,7 @@ export default function App() {
   });
 
   useEffect(() => {
-
     storageTestSteps(testSteps);
-
   }, []);
 
   useEffect(() => {
@@ -361,7 +488,7 @@ export default function App() {
           model: model,
           os: Platform.OS,
           osVersion: osVersion,
-          serialNumber: 'receivedSerialNumber', // Adjust if you can fetch the actual serial number
+          serialNumber: receivedSerialNumber, // Adjust if you can fetch the actual serial number
           storage_layouts: [{
             size: (storage / (1024 ** 3)).toFixed(2), // Convert bytes to GB
             freeStorage: (freeStorage / (1024 ** 3)).toFixed(2), // Convert bytes to GB
@@ -397,93 +524,7 @@ export default function App() {
     return () => {
       console.log('unmount App');
     };
-  }, []);
-
-
-  interface MyExpectedArgs {
-    serialNumber?: string;
-    token?: string;
-    wsIp?: string;
-  }
-
-  const paramss = LaunchArguments.value<MyExpectedArgs>();
-  const paramsTest = { "wsIp": "192.168.1.22", "serialNumber": "R58M42HXCZW", "token": "9259af73-c1da-4786-aa6b-c4a788525889" };//TODO
-
-  useEffect(() => {
-    if (paramsTest) {
-      storeData(paramsTest);
-      if (paramsTest.serialNumber) {
-        // const serialNumber = paramsTest?.serialNumber;
-        setReceivedSerialNumber(paramsTest.serialNumber);
-      } else {
-        console.log('serial number is Undefiend')
-      }
-      if (paramsTest.token) {
-        // const serialNumber = paramsTest?.serialNumber;
-        setToken(paramsTest.token);
-      } else {
-        console.log('serial number is Undefiend')
-      }
-    }
-  }, [paramss]);
-
-
-  useEffect(() => {
-    const unsubscribe = NetInfo.addEventListener((state) => {
-      setIsNetConnected(state.isConnected);
-    })
-    return () => unsubscribe();
-  }, []);
-
-
-  // useEffect(() => {
-  //   let ws;
-  //   const wsPort = '3655';
-  //   if (!websocketConnected) {
-  //     const connectWebSocket = () => {
-  //       if (paramsTest.wsIp) {
-  //         const wsUrl = 'ws://' + paramsTest?.wsIp + ':' + wsPort; // WebSocket server URL
-  //         ws = new WebSocket(wsUrl);
-
-  //         ws.onopen = () => {
-  //           setWebsocketConnected(true);
-  //           console.log('WebSocket connected');
-  //         };
-
-  //         ws.onmessage = (event) => {
-  //           console.log('Received message:', event.data);
-  //         };
-
-  //         ws.onerror = (error) => {
-  //           setWebsocketConnected(false);
-  //           console.log('WebSocket error:', error.message);
-  //         };
-
-  //         ws.onclose = () => {
-  //           setWebsocketConnected(false);
-  //           console.log('WebSocket closed');
-  //           //Auto Recconect
-  //           setTimeout(connectWebSocket, 2000);
-  //         };
-  //       } else {
-  //         Alert.alert('Ws Url not Defined.');
-  //         return;
-  //       }
-  //     };
-
-  //     if (!websocketConnected) {
-  //       connectWebSocket();
-  //     }
-
-  //     return () => {
-  //       if (ws) {
-  //         ws.close();
-  //       }
-  //     };
-  //   }else{
-  //     console.log('webSocket Already Connected.')
-  //   }
-  // }, [isInternetConnected]);
+  }, [receivedSerialNumber]);
 
 
   useEffect(() => {
@@ -525,7 +566,7 @@ export default function App() {
   return (
 
     <PaperProvider>
-      <DataContext.Provider value={{ isInternetConnected, setIsNetConnected, websocketConnected, setWebsocketConnected, receivedSerialNumber, testStep, setTestStep, testSteps, setTestsSteps, deviceDetails, setDeviceDetails, isDiagStart, setIsDiagStart, isSubmitResult, setIsSubmitResult }}>
+      <DataContext.Provider value={{ isInternetConnected, setIsNetConnected, wsSocket, receivedUuid, websocketConnected, setWebsocketConnected, receivedSerialNumber, testStep, setTestStep, testSteps, setTestsSteps, deviceDetails, setDeviceDetails, isDiagStart, setIsDiagStart, isSubmitResult, setIsSubmitResult, startContinue, setStartContinue, isFinishedTests, setIsFinishedTests }}>
         <TimerContext.Provider value={{ startTime, setStartTime, elapsedTimeRef }}>
           <SafeAreaProvider>
             <NavigationContainer>
@@ -547,21 +588,24 @@ export default function App() {
                 <Drawer.Screen name="CheckList" component={CheckList} />
                 <Drawer.Screen name="Requirements" component={Requirements} />
                 <Drawer.Screen name="Help" component={HelpScreen} />
-                <Drawer.Screen name="TouchScreen" component={TouchScreen} options={{ title: 'TouchScreen', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
-                <Drawer.Screen name="MultiTouch" component={MultiTouch} options={{ title: 'MultiTouch', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
-                <Drawer.Screen name="Display" component={Display} options={{ title: 'Display', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
-                <Drawer.Screen name="Brightness" component={Brightness} options={{ title: 'Brightness', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
-                <Drawer.Screen name="Rotation" component={Rotation} options={{ title: 'Rotation', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
-                <Drawer.Screen name="BackCamera" component={BackCamera} options={{ title: 'BackCamera', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
-                <Drawer.Screen name="FrontCamera" component={FrontCamera} options={{ title: 'FrontCamera', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
-                <Drawer.Screen name="MultiCamera" component={MultiCamera} options={{ title: 'MultiCamera', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
-                <Drawer.Screen name="BackCameraVideo" component={BackCameraVideo} options={{ title: 'BackCameraVideo', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
-                <Drawer.Screen name="NativeCameraPhoto" component={NativeCameraPhoto} options={{ title: 'NativeCameraPhoto', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
-                <Drawer.Screen name="NativeCameraVideo" component={NativeCameraVideo} options={{ title: 'NativeCameraVideo', headerShown: false, drawerLabel: () => null, unmountOnBlur: true }} />
                 <Drawer.Screen name="TestsScreen" component={TestsScreen} options={{
                   drawerLabel: () => null,
-                  headerShown: false
+                  headerShown: false,
+                  drawerItemStyle: { display: 'none' }
                 }} />
+
+                <Drawer.Screen name="TouchScreen" component={TouchScreen} options={{ title: 'TouchScreen', headerShown: false, drawerLabel: () => null, unmountOnBlur: true, drawerItemStyle: { display: 'none' } }} />
+                <Drawer.Screen name="MultiTouch" component={MultiTouch} options={{ title: 'MultiTouch', headerShown: false, drawerLabel: () => null, unmountOnBlur: true, drawerItemStyle: { display: 'none' } }} />
+                <Drawer.Screen name="Display" component={Display} options={{ title: 'Display', headerShown: false, drawerLabel: () => null, unmountOnBlur: true, drawerItemStyle: { display: 'none' } }} />
+                <Drawer.Screen name="Brightness" component={Brightness} options={{ title: 'Brightness', headerShown: false, drawerLabel: () => null, unmountOnBlur: true, drawerItemStyle: { display: 'none' } }} />
+                <Drawer.Screen name="Rotation" component={Rotation} options={{ title: 'Rotation', headerShown: false, drawerLabel: () => null, unmountOnBlur: true, drawerItemStyle: { display: 'none' } }} />
+                <Drawer.Screen name="BackCamera" component={BackCamera} options={{ title: 'BackCamera', headerShown: false, drawerLabel: () => null, unmountOnBlur: true, drawerItemStyle: { display: 'none' } }} />
+                <Drawer.Screen name="FrontCamera" component={FrontCamera} options={{ title: 'FrontCamera', headerShown: false, drawerLabel: () => null, unmountOnBlur: true, drawerItemStyle: { display: 'none' } }} />
+                <Drawer.Screen name="MultiCamera" component={MultiCamera} options={{ title: 'MultiCamera', headerShown: false, drawerLabel: () => null, unmountOnBlur: true, drawerItemStyle: { display: 'none' } }} />
+                <Drawer.Screen name="BackCameraVideo" component={BackCameraVideo} options={{ title: 'BackCameraVideo', headerShown: false, drawerLabel: () => null, unmountOnBlur: true, drawerItemStyle: { display: 'none' } }} />
+                <Drawer.Screen name="NativeCameraPhoto" component={NativeCameraPhoto} options={{ title: 'NativeCameraPhoto', headerShown: false, drawerLabel: () => null, unmountOnBlur: true, drawerItemStyle: { display: 'none' } }} />
+                <Drawer.Screen name="NativeCameraVideo" component={NativeCameraVideo} options={{ title: 'NativeCameraVideo', headerShown: false, drawerLabel: () => null, unmountOnBlur: true, drawerItemStyle: { display: 'none' } }} />
+
               </Drawer.Navigator>
 
             </NavigationContainer>

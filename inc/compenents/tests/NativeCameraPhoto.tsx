@@ -1,23 +1,45 @@
-import React, { useState, useEffect, useContext, useCallback } from 'react';
+import React, { useState, useEffect, useContext, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, Image, BackHandler, Alert, ActivityIndicator } from 'react-native';
 import { Button } from 'react-native-paper';
 import { launchCamera } from 'react-native-image-picker';
 import RNFS from 'react-native-fs';
-import { DataContext } from '../../../App';
+import { requestPermissions, openAppSettings } from '../CameraPermission';
+import { DataContext, TimerContext } from '../../../App';
 import Timer from '../Timer';
 import useStepTimer from '../useStepTimer';
+import sendWsMessage from '../../utils/wsSendMsg'
+import AnimatedIcon from '../../utils/AnimatedIcon'
 
 const NativeCameraPhoto = () => {
-  const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
+  const { testStep, setTestStep, testSteps, setTestsSteps, wsSocket, receivedUuid } = useContext(DataContext);
+  const { elapsedTimeRef } = useContext(TimerContext);
   const [photoUri, setPhotoUri] = useState(null);
   const [fileBase64, setFileBase64] = useState(null);
+  const [permissionsGranted, setPermissionsGranted] = useState(false);
+  const [isTimerVisible, setIsTimerVisible] = useState(true);
   const getDuration = useStepTimer();
+  const nativePauseTime = useRef(0)
 
   useEffect(() => {
+    sendWsMessage(wsSocket, {
+      uuid: receivedUuid,
+      type: 'progress',
+      step: testStep + '/' + testSteps.length,
+      currentStep: testSteps[testStep - 1].title
+    });
     const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
-    openNativeCamera();
+    nativePauseTime.current = Date.now();
+    requestCameraPermission();
     return () => {
+      console.log('unMount Native CameraPhoto')
       backHandler.remove();
+      setIsTimerVisible(false);
+      sendWsMessage(wsSocket, {
+        uuid: receivedUuid,
+        type: 'progress',
+        status: 'pause',
+        currentStep: testSteps[testStep - 1].title
+      });
     };
   }, []);
 
@@ -25,7 +47,19 @@ const NativeCameraPhoto = () => {
     return true; // Prevent going back
   };
 
+  const requestCameraPermission = async () => {
+    const permissionStatus = await requestPermissions();
+    // console.log('permissionStatus', permissionStatus)
+    if (permissionStatus === 'granted') {
+      setPermissionsGranted(true);
+      openNativeCamera();
+    } else if (permissionStatus === 'never_ask_again' || permissionStatus == 'denied') {
+      openAppSettings();
+    }
+  };
+
   const openNativeCamera = () => {
+
     launchCamera(
       {
         mediaType: 'photo',
@@ -34,13 +68,17 @@ const NativeCameraPhoto = () => {
       },
       async (response) => {
         if (response.didCancel) {
+          elapsedTimeRef.current += Math.floor((Date.now() - nativePauseTime.current) / 1000)
           handleResult('Skip');
         } else if (response.errorCode) {
           Alert.alert('Camera error', response.errorMessage);
+          elapsedTimeRef.current += Math.floor((Date.now() - nativePauseTime.current) / 1000)
           handleResult('Fail');
         } else {
           const { uri } = response.assets[0];
           const photoPath = await savePhoto(uri);
+          // console.log('elapseeeeeeeed=> ' , Math.floor((Date.now() - nativePauseTime.current) / 1000))
+          elapsedTimeRef.current += Math.floor((Date.now() - nativePauseTime.current) / 1000)
           if (photoPath) {
             setPhotoUri(photoPath);
           } else {
@@ -100,10 +138,20 @@ const NativeCameraPhoto = () => {
     }
   }, [testSteps, setTestsSteps, setTestStep, fileBase64, getDuration]);
 
+  if (!permissionsGranted) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.text}>Requesting permissions...</Text>
+        <ActivityIndicator size="large" color="#4908b0" />
+      </View>
+    );
+  }
   return (
     <>
-      <Timer />
+      {isTimerVisible && <Timer />}
       <View style={styles.container}>
+        <AnimatedIcon />
+
         {photoUri ? (
           <Image source={{ uri: `file://${photoUri}` }} style={styles.photo} />
         ) : (
@@ -165,6 +213,7 @@ const styles = StyleSheet.create({
   },
   btns: {
     padding: 8,
+    borderRadius: 8
   },
   btnLabel: {
     fontFamily: 'Quicksand-Bold',

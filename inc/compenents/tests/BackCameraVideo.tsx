@@ -9,13 +9,15 @@ import useStepTimer from '../useStepTimer';
 import RNFS from 'react-native-fs';
 import { requestPermissions, openAppSettings } from '../CameraPermission';
 import Video from 'react-native-video';
+import sendWsMessage from '../../utils/wsSendMsg'
+import AnimatedIcon from '../../utils/AnimatedIcon'
 
 const BackCameraVideoTest = () => {
-  const { testStep, setTestStep, testSteps, setTestsSteps, elapsedTime, setElapsedTime } = useContext(DataContext);
-  const { elapsedTimeRef } = useContext(TimerContext);
+  const { testStep, setTestStep, testSteps, setTestsSteps, elapsedTime, setElapsedTime, wsSocket, receivedUuid } = useContext(DataContext);
   const [videoUri, setVideoUri] = useState(null);
   const cameraRef = useRef(null);
   const [permissionsGranted, setPermissionsGranted] = useState(false);
+  const [isTimerVisible, setIsTimerVisible] = useState(true);
   const [videoPath, setVideoPath] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
   const [cameraActive, setCameraActive] = useState(true);
@@ -24,15 +26,27 @@ const BackCameraVideoTest = () => {
 
 
   useEffect(() => {
-    console.log('elapsedTimeRef.current', elapsedTimeRef.current)
+    sendWsMessage(wsSocket, {
+      uuid: receivedUuid,
+      type: 'progress',
+      step: testStep + '/' + testSteps.length,
+      currentStep: testSteps[testStep - 1].title
+    });
     const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
     requestCameraPermission();
     return () => {
       console.log('unmounting... backCamera');
-      setCameraActive(false)
+      setCameraActive(false);
       backHandler.remove();
+      setIsTimerVisible(false);
+      sendWsMessage(wsSocket, {
+        uuid: receivedUuid,
+        type: 'progress',
+        status: 'pause',
+        currentStep: testSteps[testStep - 1].title
+    });
     };
-  }, [elapsedTime, setElapsedTime]);
+  }, []);
 
   const handleBackButtonPress = useCallback(() => {
     return true;
@@ -40,7 +54,7 @@ const BackCameraVideoTest = () => {
 
   const requestCameraPermission = async () => {
     const permissionStatus = await requestPermissions();
-    console.log('permissionStatus: ' , permissionStatus)
+    console.log('permissionStatus: ', permissionStatus)
     if (permissionStatus === 'granted') {
       setPermissionsGranted(true);
     } else if (permissionStatus === 'never_ask_again' || permissionStatus === 'denied') {
@@ -122,8 +136,11 @@ const BackCameraVideoTest = () => {
 
   return (
     <>
-      <Timer />
+      {isTimerVisible &&
+        <Timer />}
       <View style={styles.container}>
+      <AnimatedIcon />
+
         {videoUri ? (
           <>
             <Video source={{ uri: `file://${videoUri}` }} style={styles.video} controls={true} />
@@ -195,6 +212,7 @@ const styles = StyleSheet.create({
   },
   btns: {
     padding: 7,
+    borderRadius: 8
   },
   btnLabel: {
     fontSize: 16,

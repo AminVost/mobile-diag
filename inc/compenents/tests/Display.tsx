@@ -5,10 +5,12 @@ import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-na
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { hideNavigationBar, showNavigationBar } from 'react-native-navigation-bar-color';
 import { DataContext, TimerContext } from '../../../App';
-import { formatTime } from '../../utils/formatTime';
 import CustomAlert from './CustomAlert';
 import Timer from '../Timer';
 import useStepTimer from '../useStepTimer';
+import sendWsMessage from '../../utils/wsSendMsg'
+import AnimatedIcon from '../../utils/AnimatedIcon'
+
 
 const { width, height } = Dimensions.get('screen');
 
@@ -23,19 +25,23 @@ const testPatterns = [
 ];
 
 const Display = () => {
-    const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
-    // const { elapsedTimeRef } = useContext(TimerContext);
+    const { testStep, setTestStep, testSteps, setTestsSteps, wsSocket, receivedUuid } = useContext(DataContext);
     const [isAlertVisible, setAlertVisible] = useState(false);
     const [currentTestIndex, setCurrentTestIndex] = useState(0);
     const [testComplete, setTestComplete] = useState(false);
     const [showText, setShowText] = useState(true);
     const opacity = useSharedValue(1);
     const [stepDuration, _] = useState(Date.now());
+    const [isTimerVisible, setIsTimerVisible] = useState(true);
     const getDuration = useStepTimer();
 
-
-
     useEffect(() => {
+        sendWsMessage(wsSocket, {
+            uuid: receivedUuid,
+            type: 'progress',
+            step: testStep + '/' + testSteps.length,
+            currentStep: testSteps[testStep - 1].title
+        });
         hideNavigationBar();
         const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
         // console.log(testSteps);
@@ -43,6 +49,13 @@ const Display = () => {
             console.log('Unmount Display');
             backHandler.remove();
             showNavigationBar();
+            setIsTimerVisible(false);
+            sendWsMessage(wsSocket, {
+                uuid: receivedUuid,
+                type: 'progress',
+                status: 'pause',
+                currentStep: testSteps[testStep - 1].title
+            });
         };
     }, []);
 
@@ -169,9 +182,12 @@ const Display = () => {
                 renderCompletionPage()
             ) : (
                 <>
-                    {/* <Text style={styles.timerText}>{`Elapsed Time: ${formatTime(elapsedTimeRef.current)}`}</Text> */}
-                    <Timer />
+                    {isTimerVisible
+                        &&
+                        <Timer />}
                     <TouchableOpacity style={styles.container} onPress={handleNextTest}>
+                        <AnimatedIcon />
+
                         {renderPattern()}
                         {showText && (
                             <View style={styles.textContainer}>
@@ -272,6 +288,7 @@ const styles = StyleSheet.create({
     },
     btns: {
         padding: 8,
+        borderRadius: 8
     },
     btnLabel: {
         fontFamily: 'Quicksand-Bold',

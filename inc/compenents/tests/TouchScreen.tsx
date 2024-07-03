@@ -8,12 +8,15 @@ import { DataContext } from '../../../App';
 import CustomAlert from './CustomAlert';
 import Timer from '../Timer';
 import useStepTimer from '../useStepTimer';
+import sendWsMessage from '../../utils/wsSendMsg'
+import AnimatedIcon from '../../utils/AnimatedIcon'
 
 
 
 const TouchScreenTest = ({ navigation, route }) => {
-    const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
+    const { testStep, setTestStep, testSteps, setTestsSteps, wsSocket, receivedUuid } = useContext(DataContext);
     const [isAlertVisible, setAlertVisible] = useState(false);
+    const [isTimerVisible, setIsTimerVisible] = useState(true);
     const getDuration = useStepTimer();
 
     // const heightBar = StatusBar.currentHeight;
@@ -30,6 +33,12 @@ const TouchScreenTest = ({ navigation, route }) => {
     const squareHeight = screenHeight / numRows;
 
     useEffect(() => {
+        sendWsMessage(wsSocket, {
+            uuid: receivedUuid,
+            type: 'progress',
+            step: testStep + '/' + testSteps.length,
+            currentStep: testSteps[testStep - 1].title
+        });
         hideNavigationBar();
         generateSquares();
         const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
@@ -37,6 +46,13 @@ const TouchScreenTest = ({ navigation, route }) => {
             backHandler.remove();
             showNavigationBar();
             console.log('unmount..... touchScreen', testSteps[testStep - 1])
+            setIsTimerVisible(false);
+            sendWsMessage(wsSocket, {
+                uuid: receivedUuid,
+                type: 'progress',
+                status: 'pause',
+                currentStep: testSteps[testStep - 1].title
+            });
         };
     }, []);
 
@@ -115,8 +131,9 @@ const TouchScreenTest = ({ navigation, route }) => {
     return (
         <>
             <StatusBar hidden={false} translucent={true} backgroundColor="transparent" barStyle="default" />
-            <Timer />
+            {isTimerVisible && <Timer />}
             <CustomAlert isAlertVisible={isAlertVisible} handleResult={handleResult} toggleAlert={toggleAlert} currentTestStep={testSteps[testStep - 1]} />
+            <AnimatedIcon />
             <View
                 style={styles.container}
                 {...panResponder.panHandlers}
@@ -220,6 +237,7 @@ const styles = StyleSheet.create({
     },
     btns: {
         padding: 8,
+        borderRadius: 8
     },
     btnLabel: {
         fontFamily: 'Quicksand-Bold',

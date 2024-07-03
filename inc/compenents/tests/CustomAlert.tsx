@@ -15,7 +15,7 @@ const CustomAlert = memo(({ isAlertVisible, handleResult, toggleAlert, currentTe
         return () => '';
     }, [currentTestStep]);
 
-    console.log('CustomAlert rendered', currentTestStep);
+    // console.log('CustomAlert rendered', currentTestStep);
     return (
         <Modal
             visible={isAlertVisible}
@@ -130,6 +130,7 @@ const styles = StyleSheet.create({
     },
     btns: {
         padding: 8,
+        borderRadius: 8
     },
     btnLabel: {
         fontFamily: 'Quicksand-Bold',

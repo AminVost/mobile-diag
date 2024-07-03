@@ -1,24 +1,43 @@
-import React, { useState, useEffect, useContext, useCallback } from 'react';
+import React, { useState, useEffect, useContext, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, BackHandler, Alert, ActivityIndicator } from 'react-native';
 import Video from 'react-native-video';
 import { Button } from 'react-native-paper';
 import { launchCamera } from 'react-native-image-picker';
-import { DataContext } from '../../../App';
+import { DataContext, TimerContext } from '../../../App';
 import Timer from '../Timer';
 import useStepTimer from '../useStepTimer';
+import sendWsMessage from '../../utils/wsSendMsg'
+import AnimatedIcon from '../../utils/AnimatedIcon'
+
 
 const NativeCameraVideo = () => {
-  const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
+  const { testStep, setTestStep, testSteps, setTestsSteps, wsSocket, receivedUuid } = useContext(DataContext);
+  const { elapsedTimeRef } = useContext(TimerContext);
   const [videoUri, setVideoUri] = useState(null);
+  const [isTimerVisible, setIsTimerVisible] = useState(true);
+  const nativePauseTime = useRef(0)
   const getDuration = useStepTimer();
 
 
   useEffect(() => {
-    // Prevent hardware back button press
+    sendWsMessage(wsSocket, {
+      uuid: receivedUuid,
+      type: 'progress',
+      step: testStep + '/' + testSteps.length,
+      currentStep: testSteps[testStep - 1].title
+    });
     const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
+    nativePauseTime.current = Date.now();
     openNativeCamera();
     return () => {
       backHandler.remove();
+      setIsTimerVisible(false);
+      sendWsMessage(wsSocket, {
+        uuid: receivedUuid,
+        type: 'progress',
+        status: 'pause',
+        currentStep: testSteps[testStep - 1].title
+    });
     };
   }, []);
 
@@ -36,11 +55,15 @@ const NativeCameraVideo = () => {
       },
       async (response) => {
         if (response.didCancel) {
+          elapsedTimeRef.current += Math.floor((Date.now() - nativePauseTime.current) / 1000)
           handleResult('Fail');
         } else if (response.errorCode) {
           Alert.alert('Camera error', response.errorMessage);
+          elapsedTimeRef.current += Math.floor((Date.now() - nativePauseTime.current) / 1000)
           handleResult('Fail');
         } else {
+          // console.log('elapseeeeeeeed Video=> ', Math.floor((Date.now() - nativePauseTime.current) / 1000))
+          elapsedTimeRef.current += Math.floor((Date.now() - nativePauseTime.current) / 1000)
           setVideoUri(response.assets[0].uri);
           // handleResult('Pass', response.assets[0].uri);
         }
@@ -64,8 +87,10 @@ const NativeCameraVideo = () => {
 
   return (
     <>
-      <Timer />
+      {isTimerVisible &&
+        <Timer />}
       <View style={styles.container}>
+        <AnimatedIcon />
         {videoUri ? (
           <Video source={{ uri: videoUri }} style={styles.video} controls />
         ) : (
@@ -125,6 +150,7 @@ const styles = StyleSheet.create({
   },
   btns: {
     padding: 8,
+    borderRadius: 8
   },
   btnLabel: {
     fontFamily: 'Quicksand-Bold',

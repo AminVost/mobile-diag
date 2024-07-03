@@ -8,29 +8,44 @@ import Timer from '../Timer';
 import useStepTimer from '../useStepTimer';
 import RNFS from 'react-native-fs';
 import { requestPermissions, openAppSettings } from '../CameraPermission';
+import sendWsMessage from '../../utils/wsSendMsg'
+import AnimatedIcon from '../../utils/AnimatedIcon'
 
 const BackCamera = () => {
-  const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
-  const { elapsedTimeRef } = useContext(TimerContext);
+  const { testStep, setTestStep, testSteps, setTestsSteps, wsSocket, receivedUuid } = useContext(DataContext);
   const [photoUri, setPhotoUri] = useState(null);
   const [photoBase64, setPhotoBase64] = useState(null);
   const cameraRef = useRef(null);
   const [isCameraActive, setIsCameraActive] = useState(true);
   const [permissionsGranted, setPermissionsGranted] = useState(false);
+  const [isTimerVisible, setIsTimerVisible] = useState(true);
   const [photoPath, setPhotoPath] = useState<string | ((arg: any) => string)>(null);
   const device = useCameraDevice('back');
   const { width, height } = Dimensions.get('screen');
   const format = useCameraFormat(device, [
-    { photoResolution: { width: 640, height: 480  } }
+    { photoResolution: { width: 640, height: 480 } }
   ])
   const getDuration = useStepTimer();
 
   useEffect(() => {
+    sendWsMessage(wsSocket, {
+      uuid: receivedUuid,
+      type: 'progress',
+      step: testStep + '/' + testSteps.length,
+      currentStep: testSteps[testStep - 1].title
+    });
     const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
     requestCameraPermission();
     return () => {
       setIsCameraActive(false); // Deactivate camera on unmount
       backHandler.remove();
+      setIsTimerVisible(false);
+      sendWsMessage(wsSocket, {
+        uuid: receivedUuid,
+        type: 'progress',
+        status: 'pause',
+        currentStep: testSteps[testStep - 1].title
+    });
     };
   }, []);
 
@@ -40,7 +55,7 @@ const BackCamera = () => {
 
   const requestCameraPermission = async () => {
     const permissionStatus = await requestPermissions();
-    console.log('permissionStatus', permissionStatus)
+    // console.log('permissionStatus', permissionStatus)
     if (permissionStatus === 'granted') {
       setPermissionsGranted(true);
     } else if (permissionStatus === 'never_ask_again' || permissionStatus == 'denied') {
@@ -95,7 +110,7 @@ const BackCamera = () => {
     // console.log('injaaa' , updatedTestSteps[testStep - 1])
     setTestsSteps(updatedTestSteps);
     setTestStep((prevStep) => prevStep + 1);
-    console.log(testSteps);
+    // console.log(testSteps);
   };
 
 
@@ -118,8 +133,10 @@ const BackCamera = () => {
 
   return (
     <>
-      <Timer />
+      {isTimerVisible &&
+        <Timer />}
       <View style={styles.container}>
+        <AnimatedIcon />
         {photoUri ? (
           <>
             <Image source={{ uri: `file://${photoUri}` }} style={styles.photo} />
@@ -201,6 +218,7 @@ const styles = StyleSheet.create({
   },
   btns: {
     padding: 8,
+    borderRadius: 8
   },
   btnLabel: {
     fontFamily: 'Quicksand-Bold',

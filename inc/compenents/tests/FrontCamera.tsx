@@ -8,14 +8,18 @@ import Timer from '../Timer';
 import useStepTimer from '../useStepTimer';
 import RNFS from 'react-native-fs';
 import { requestPermissions, openAppSettings } from '../CameraPermission';
+import sendWsMessage from '../../utils/wsSendMsg'
+import AnimatedIcon from '../../utils/AnimatedIcon'
+
 
 const FrontCamera = () => {
-  const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
+  const { testStep, setTestStep, testSteps, setTestsSteps, wsSocket, receivedUuid } = useContext(DataContext);
   const [photoUri, setPhotoUri] = useState(null);
   const [photoBase64, setPhotoBase64] = useState(null);
   const cameraRef = useRef(null);
   const [isCameraActive, setIsCameraActive] = useState(true);
   const [permissionsGranted, setPermissionsGranted] = useState(false);
+  const [isTimerVisible, setIsTimerVisible] = useState(true);
 
   const [photoPath, setPhotoPath] = useState<string | ((arg: any) => string)>(null);
 
@@ -28,13 +32,25 @@ const FrontCamera = () => {
 
 
   useEffect(() => {
-    console.log('FrontCameraaaaaa')
+    sendWsMessage(wsSocket, {
+      uuid: receivedUuid,
+      type: 'progress',
+      step: testStep + '/' + testSteps.length,
+      currentStep: testSteps[testStep - 1].title
+    });
     const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
     requestCameraPermission();
     return () => {
       console.log('unmount FrontCamera')
-      setIsCameraActive(false)
+      setIsCameraActive(false);
       backHandler.remove();
+      setIsTimerVisible(false);
+      sendWsMessage(wsSocket, {
+        uuid: receivedUuid,
+        type: 'progress',
+        status: 'pause',
+        currentStep: testSteps[testStep - 1].title
+    });
     };
   }, []);
 
@@ -120,8 +136,10 @@ const FrontCamera = () => {
 
   return (
     <>
-      <Timer />
+      {isTimerVisible &&
+        <Timer />}
       <View style={styles.container}>
+        <AnimatedIcon />
         {photoUri ? (
           <>
             <Image source={{ uri: `file://${photoUri}` }} style={styles.photo} />
@@ -200,6 +218,7 @@ const styles = StyleSheet.create({
   },
   btns: {
     padding: 7,
+    borderRadius: 8
   },
   btnLabel: {
     fontFamily: 'Quicksand-Bold',

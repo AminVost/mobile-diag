@@ -8,13 +8,16 @@ import Timer from '../Timer';
 import RNFS from 'react-native-fs';
 import useStepTimer from '../useStepTimer';
 import { requestPermissions, openAppSettings } from '../CameraPermission';
+import sendWsMessage from '../../utils/wsSendMsg'
+import AnimatedIcon from '../../utils/AnimatedIcon'
 
 const MultiCameraTest = () => {
-  const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
+  const { testStep, setTestStep, testSteps, setTestsSteps, wsSocket, receivedUuid } = useContext(DataContext);
   const [isCameraActive, setIsCameraActive] = useState(true);
   const [photoUri, setPhotoUri] = useState(null);
   const cameraRef = useRef(null);
   const [permissionsGranted, setPermissionsGranted] = useState(false);
+  const [isTimerVisible, setIsTimerVisible] = useState(true);
   const [photoPath, setPhotoPath] = useState(null);
   const [currentCameraIndex, setCurrentCameraIndex] = useState(0);
   const [fileBase64, setFileBase64] = useState(null);
@@ -28,12 +31,25 @@ const MultiCameraTest = () => {
   const format = device ? useCameraFormat(device, [{ photoResolution: { width: 640, height: 480 } }]) : null;
 
   useEffect(() => {
+    sendWsMessage(wsSocket, {
+      uuid: receivedUuid,
+      type: 'progress',
+      step: testStep + '/' + testSteps.length,
+      currentStep: testSteps[testStep - 1].title
+    });
     const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
     requestCameraPermission();
     return () => {
-      console.log('unmount multiCamera', testSteps[testStep - 1]);
-      setIsCameraActive(false);
+      console.log('unmount multiCamera');
       backHandler.remove();
+      setIsCameraActive(false);
+      setIsTimerVisible(false);
+      sendWsMessage(wsSocket, {
+        uuid: receivedUuid,
+        type: 'progress',
+        status: 'pause',
+        currentStep: testSteps[testStep - 1].title
+    });
     };
   }, []);
 
@@ -78,7 +94,7 @@ const MultiCameraTest = () => {
 
         // Convert the photo to base64
         const fileBase64String = await RNFS.readFile(photo.path, 'base64');
-        
+
         const finalFileBase64 = 'data:image/jpeg;base64,' + fileBase64String;
 
         setFileBase64(finalFileBase64);
@@ -150,8 +166,10 @@ const MultiCameraTest = () => {
 
   return (
     <>
-      <Timer />
+      {isTimerVisible &&
+        <Timer />}
       <View style={styles.container}>
+      <AnimatedIcon />
         {photoUri ? (
           <>
             <Image source={{ uri: `file://${photoUri}` }} style={styles.photo} />
@@ -238,7 +256,7 @@ const styles = StyleSheet.create({
   },
   btns: {
     padding: 7,
-    borderRadius: 6
+    borderRadius: 8
   },
   btnLabel: {
     fontSize: 16,

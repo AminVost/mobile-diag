@@ -5,11 +5,14 @@ import { Button } from 'react-native-paper';
 import { DataContext } from '../../../App';
 import Timer from '../Timer';
 import useStepTimer from '../useStepTimer';
+import sendWsMessage from '../../utils/wsSendMsg'
+import AnimatedIcon from '../../utils/AnimatedIcon'
 
 
 
 const MultiTouchTest = ({ navigation }) => {
-    const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
+    const [isTimerVisible, setIsTimerVisible] = useState(true);
+    const { testStep, setTestStep, testSteps, setTestsSteps, wsSocket, receivedUuid } = useContext(DataContext);
     const [touches, setTouches] = useState([]);
     const [maxTouches, setMaxTouches] = useState(0);
     const getDuration = useStepTimer();
@@ -17,11 +20,25 @@ const MultiTouchTest = ({ navigation }) => {
     const screenWidth = Dimensions.get('window').width;
     const screenHeight = Dimensions.get('window').height;
     useEffect(() => {
+        sendWsMessage(wsSocket, {
+            uuid: receivedUuid,
+            type: 'progress',
+            status: 'step',
+            step: testStep + '/' + testSteps.length,
+            currentStep: testSteps[testStep - 1].title
+        });
         hideNavigationBar();
         const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
         return () => {
             backHandler.remove();
             showNavigationBar();
+            setIsTimerVisible(false);
+            sendWsMessage(wsSocket, {
+                uuid: receivedUuid,
+                type: 'progress',
+                status: 'pause',
+                currentStep: testSteps[testStep - 1].title
+            });
         };
     }, []);
 
@@ -63,22 +80,16 @@ const MultiTouchTest = ({ navigation }) => {
 
     useEffect(() => {
         if (maxTouches > 2) {
-            // If multi-touch is detected, mark the test as passed
             handleResult('Pass');
-            // const updatedTestSteps = [...testSteps];
-            // updatedTestSteps[testStep - 1].result = 'pass';
-            // setTestsSteps(updatedTestSteps);
-
-            // // Move to the next test step
-            // setTestStep((prevStep) => prevStep + 1);
         }
     }, [maxTouches]);
 
     return (
         <>
-            <StatusBar hidden={false} translucent={false} backgroundColor="transparent" barStyle="default" />
-            <Timer />
+            <StatusBar hidden={false} translucent={false} backgroundColor="transparent" barStyle="default" />            
+            {isTimerVisible && <Timer />}
             <View style={styles.container}>
+                <View style={[styles.btnContainer]}>
                 <View
                     style={[styles.touchArea, { width: screenWidth, height: screenHeight }]}
                     {...panResponder.panHandlers}
@@ -91,7 +102,7 @@ const MultiTouchTest = ({ navigation }) => {
                     <Text style={styles.touchCount}>Touch Points: {touches.length}</Text>
                     <Text style={styles.maxTouchCount}>Max Touch Points: {maxTouches}</Text>
                 </View>
-                <View style={[styles.btnContainer]}>
+                <AnimatedIcon />
 
                     <Button
                         mode="elevated"
@@ -176,6 +187,7 @@ const styles = StyleSheet.create({
     },
     btns: {
         padding: 8,
+        borderRadius: 8
     },
     btnLabel: {
         fontFamily: 'Quicksand-Bold',

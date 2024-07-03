@@ -9,26 +9,42 @@ import {
 } from 'react-native-safe-area-context';
 
 
-const Timer = memo(({ }) => {
-    const { elapsedTimeRef, startTime } = useContext(TimerContext);
+const Timer = memo(({}) => {
+    const { elapsedTimeRef, startTime, setStartTime } = useContext(TimerContext);
     const { testStep, testSteps } = useContext(DataContext);
     const currentStep = testSteps[testStep - 1];
     const insets = useSafeAreaInsets();
-
-    // console.log('testStep', currentStep);
+    let interval: string | number | NodeJS.Timeout | null | undefined = null;
+    let intervalContinue: string | number | NodeJS.Timeout | null | undefined = null;
 
     const [gozar, setGozar] = useState(null);
 
     useEffect(() => {
         if (!currentStep) return;
-
-        const interval = setInterval(() => {
-            elapsedTimeRef.current = Math.floor((Date.now() - startTime) / 1000);
-            setGozar(elapsedTimeRef.current); // causing the component to render
-        }, 1000);
-
-        return () => clearInterval(interval);
-    }, [currentStep]);
+        console.log('startTime=> ', startTime)
+        console.log('elapsedTimeRef=> ', elapsedTimeRef);
+        if (elapsedTimeRef.current == 0) {
+            interval = setInterval(() => {
+                elapsedTimeRef.current = Math.floor((Date.now() - startTime) / 1000);
+                setGozar(elapsedTimeRef.current); // causing the component to render
+            }, 1000);
+        } else {
+            intervalContinue = setInterval(() => {
+                elapsedTimeRef.current += 1;
+                setGozar(elapsedTimeRef.current); // causing the component to render
+            }, 1000);
+        }
+        return () => {
+            console.log('unmount Timer')
+            if (interval) {
+                clearInterval(interval);
+            }
+            if (intervalContinue) {
+                clearInterval(intervalContinue);
+            }
+            console.log(elapsedTimeRef.current)
+        };
+    }, []);
 
     if (!currentStep || !currentStep.showInfoBar) {
         return null;
@@ -40,7 +56,7 @@ const Timer = memo(({ }) => {
             {
                 currentStep.showTimer &&
                 <View style={styles.timerContainer}>
-                    <Icon style={styles.timerIcon} name="timer-outline" size={16} color="black" />
+                    <Icon style={styles.timerIcon} name="timer-outline" size={17} color="black" />
                     <Text style={styles.timerText}>
                         {formatTime(elapsedTimeRef.current)}
                     </Text>
@@ -66,6 +82,7 @@ const Timer = memo(({ }) => {
     );
 });
 
+export default Timer;
 
 const styles = StyleSheet.create({
     barContainer: {
@@ -78,9 +95,12 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         width: '100%',
         paddingHorizontal: 10,
-        // backgroundColor: '#ffffff21',
         backgroundColor: 'white',
-        padding: 5
+        padding: 8,
+        borderLeftWidth: 0,
+        borderRightWidth: 0,
+        borderWidth: 1,
+        borderColor: '#00000038'
     },
     progressContainer: {
         display: 'flex',
@@ -118,7 +138,7 @@ const styles = StyleSheet.create({
     currentText: {
         fontSize: 16,
         color: 'black',
-        fontFamily: 'Quicksand-SemiBold',
+        fontFamily: 'Quicksand-Bold',
         marginLeft: 5
     },
     progressText: {
@@ -129,4 +149,4 @@ const styles = StyleSheet.create({
     }
 });
 
-export default Timer;
+

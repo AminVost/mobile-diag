@@ -14,13 +14,15 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import { DataContext } from '../../App';
+import { TimerContext } from '../../App';
 
 const Stack = createNativeStackNavigator();
 
 function HomeScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
 
-  const { isInternetConnected, websocketConnected, receivedSerialNumber, deviceDetails, setDeviceDetails } = useContext(DataContext);
+  const { isInternetConnected, websocketConnected, receivedSerialNumber, deviceDetails, testStep, setTestStep, isDiagStart, setIsDiagStart, setIsSubmitResult, setTestsSteps } = useContext(DataContext);
+  const { startTime, setStartTime } = useContext(TimerContext);
 
   const checklistItems = [
     "Any Bluetooth Device",
@@ -66,29 +68,22 @@ function HomeScreen({ navigation, route }) {
     setAlertVisible(!isAlertVisible);
   };
 
-  const sendPhoneNumber = async () => {
-    const hasPhoneStatePermission = await PermissionsAndroid.request(
-      PermissionsAndroid.PERMISSIONS.READ_PHONE_STATE,
-    );
-
-
-    const hasReadSMSPermission = await PermissionsAndroid.request(
-      PermissionsAndroid.PERMISSIONS.READ_SMS,
-    );
-
-    if (
-      hasPhoneStatePermission === PermissionsAndroid.RESULTS.GRANTED &&
-      hasReadSMSPermission === PermissionsAndroid.RESULTS.GRANTED
-    ) {
-      const phoneNumber = await DeviceInfo.getPhoneNumber();
-
-      if (phoneNumber) {
-        DeviceInfo.getPhoneNumber().then((phoneNumber) => {
-          // console.log('phoneNumber', phoneNumber)
-        });
+  const resetSteps = async () => {
+    try {
+      console.log('reset Step Tests');
+      const jsonValue = await AsyncStorage.getItem('refTestSteps');
+      if (jsonValue !== null) {
+        const data = JSON.parse(jsonValue);
+        setTestsSteps(data);
+      } else {
+        console.log('No data found for refTestSteps');
+        setTestsSteps([]); // Optionally set an empty array if no data is found
       }
+    } catch (error) {
+      console.log('Error retrieving refTestSteps:', error);
     }
   };
+
 
   const CustomAlert = () => {
     return (
@@ -127,6 +122,20 @@ function HomeScreen({ navigation, route }) {
     );
   };
 
+  const handleStartDiagBtn = async () => {
+    if (isSwitchDiag) {
+      if (isDiagStart) {
+        resetSteps();
+        setTestStep(1);
+      };
+      setStartTime(Date.now());
+      setIsDiagStart(true)
+      setIsSubmitResult(false);
+      navigation.navigate('TestsScreen')
+    } else {
+      Alert.alert('Rapid Mobile Wipe Coming Soon...');
+    }
+  }
 
   return (
     <>
@@ -164,7 +173,7 @@ function HomeScreen({ navigation, route }) {
               <Icon name="wifi-check" size={40} style={[isInternetConnected]} color="#44bd32" />}
         </TouchableOpacity>
         <View style={styles.upperPart}>
-          <TouchableOpacity style={isSwitchDiag ? styles.startButtonDiag : styles.startButtonWipe} onPress={() => isSwitchDiag ? navigation.navigate('TestsScreen') : ''}>
+          <TouchableOpacity style={isSwitchDiag ? styles.startButtonDiag : styles.startButtonWipe} onPress={handleStartDiagBtn}>
             {isSwitchDiag ?
               <Icon name={'cog-play-outline'} style={styles.startIconDiag} />
               :
@@ -202,7 +211,7 @@ function HomeScreen({ navigation, route }) {
             <View style={styles.deviceContainer}>
               <View style={styles.detailsItem}>
                 <Text style={styles.detailsTextLabel}>Device:</Text>
-                <Text style={styles.detailsTextValue}>{deviceDetails.brand} {deviceDetails.deviceName}  ({deviceDetails.model})</Text>
+                <Text style={styles.detailsTextValue}>{deviceDetails.brand} {deviceDetails.deviceName} ({deviceDetails.model})</Text>
               </View>
               <View style={styles.detailsItem}>
                 <Text style={styles.detailsTextLabel}>Serial Number:</Text>
@@ -210,7 +219,7 @@ function HomeScreen({ navigation, route }) {
               </View>
               <View style={styles.detailsItem}>
                 <Text style={styles.detailsTextLabel}>OS:</Text>
-                <Text style={styles.detailsTextValue}>{deviceDetails.oS}  {deviceDetails.osVersion}</Text>
+                <Text style={styles.detailsTextValue}>{deviceDetails.os} {deviceDetails.osVersion}</Text>
               </View>
               <View style={styles.detailsItem}>
                 <Text style={styles.detailsTextLabel}>CPU Model:</Text>
@@ -218,18 +227,35 @@ function HomeScreen({ navigation, route }) {
               </View>
               <View style={styles.detailsItem}>
                 <Text style={styles.detailsTextLabel}>CPU Architectures:</Text>
-                <Text style={styles.detailsTextValue}>{deviceDetails.cpu}</Text>
+                <View>
+                  {deviceDetails.cpu.map((cpuInfo, index) => (
+                    <Text key={index} style={styles.detailsTextValue}>{cpuInfo.architecture}</Text>
+                  ))}
+                </View>
               </View>
               <View style={styles.detailsItem}>
                 <Text style={styles.detailsTextLabel}>Storage:</Text>
-                <Text style={styles.detailsTextValue}>{(deviceDetails.storage)} GB (used {deviceDetails.usedStorage} GB)</Text>
+                <View>
+                  {deviceDetails.storage_layouts.map((storage, index) => (
+                    <Text key={index} style={styles.detailsTextValue}>
+                      {storage.size} GB (used {storage.usedStorage} GB, free {storage.freeStorage} GB)
+                    </Text>
+                  ))}
+                </View>
               </View>
               <View style={styles.detailsItem}>
                 <Text style={styles.detailsTextLabel}>RAM:</Text>
-                <Text style={styles.detailsTextValue}>{(deviceDetails.memory)} GB  (used {deviceDetails.usedMemory} GB)</Text>
+                <View>
+                  {deviceDetails.memory_layouts.map((memory, index) => (
+                    <Text key={index} style={styles.detailsTextValue}>
+                      {memory.size} GB (used {memory.usedMemory} GB)
+                    </Text>
+                  ))}
+                </View>
               </View>
             </View>
           </View>
+
         </View>
         <Text style={styles.versionText}>
           {/* Version : 1.0.0 */}
@@ -361,7 +387,7 @@ const styles = StyleSheet.create({
     height: 200,
     display: 'flex',
     borderWidth: 2,
-    borderColor: '#40079a75',
+    borderColor: '#40079a4a',
     backgroundColor: 'white',
   },
   startButtonWipe: {

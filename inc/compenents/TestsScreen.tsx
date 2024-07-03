@@ -1,15 +1,18 @@
 import React, { createContext, useState, useEffect, useRef, useContext } from 'react';
 import { View, ActivityIndicator, StyleSheet, Text } from 'react-native';
-import { DataContext, TimerContext } from '../../App';
+import { DataContext } from '../../App';
+import sendWsMessage from '../utils/wsSendMsg'
 
 const TestsScreens = ({ navigation, route }) => {
-  const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
-  const { startTime, setStartTime } = useContext(TimerContext);
+  const { testStep, setTestStep, testSteps, setTestsSteps, startContinue, isFinishedTests, setIsFinishedTests, wsSocket, receivedUuid } = useContext(DataContext);
+  const hasSortedRef = useRef(false);
 
   const performTestStep = async () => {
     console.log('performTestStep');
+
     const sortedTestSteps = [...testSteps].sort((a, b) => a.priority - b.priority);
     setTestsSteps(sortedTestSteps);
+    hasSortedRef.current = true;
     if (testStep <= sortedTestSteps.length) {
       const currentTest = sortedTestSteps[testStep - 1];
       // console.log('currentTest', currentTest);
@@ -29,6 +32,7 @@ const TestsScreens = ({ navigation, route }) => {
           break;
         case 'Rotation':
           navigation.navigate('Rotation');
+          // navigation.navigate('HiddenStack', { screen: 'Rotation' });
           break;
         case 'BackCamera':
           navigation.navigate('BackCamera');
@@ -54,30 +58,50 @@ const TestsScreens = ({ navigation, route }) => {
     }
   };
 
-  // const sendTestResults = async () => {
-  //   try {
-  //     // await sendTestDataToAPI(testResults);
-  //     console.log('Test data sent successfully!');
-  //   } catch (error) {
-  //     console.error('Error sending test data:', error);
-  //   } finally {
-  //     console.log('Finally sending test data');
+  // useEffect(() => {
+  //   if (!testStep) {
+  //     return;
   //   }
-  // };
+  //   if (testStep <= testSteps.length) {
+  //     performTestStep();
+  //   } else {
+  //     console.log('finished test');
+  //     setIsFinishedTests(true);
+  //     sendWsMessage(wsSocket, {
+  //       uuid: receivedUuid,
+  //       type: 'progress'
+  //     });
+  //     navigation.navigate('Report');
+  //   }
+
+  //   return () => '';
+  // }, [testStep, startContinue]);
 
   useEffect(() => {
+    if (!testStep) {
+      return;
+    }
     if (testStep <= testSteps.length) {
       performTestStep();
     } else {
-      console.log('finished test')
+      console.log('finished test');
+      setIsFinishedTests(true);
+      sendWsMessage(wsSocket, {
+        uuid: receivedUuid,
+        type: 'progress',
+        status: 'readyForSubmit'
+      });
       navigation.navigate('Report');
     }
 
-    return () => '';
-  }, [testStep]);
+    return () => {
+      console.log('unmount testScreen')
+
+    };
+  }, [testStep, startContinue]);
+
   return (
     <View style={styles.container}>
-
       <ActivityIndicator size="large" color="#4908b0" />
       <Text style={styles.text}>Preparing test procedures</Text>
     </View>

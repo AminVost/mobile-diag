@@ -7,9 +7,10 @@ import axios from 'axios';
 import { DataContext, TimerContext } from '../../App';
 import { formatTimeHms } from '../utils/formatTimeHms';
 import { appConfig } from '../../config';
+import sendWsMessage from '../utils/wsSendMsg'
 
 export default function ReportScreen({ navigation }) {
-    const { testSteps, deviceDetails, isInternetConnected, isDiagStart, isSubmitResult, setIsSubmitResult } = useContext(DataContext);
+    const { testSteps, deviceDetails, isInternetConnected, isDiagStart, isSubmitResult, setIsSubmitResult, isFinishedTests, wsSocket, receivedUuid } = useContext(DataContext);
     const { elapsedTimeRef } = useContext(TimerContext);
     const [storedDeviceParams, setStoredDeviceParams] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -74,6 +75,10 @@ export default function ReportScreen({ navigation }) {
         }
         if (isSubmitResult) {
             Alert.alert('It is not possible to resend the test result', 'Please repeat the test steps to resend the test results.');
+            return;
+        }
+        if (!isFinishedTests) {
+            Alert.alert('Complete the test steps', 'Please complete the test steps to send the result.');
             return;
         }
         setLoading(true);
@@ -141,6 +146,10 @@ export default function ReportScreen({ navigation }) {
 
             if (response.data.status === 'success') {
                 console.log('success send Result= ', response.data.message)
+                sendWsMessage(wsSocket, {
+                    uuid: receivedUuid,
+                    type: 'submited'                    
+                });
                 setIsSubmitResult(true);
                 setUploadMessage(response.data.message);
                 setIsSuccess(true);
@@ -201,7 +210,7 @@ export default function ReportScreen({ navigation }) {
                                 <Icon name='check-circle' size={30} style={[styles.iconPass]} />
                             }
                             {step.result === 'Skip' &&
-                                <Icon name='reload' size={30} style={styles.iconSkip} />
+                                <Icon name='skip-next-circle' size={30} style={styles.iconSkip} />
                             }
                             {step.result === 'Fail' &&
                                 <Icon name='close-circle' size={30} style={styles.iconFail} />
@@ -219,7 +228,7 @@ export default function ReportScreen({ navigation }) {
                     labelStyle={styles.btnLabel}
                     icon={() => <Icon name="export-variant" size={20} color="white" />}
                     onPress={handleSendResult}
-                    style={[styles.button, { backgroundColor: !isInternetConnected || !isDiagStart || isSubmitResult ? '#d3d3d3' : '#2980b9' }]}
+                    style={[styles.button, { backgroundColor: !isInternetConnected || !isDiagStart || isSubmitResult || !isFinishedTests ? '#d3d3d3' : '#2980b9' }]}
                 >
                     Send Result
                 </Button>

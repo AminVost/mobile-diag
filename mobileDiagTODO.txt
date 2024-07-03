@@ -6,13 +6,13 @@
 
 -ezafe kardane button send result - Done
 
--size ax camera ha
+-size ax camera ha - Done
 
--set quality
+-set quality - Done
 
--ezafe kardane systeminformation be result
+-ezafe kardane systeminformation be result - Done
 
--kar kardane button send result
+-kar kardane button send result - done
 
 
 

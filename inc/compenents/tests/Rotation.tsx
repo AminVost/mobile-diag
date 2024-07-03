@@ -6,15 +6,25 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { DataContext } from '../../../App';
 import Timer from '../Timer';
 import useStepTimer from '../useStepTimer';
+import sendWsMessage from '../../utils/wsSendMsg'
+import AnimatedIcon from '../../utils/AnimatedIcon'
 
 const Rotation = () => {
-  const { testStep, setTestStep, testSteps, setTestsSteps } = useContext(DataContext);
+  const { testStep, setTestStep, testSteps, setTestsSteps, wsSocket, receivedUuid } = useContext(DataContext);
   const [orientation, setOrientation] = useState('Portrait');
   const [orientationChanges, setOrientationChanges] = useState(0);
   const [testPassed, setTestPassed] = useState(false);
+  const [isTimerVisible, setIsTimerVisible] = useState(true);
   const getDuration = useStepTimer();
 
   useEffect(() => {
+    sendWsMessage(wsSocket, {
+      uuid: receivedUuid,
+      type: 'progress',
+      step: testStep + '/' + testSteps.length,
+      currentStep: testSteps[testStep - 1].title
+    });
+
     hideNavigationBar();
     const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
 
@@ -41,6 +51,13 @@ const Rotation = () => {
       backHandler.remove();
       subscription?.remove();
       showNavigationBar();
+      setIsTimerVisible(false);
+      sendWsMessage(wsSocket, {
+        uuid: receivedUuid,
+        type: 'progress',
+        status: 'pause',
+        currentStep: testSteps[testStep - 1].title
+    });
     };
   }, []);
 
@@ -66,7 +83,8 @@ const Rotation = () => {
 
   return (
     <View style={styles.container}>
-      <Timer />
+      <AnimatedIcon />
+      {isTimerVisible && <Timer />}
       {testSteps[testStep - 1]?.text &&
         < Text style={styles.text}>
           {testSteps[testStep - 1].text}
@@ -164,6 +182,7 @@ const styles = StyleSheet.create({
   },
   btns: {
     padding: 7,
+    borderRadius: 8
   },
   btnLabel: {
     fontFamily: 'Quicksand-Bold',
