@@ -22,6 +22,7 @@ const MultiTouchTest = ({ navigation }) => {
         sendWsMessage(wsSocket, {
             uuid: receivedUuid,
             type: 'progress',
+            status: 'step',
             step: testStep + '/' + testSteps.length,
             currentStep: testSteps[testStep - 1].title
         });

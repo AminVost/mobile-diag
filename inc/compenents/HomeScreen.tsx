@@ -22,8 +22,8 @@ const Stack = createNativeStackNavigator();
 function HomeScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
 
-  const { isInternetConnected, websocketConnected, receivedSerialNumber, deviceDetails, testStep, setTestStep, isDiagStart, setIsDiagStart, setIsSubmitResult, setTestsSteps, setStartContinue, startContinue, isFinishedTests, setIsFinishedTests } = useContext(DataContext);
-  const { startTime, setStartTime,elapsedTimeRef } = useContext(TimerContext);
+  const { isInternetConnected, websocketConnected, wsSocket, receivedSerialNumber, deviceDetails, testStep, setTestStep, isDiagStart, setIsDiagStart, setIsSubmitResult, isSubmitResult, setTestsSteps, setStartContinue, startContinue, isFinishedTests, setIsFinishedTests } = useContext(DataContext);
+  const { startTime, setStartTime, elapsedTimeRef } = useContext(TimerContext);
 
   const checklistItems = [
     "Any Bluetooth Device",
@@ -119,6 +119,7 @@ function HomeScreen({ navigation, route }) {
     setStartTime(Date.now());
     setIsDiagStart(true);
     setIsSubmitResult(false);
+    console.log('setIsSubmitResult', isSubmitResult)
     setTestStep(null);
     setTestStep(1);
     toggleReTestModal();
@@ -224,6 +225,43 @@ function HomeScreen({ navigation, route }) {
       </Modal>
     );
   };
+
+  // useEffect(() => {
+  //   if (route.params) {
+  //     console.log('route.params=>> ', route.params)
+  //     if (route.params.isStartDiag == true) {
+  //       // handleStartDiagBtn()
+  //       handleReTestDiag();
+  //     }
+  //   }
+
+  // }, [route.params]);
+
+
+  useEffect(() => {
+    if (wsSocket) {
+      const handleWebSocketMessage = (event) => {
+        if (event) {
+          console.log('Received event.data in HomeScreen:', event.data);
+          const message = JSON.parse(event.data);
+          console.log('Received message in HomeScreen:', message);
+          if (message.type === 'action' && message.action === 'startDiag') {
+            handleStartDiagBtn();
+          } else if (message.type === 'action' && message.action === 'handleRetestDiag') {
+            handleReTestDiag();
+          } else if (message.type === 'action' && message.action === 'handleContinueDiag') {
+            handleContinueDiag();
+          }
+        };
+      };
+
+      wsSocket.addEventListener('message', handleWebSocketMessage);
+      return () => {
+        console.log('disabled addEventListener')
+        wsSocket.removeEventListener('message', handleWebSocketMessage);
+      };
+    }
+  }, [wsSocket]);
 
 
   if (isLoading) {

@@ -22,9 +22,9 @@ export const requestPermissions = async () => {
       const cameraPermission = granted[PermissionsAndroid.PERMISSIONS.CAMERA] === PermissionsAndroid.RESULTS.GRANTED;
       const audioPermission = granted[PermissionsAndroid.PERMISSIONS.RECORD_AUDIO] === PermissionsAndroid.RESULTS.GRANTED;
       const writePermission = granted[PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE] === PermissionsAndroid.RESULTS.GRANTED;
-      console.log('writePermission : ', writePermission);
+      // console.log('writePermission : ', writePermission);
       const readPermission = granted[PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE] === PermissionsAndroid.RESULTS.GRANTED;
-      console.log('readPermission : ', readPermission);
+      // console.log('readPermission : ', readPermission);
 
       if (systemVersion >= 10) {
         if (cameraPermission && audioPermission) {

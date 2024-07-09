@@ -36,6 +36,7 @@ const TouchScreenTest = ({ navigation, route }) => {
         sendWsMessage(wsSocket, {
             uuid: receivedUuid,
             type: 'progress',
+            status: 'step',
             step: testStep + '/' + testSteps.length,
             currentStep: testSteps[testStep - 1].title
         });
@@ -45,14 +46,8 @@ const TouchScreenTest = ({ navigation, route }) => {
         return () => {
             backHandler.remove();
             showNavigationBar();
-            console.log('unmount..... touchScreen', testSteps[testStep - 1])
+            // console.log('unmount..... touchScreen', testSteps[testStep - 1])
             setIsTimerVisible(false);
-            sendWsMessage(wsSocket, {
-                uuid: receivedUuid,
-                type: 'progress',
-                status: 'pause',
-                currentStep: testSteps[testStep - 1].title
-            });
         };
     }, []);
 

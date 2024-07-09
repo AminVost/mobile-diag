@@ -34,6 +34,7 @@ const MultiCameraTest = () => {
     sendWsMessage(wsSocket, {
       uuid: receivedUuid,
       type: 'progress',
+      status: 'step',
       step: testStep + '/' + testSteps.length,
       currentStep: testSteps[testStep - 1].title
     });
@@ -44,12 +45,6 @@ const MultiCameraTest = () => {
       backHandler.remove();
       setIsCameraActive(false);
       setIsTimerVisible(false);
-      sendWsMessage(wsSocket, {
-        uuid: receivedUuid,
-        type: 'progress',
-        status: 'pause',
-        currentStep: testSteps[testStep - 1].title
-    });
     };
   }, []);
 
@@ -169,7 +164,7 @@ const MultiCameraTest = () => {
       {isTimerVisible &&
         <Timer />}
       <View style={styles.container}>
-      <AnimatedIcon />
+        <AnimatedIcon />
         {photoUri ? (
           <>
             <Image source={{ uri: `file://${photoUri}` }} style={styles.photo} />

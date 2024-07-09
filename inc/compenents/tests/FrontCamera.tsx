@@ -35,6 +35,7 @@ const FrontCamera = () => {
     sendWsMessage(wsSocket, {
       uuid: receivedUuid,
       type: 'progress',
+      status: 'step',
       step: testStep + '/' + testSteps.length,
       currentStep: testSteps[testStep - 1].title
     });
@@ -45,12 +46,6 @@ const FrontCamera = () => {
       setIsCameraActive(false);
       backHandler.remove();
       setIsTimerVisible(false);
-      sendWsMessage(wsSocket, {
-        uuid: receivedUuid,
-        type: 'progress',
-        status: 'pause',
-        currentStep: testSteps[testStep - 1].title
-    });
     };
   }, []);
 

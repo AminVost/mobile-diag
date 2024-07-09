@@ -7,11 +7,12 @@ import {
     SafeAreaProvider,
     useSafeAreaInsets,
 } from 'react-native-safe-area-context';
+import sendWsMessage from '../utils/wsSendMsg'
 
 
-const Timer = memo(({}) => {
+const Timer = memo(({ }) => {
     const { elapsedTimeRef, startTime, setStartTime } = useContext(TimerContext);
-    const { testStep, testSteps } = useContext(DataContext);
+    const { testStep, testSteps, wsSocket, receivedUuid } = useContext(DataContext);
     const currentStep = testSteps[testStep - 1];
     const insets = useSafeAreaInsets();
     let interval: string | number | NodeJS.Timeout | null | undefined = null;
@@ -21,8 +22,9 @@ const Timer = memo(({}) => {
 
     useEffect(() => {
         if (!currentStep) return;
-        console.log('startTime=> ', startTime)
-        console.log('elapsedTimeRef=> ', elapsedTimeRef);
+        console.log('mount Timer=> ', elapsedTimeRef.current)
+        // console.log('startTime=> ', startTime)
+        // console.log('elapsedTimeRef=> ', elapsedTimeRef);
         if (elapsedTimeRef.current == 0) {
             interval = setInterval(() => {
                 elapsedTimeRef.current = Math.floor((Date.now() - startTime) / 1000);
@@ -35,14 +37,25 @@ const Timer = memo(({}) => {
             }, 1000);
         }
         return () => {
-            console.log('unmount Timer')
+            console.log('unmount Timer=> ', elapsedTimeRef.current);
             if (interval) {
                 clearInterval(interval);
             }
             if (intervalContinue) {
                 clearInterval(intervalContinue);
             }
-            console.log(elapsedTimeRef.current)
+            // console.log('currentStep=> ' ,currentStep)
+            // console.log('testSteps.length=> ' ,testSteps.length)
+            if (testStep < testSteps.length) {                
+                console.log('sendWsMessage To Pause ')
+                sendWsMessage(wsSocket, {
+                    uuid: receivedUuid,
+                    type: 'progress',
+                    status: 'paused',
+                    currentStep: testSteps[testStep - 1].title
+                });
+            }
+            // console.log(elapsedTimeRef.current)
         };
     }, []);
 

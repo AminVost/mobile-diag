@@ -24,6 +24,7 @@ const MultiTouchTest = ({ navigation }) => {
             uuid: receivedUuid,
             type: 'progress',
             status: 'step',
+            status: 'step',
             step: testStep + '/' + testSteps.length,
             currentStep: testSteps[testStep - 1].title
         });
@@ -33,12 +34,6 @@ const MultiTouchTest = ({ navigation }) => {
             backHandler.remove();
             showNavigationBar();
             setIsTimerVisible(false);
-            sendWsMessage(wsSocket, {
-                uuid: receivedUuid,
-                type: 'progress',
-                status: 'pause',
-                currentStep: testSteps[testStep - 1].title
-            });
         };
     }, []);
 
@@ -86,23 +81,23 @@ const MultiTouchTest = ({ navigation }) => {
 
     return (
         <>
-            <StatusBar hidden={false} translucent={false} backgroundColor="transparent" barStyle="default" />            
+            <StatusBar hidden={false} translucent={false} backgroundColor="transparent" barStyle="default" />
             {isTimerVisible && <Timer />}
             <View style={styles.container}>
                 <View style={[styles.btnContainer]}>
-                <View
-                    style={[styles.touchArea, { width: screenWidth, height: screenHeight }]}
-                    {...panResponder.panHandlers}
-                >
-                    {touches.map((touch) => (
-                        <View
-                            key={touch.id}
-                            style={[styles.touchCircle, { left: touch.x - 25, top: touch.y - 25 }]} />
-                    ))}
-                    <Text style={styles.touchCount}>Touch Points: {touches.length}</Text>
-                    <Text style={styles.maxTouchCount}>Max Touch Points: {maxTouches}</Text>
-                </View>
-                <AnimatedIcon />
+                    <View
+                        style={[styles.touchArea, { width: screenWidth, height: screenHeight }]}
+                        {...panResponder.panHandlers}
+                    >
+                        {touches.map((touch) => (
+                            <View
+                                key={touch.id}
+                                style={[styles.touchCircle, { left: touch.x - 25, top: touch.y - 25 }]} />
+                        ))}
+                        <Text style={styles.touchCount}>Touch Points: {touches.length}</Text>
+                        <Text style={styles.maxTouchCount}>Max Touch Points: {maxTouches}</Text>
+                    </View>
+                    <AnimatedIcon />
 
                     <Button
                         mode="elevated"

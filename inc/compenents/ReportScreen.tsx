@@ -10,7 +10,7 @@ import { appConfig } from '../../config';
 import sendWsMessage from '../utils/wsSendMsg'
 
 export default function ReportScreen({ navigation }) {
-    const { testSteps, deviceDetails, isInternetConnected, isDiagStart, isSubmitResult, setIsSubmitResult, isFinishedTests, wsSocket, receivedUuid } = useContext(DataContext);
+    const { testSteps, deviceDetails, isInternetConnected, isDiagStart, isSubmitResult, setIsSubmitResult, isFinishedTests, wsSocket, receivedUuid, tokenReceived } = useContext(DataContext);
     const { elapsedTimeRef } = useContext(TimerContext);
     const [storedDeviceParams, setStoredDeviceParams] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -19,6 +19,7 @@ export default function ReportScreen({ navigation }) {
     const [uploadMessage, setUploadMessage] = useState('');
     const [isSuccess, setIsSuccess] = useState(null);
     const [abortController, setAbortController] = useState(null);
+
 
     useEffect(() => {
         navigation.setOptions({
@@ -31,6 +32,10 @@ export default function ReportScreen({ navigation }) {
                 </Tooltip>
             ),
         });
+        return () => {
+            console.log('unmount report Screnn....')
+            handleCloseModal();
+        };
     }, [navigation, elapsedTimeRef.current]);
 
     useEffect(() => {
@@ -45,7 +50,30 @@ export default function ReportScreen({ navigation }) {
             }
         };
         getData();
-    }, []);
+    }, [wsSocket]);
+
+    // useEffect(() => {
+    //     if (isStartDiag) {
+    //         navigation.navigate('Home', {
+    //             isStartDiag,
+    //         });
+    //     }
+    // }, [isStartDiag]);
+
+    useEffect(() => {
+        if (wsSocket && wsSocket.readyState === WebSocket.OPEN) {
+            wsSocket.onmessage = (event) => {
+                console.log('Received message ReportScreen:', event.data);
+                const message = JSON.parse(event.data);
+                if (message.type === 'action' && message.action === 'submit') {
+                    handleSendResult();
+                } else if (message.type === 'action' && message.action === 'returnToHome') {
+                    // setIsStartDiag(true);
+                    navigation.navigate('Home');
+                }
+            };
+        }
+    }, [wsSocket]);
 
     const getResultColor = (result) => {
         switch (result) {
@@ -85,7 +113,8 @@ export default function ReportScreen({ navigation }) {
         setModalVisible(true);
         setProgress(0);
         const apiUrl = 'https://myrapidtrack.com/final_acc/_apps/diag_mobile/submitData';
-        const token = storedDeviceParams.token ? storedDeviceParams.token : '9259af73-c1da-4786-aa6b-c4a788525889';
+        // const token = tokenReceived ? tokenReceived : '9259af73-c1da-4786-aa6b-c4a788525889';
+        const token ='9259af74443-c1da-4786-aa6b-c4a788525889';
         const platform = 'linux';
         const appVersion = appConfig.version;
         const inventoryId = '202406162653';
@@ -136,7 +165,7 @@ export default function ReportScreen({ navigation }) {
         setAbortController(controller);
 
         try {
-            console.log('try To send Result');
+            // console.log('try To send Result' , payload);
             const response = await axios.post(apiUrl, payload, {
                 headers: {
                     'Content-Type': 'application/json',
@@ -148,7 +177,8 @@ export default function ReportScreen({ navigation }) {
                 console.log('success send Result= ', response.data.message)
                 sendWsMessage(wsSocket, {
                     uuid: receivedUuid,
-                    type: 'submited'                    
+                    type: 'progress',
+                    status: 'submitted'
                 });
                 setIsSubmitResult(true);
                 setUploadMessage(response.data.message);
@@ -157,14 +187,31 @@ export default function ReportScreen({ navigation }) {
                 console.log('error else send Result= ', response.data.message)
                 setUploadMessage(response.data.message);
                 setIsSuccess(false);
+                sendWsMessage(wsSocket, {
+                    uuid: receivedUuid,
+                    type: 'progress',
+                    status: 'failedToSubmit',
+                    error: response.data.message ? response.data.message : 'unKnown'
+                });
             }
         } catch (error) {
             console.log('catch send Result= ', error.message)
             if (axios.isCancel(error)) {
                 setUploadMessage('Upload canceled by user');
+                sendWsMessage(wsSocket, {
+                    uuid: receivedUuid,
+                    type: 'progress',
+                    status: 'canceleSubmit'
+                });
             } else {
                 setUploadMessage(error.message);
             }
+            sendWsMessage(wsSocket, {
+                uuid: receivedUuid,
+                type: 'progress',
+                status: 'failedToSubmit',
+                error: error.message
+            });
             setIsSuccess(false);
         } finally {
             setLoading(false);

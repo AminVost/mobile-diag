@@ -4,7 +4,7 @@ import { DataContext } from '../../App';
 import sendWsMessage from '../utils/wsSendMsg'
 
 const TestsScreens = ({ navigation, route }) => {
-  const { testStep, setTestStep, testSteps, setTestsSteps, startContinue, isFinishedTests, setIsFinishedTests, wsSocket, receivedUuid } = useContext(DataContext);
+  const { testStep, testSteps, setTestsSteps, startContinue, wsSocket, receivedUuid,setIsFinishedTests } = useContext(DataContext);
   const hasSortedRef = useRef(false);
 
   const performTestStep = async () => {
@@ -85,11 +85,13 @@ const TestsScreens = ({ navigation, route }) => {
       performTestStep();
     } else {
       console.log('finished test');
+      // setIsDiagStart(false);
       setIsFinishedTests(true);
+
       sendWsMessage(wsSocket, {
         uuid: receivedUuid,
         type: 'progress',
-        status: 'readyForSubmit'
+        status: 'readyToSubmit'
       });
       navigation.navigate('Report');
     }

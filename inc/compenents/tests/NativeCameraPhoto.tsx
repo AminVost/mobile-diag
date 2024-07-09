@@ -24,6 +24,8 @@ const NativeCameraPhoto = () => {
     sendWsMessage(wsSocket, {
       uuid: receivedUuid,
       type: 'progress',
+      status: 'step',
+      status: 'step',
       step: testStep + '/' + testSteps.length,
       currentStep: testSteps[testStep - 1].title
     });
@@ -34,12 +36,6 @@ const NativeCameraPhoto = () => {
       console.log('unMount Native CameraPhoto')
       backHandler.remove();
       setIsTimerVisible(false);
-      sendWsMessage(wsSocket, {
-        uuid: receivedUuid,
-        type: 'progress',
-        status: 'pause',
-        currentStep: testSteps[testStep - 1].title
-      });
     };
   }, []);
 
