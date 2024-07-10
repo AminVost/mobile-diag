@@ -10,8 +10,8 @@ import useStepTimer from '../useStepTimer';
 import sendWsMessage from '../../utils/wsSendMsg'
 import AnimatedIcon from '../../utils/AnimatedIcon'
 
-const NativeCameraPhoto = () => {
-  const { testStep, setTestStep, testSteps, setTestsSteps, wsSocket, receivedUuid } = useContext(DataContext);
+const NativeCameraPhoto = ({ navigation }) => {
+  const { testStep, setTestStep, testSteps, setTestsSteps, wsSocket, receivedUuid, isSingleTest, isFinishedTests } = useContext(DataContext);
   const { elapsedTimeRef } = useContext(TimerContext);
   const [photoUri, setPhotoUri] = useState(null);
   const [fileBase64, setFileBase64] = useState(null);
@@ -21,14 +21,23 @@ const NativeCameraPhoto = () => {
   const nativePauseTime = useRef(0)
 
   useEffect(() => {
-    sendWsMessage(wsSocket, {
-      uuid: receivedUuid,
-      type: 'progress',
-      status: 'step',
-      status: 'step',
-      step: testStep + '/' + testSteps.length,
-      currentStep: testSteps[testStep - 1].title
-    });
+    if (isSingleTest) {
+      sendWsMessage(wsSocket, {
+        uuid: receivedUuid,
+        type: 'progress',
+        status: 'step',
+        step: 'singleTest',
+        currentStep: testSteps[testStep - 1].title
+      });
+    } else {
+      sendWsMessage(wsSocket, {
+        uuid: receivedUuid,
+        type: 'progress',
+        status: 'step',
+        step: testStep + '/' + testSteps.length,
+        currentStep: testSteps[testStep - 1].title
+      });
+    }
     const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
     nativePauseTime.current = Date.now();
     requestCameraPermission();
@@ -128,11 +137,20 @@ const NativeCameraPhoto = () => {
       updatedTestSteps[nativeCameraStepIndex].duration = getDuration();
       // console.log('injaaaa', updatedTestSteps[nativeCameraStepIndex])
       setTestsSteps(updatedTestSteps);
-      setTestStep((prevStep) => prevStep + 1);
+      if (isSingleTest && isFinishedTests) {
+        sendWsMessage(wsSocket, {
+          uuid: receivedUuid,
+          type: 'progress',
+          status: 'readyToSubmit'
+        });
+        navigation.navigate('Report');
+      } else {
+        setTestStep((prevStep) => prevStep + 1);
+      }
     } else {
       console.log('No step found');
     }
-  }, [testSteps, setTestsSteps, setTestStep, fileBase64, getDuration]);
+  }, [testSteps, setTestsSteps, setTestStep, fileBase64, getDuration, isFinishedTests, isSingleTest]);
 
   if (!permissionsGranted) {
     return (

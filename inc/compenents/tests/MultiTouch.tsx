@@ -12,7 +12,7 @@ import AnimatedIcon from '../../utils/AnimatedIcon'
 
 const MultiTouchTest = ({ navigation }) => {
     const [isTimerVisible, setIsTimerVisible] = useState(true);
-    const { testStep, setTestStep, testSteps, setTestsSteps, wsSocket, receivedUuid } = useContext(DataContext);
+    const { testStep, setTestStep, testSteps, setTestsSteps, wsSocket, receivedUuid, isSingleTest, isFinishedTests } = useContext(DataContext);
     const [touches, setTouches] = useState([]);
     const [maxTouches, setMaxTouches] = useState(0);
     const getDuration = useStepTimer();
@@ -20,14 +20,23 @@ const MultiTouchTest = ({ navigation }) => {
     const screenWidth = Dimensions.get('window').width;
     const screenHeight = Dimensions.get('window').height;
     useEffect(() => {
-        sendWsMessage(wsSocket, {
-            uuid: receivedUuid,
-            type: 'progress',
-            status: 'step',
-            status: 'step',
-            step: testStep + '/' + testSteps.length,
-            currentStep: testSteps[testStep - 1].title
-        });
+        if (isSingleTest) {
+            sendWsMessage(wsSocket, {
+                uuid: receivedUuid,
+                type: 'progress',
+                status: 'step',
+                step: 'singleTest',
+                currentStep: testSteps[testStep - 1].title
+            });
+        } else {
+            sendWsMessage(wsSocket, {
+                uuid: receivedUuid,
+                type: 'progress',
+                status: 'step',
+                step: testStep + '/' + testSteps.length,
+                currentStep: testSteps[testStep - 1].title
+            });
+        }
         hideNavigationBar();
         const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
         return () => {
@@ -46,8 +55,17 @@ const MultiTouchTest = ({ navigation }) => {
         updatedTestSteps[testStep - 1].result = result;
         updatedTestSteps[testStep - 1].duration = getDuration();
         setTestsSteps(updatedTestSteps);
-        setTestStep((prevStep) => prevStep + 1);
-    }, [testStep, testSteps, setTestStep, setTestsSteps]);
+        if (isSingleTest && isFinishedTests) {
+            sendWsMessage(wsSocket, {
+                uuid: receivedUuid,
+                type: 'progress',
+                status: 'readyToSubmit'
+            });
+            navigation.navigate('Report');
+        } else {
+            setTestStep((prevStep) => prevStep + 1);
+        }
+    }, [testStep, testSteps, setTestStep, setTestsSteps, isFinishedTests, isSingleTest]);
 
     const panResponder = PanResponder.create({
         onStartShouldSetPanResponder: () => true,

@@ -14,7 +14,7 @@ import AnimatedIcon from '../../utils/AnimatedIcon'
 
 
 const TouchScreenTest = ({ navigation, route }) => {
-    const { testStep, setTestStep, testSteps, setTestsSteps, wsSocket, receivedUuid } = useContext(DataContext);
+    const { testStep, setTestStep, testSteps, setTestsSteps, wsSocket, receivedUuid, isSingleTest, isFinishedTests } = useContext(DataContext);
     const [isAlertVisible, setAlertVisible] = useState(false);
     const [isTimerVisible, setIsTimerVisible] = useState(true);
     const getDuration = useStepTimer();
@@ -33,13 +33,23 @@ const TouchScreenTest = ({ navigation, route }) => {
     const squareHeight = screenHeight / numRows;
 
     useEffect(() => {
-        sendWsMessage(wsSocket, {
-            uuid: receivedUuid,
-            type: 'progress',
-            status: 'step',
-            step: testStep + '/' + testSteps.length,
-            currentStep: testSteps[testStep - 1].title
-        });
+        if (isSingleTest) {
+            sendWsMessage(wsSocket, {
+                uuid: receivedUuid,
+                type: 'progress',
+                status: 'step',
+                step: 'singleTest',
+                currentStep: testSteps[testStep - 1].title
+            });
+        } else {
+            sendWsMessage(wsSocket, {
+                uuid: receivedUuid,
+                type: 'progress',
+                status: 'step',
+                step: testStep + '/' + testSteps.length,
+                currentStep: testSteps[testStep - 1].title
+            });
+        }
         hideNavigationBar();
         generateSquares();
         const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
@@ -62,9 +72,18 @@ const TouchScreenTest = ({ navigation, route }) => {
         updatedTestSteps[testStep - 1].result = result;
         updatedTestSteps[testStep - 1].duration = getDuration();
         setTestsSteps(updatedTestSteps);
-        setTestStep((prevStep) => prevStep + 1);
         setAlertVisible(false);
-    }, [testStep, testSteps, setTestsSteps]);
+        if (isSingleTest && isFinishedTests) {
+            sendWsMessage(wsSocket, {
+                uuid: receivedUuid,
+                type: 'progress',
+                status: 'readyToSubmit'
+            });
+            navigation.navigate('Report');
+        } else {
+            setTestStep((prevStep) => prevStep + 1);
+        }
+    }, [testStep, testSteps, setTestsSteps, isFinishedTests, isSingleTest]);
 
     const toggleAlert = useCallback(() => {
         // setAlertVisible(!isAlertVisible);

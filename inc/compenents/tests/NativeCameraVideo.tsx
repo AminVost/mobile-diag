@@ -10,8 +10,8 @@ import sendWsMessage from '../../utils/wsSendMsg'
 import AnimatedIcon from '../../utils/AnimatedIcon'
 
 
-const NativeCameraVideo = () => {
-  const { testStep, setTestStep, testSteps, setTestsSteps, wsSocket, receivedUuid } = useContext(DataContext);
+const NativeCameraVideo = ({ navigation }) => {
+  const { testStep, setTestStep, testSteps, setTestsSteps, wsSocket, receivedUuid, isSingleTest, isFinishedTests } = useContext(DataContext);
   const { elapsedTimeRef } = useContext(TimerContext);
   const [videoUri, setVideoUri] = useState(null);
   const [isTimerVisible, setIsTimerVisible] = useState(true);
@@ -20,13 +20,23 @@ const NativeCameraVideo = () => {
 
 
   useEffect(() => {
-    sendWsMessage(wsSocket, {
-      uuid: receivedUuid,
-      type: 'progress',
-      status: 'step',
-      step: testStep + '/' + testSteps.length,
-      currentStep: testSteps[testStep - 1].title
-    });
+    if (isSingleTest) {
+      sendWsMessage(wsSocket, {
+        uuid: receivedUuid,
+        type: 'progress',
+        status: 'step',
+        step: 'singleTest',
+        currentStep: testSteps[testStep - 1].title
+      });
+    } else {
+      sendWsMessage(wsSocket, {
+        uuid: receivedUuid,
+        type: 'progress',
+        status: 'step',
+        step: testStep + '/' + testSteps.length,
+        currentStep: testSteps[testStep - 1].title
+      });
+    }
     const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
     nativePauseTime.current = Date.now();
     openNativeCamera();
@@ -74,11 +84,20 @@ const NativeCameraVideo = () => {
       updatedTestSteps[nativeCameraStepIndex].result = result;
       updatedTestSteps[nativeCameraStepIndex].duration = getDuration();
       setTestsSteps(updatedTestSteps);
-      setTestStep((prevStep) => prevStep + 1);
+      if (isSingleTest && isFinishedTests) {
+        sendWsMessage(wsSocket, {
+          uuid: receivedUuid,
+          type: 'progress',
+          status: 'readyToSubmit'
+        });
+        navigation.navigate('Report');
+      } else {
+        setTestStep((prevStep) => prevStep + 1);
+      }
     } else {
       console.log('No step found');
     }
-  }, [testSteps, setTestsSteps, setTestStep]);
+  }, [testSteps, setTestsSteps, setTestStep, isFinishedTests, isSingleTest]);
 
   return (
     <>

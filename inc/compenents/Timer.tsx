@@ -12,7 +12,7 @@ import sendWsMessage from '../utils/wsSendMsg'
 
 const Timer = memo(({ }) => {
     const { elapsedTimeRef, startTime, setStartTime } = useContext(TimerContext);
-    const { testStep, testSteps, wsSocket, receivedUuid } = useContext(DataContext);
+    const { testStep, testSteps, wsSocket, receivedUuid, isSingleTest } = useContext(DataContext);
     const currentStep = testSteps[testStep - 1];
     const insets = useSafeAreaInsets();
     let interval: string | number | NodeJS.Timeout | null | undefined = null;
@@ -42,7 +42,7 @@ const Timer = memo(({ }) => {
             if (intervalContinue) {
                 clearInterval(intervalContinue);
             }
-            if (testStep < testSteps.length) {                
+            if (testStep < testSteps.length && !isSingleTest) {
                 console.log('sendWsMessage To Pause ')
                 sendWsMessage(wsSocket, {
                     uuid: receivedUuid,

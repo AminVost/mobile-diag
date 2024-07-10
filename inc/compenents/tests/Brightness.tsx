@@ -12,9 +12,9 @@ import sendWsMessage from '../../utils/wsSendMsg'
 import AnimatedIcon from '../../utils/AnimatedIcon'
 
 
-const Brightness = () => {
+const Brightness = ({ navigation }) => {
   const [isTimerVisible, setIsTimerVisible] = useState(true);
-  const { testStep, setTestStep, testSteps, setTestsSteps, wsSocket, receivedUuid } = useContext(DataContext);
+  const { testStep, setTestStep, testSteps, setTestsSteps, wsSocket, receivedUuid, isSingleTest, isFinishedTests } = useContext(DataContext);
   const [brightness, setBrightness] = useState(1);
   const [autoAdjust, setAutoAdjust] = useState(true);
   const autoAdjustRef = useRef(autoAdjust);
@@ -23,13 +23,23 @@ const Brightness = () => {
 
 
   useEffect(() => {
-    sendWsMessage(wsSocket, {
-      uuid: receivedUuid,
-      type: 'progress',
-      status: 'step',
-      step: testStep + '/' + testSteps.length,
-      currentStep: testSteps[testStep - 1].title
-    });
+    if (isSingleTest) {
+      sendWsMessage(wsSocket, {
+        uuid: receivedUuid,
+        type: 'progress',
+        status: 'step',
+        step: 'singleTest',
+        currentStep: testSteps[testStep - 1].title
+      });
+    } else {
+      sendWsMessage(wsSocket, {
+        uuid: receivedUuid,
+        type: 'progress',
+        status: 'step',
+        step: testStep + '/' + testSteps.length,
+        currentStep: testSteps[testStep - 1].title
+      });
+    }
     hideNavigationBar();
     const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
 
@@ -104,7 +114,16 @@ const Brightness = () => {
     updatedTestSteps[testStep - 1].result = result;
     updatedTestSteps[testStep - 1].duration = getDuration();
     setTestsSteps(updatedTestSteps);
-    setTestStep((prevStep) => prevStep + 1);
+    if (isSingleTest && isFinishedTests) {
+      sendWsMessage(wsSocket, {
+        uuid: receivedUuid,
+        type: 'progress',
+        status: 'readyToSubmit'
+      });
+      navigation.navigate('Report');
+    } else {
+      setTestStep((prevStep) => prevStep + 1);
+    }
   };
 
   return (

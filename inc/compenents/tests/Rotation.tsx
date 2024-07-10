@@ -9,8 +9,8 @@ import useStepTimer from '../useStepTimer';
 import sendWsMessage from '../../utils/wsSendMsg'
 import AnimatedIcon from '../../utils/AnimatedIcon'
 
-const Rotation = () => {
-  const { testStep, setTestStep, testSteps, setTestsSteps, wsSocket, receivedUuid } = useContext(DataContext);
+const Rotation = ({ navigation }) => {
+  const { testStep, setTestStep, testSteps, setTestsSteps, wsSocket, receivedUuid, isSingleTest, isFinishedTests } = useContext(DataContext);
   const [orientation, setOrientation] = useState('Portrait');
   const [orientationChanges, setOrientationChanges] = useState(0);
   const [testPassed, setTestPassed] = useState(false);
@@ -18,13 +18,23 @@ const Rotation = () => {
   const getDuration = useStepTimer();
 
   useEffect(() => {
-    sendWsMessage(wsSocket, {
-      uuid: receivedUuid,
-      type: 'progress',
-      status: 'step',
-      step: testStep + '/' + testSteps.length,
-      currentStep: testSteps[testStep - 1].title
-    });
+    if (isSingleTest) {
+      sendWsMessage(wsSocket, {
+        uuid: receivedUuid,
+        type: 'progress',
+        status: 'step',
+        step: 'singleTest',
+        currentStep: testSteps[testStep - 1].title
+      });
+    } else {
+      sendWsMessage(wsSocket, {
+        uuid: receivedUuid,
+        type: 'progress',
+        status: 'step',
+        step: testStep + '/' + testSteps.length,
+        currentStep: testSteps[testStep - 1].title
+      });
+    }
 
     hideNavigationBar();
     const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
@@ -73,7 +83,16 @@ const Rotation = () => {
     updatedTestSteps[testStep - 1].result = result;
     updatedTestSteps[testStep - 1].duration = getDuration();
     setTestsSteps(updatedTestSteps);
-    setTestStep((prevStep) => prevStep + 1);
+    if (isSingleTest && isFinishedTests) {
+      sendWsMessage(wsSocket, {
+        uuid: receivedUuid,
+        type: 'progress',
+        status: 'readyToSubmit'
+      });
+      navigation.navigate('Report');
+    } else {
+      setTestStep((prevStep) => prevStep + 1);
+    }
   };
 
   return (

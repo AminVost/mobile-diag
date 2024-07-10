@@ -10,7 +10,7 @@ import { appConfig } from '../../config';
 import sendWsMessage from '../utils/wsSendMsg';
 
 export default function ReportScreen({ navigation }) {
-    const { testSteps, setTestStep, deviceDetails, isInternetConnected, websocketConnected, isDiagStart, isSubmitResult, setIsSubmitResult, isFinishedTests, wsSocket, receivedUuid, tokenReceived } = useContext(DataContext);
+    const { testSteps, setTestStep, deviceDetails, isInternetConnected, websocketConnected, isDiagStart, isSubmitResult, setIsSubmitResult, isFinishedTests, wsSocket, receivedUuid, tokenReceived, isSingleTest, setIsSingleTest } = useContext(DataContext);
     const { elapsedTimeRef } = useContext(TimerContext);
     const [storedDeviceParams, setStoredDeviceParams] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -79,8 +79,11 @@ export default function ReportScreen({ navigation }) {
     };
 
     const navigateToTest = (index) => {
-        console.log(`Item at index ${index} pressed`);
-        setTestStep(index + 1);
+        // console.log(`Item at index ${index} pressed`);
+        if (isFinishedTests) {
+            setIsSingleTest(true);
+            setTestStep(index + 1);
+        }
         // You can call another function or navigate to another screen here
     };
 
@@ -111,6 +114,7 @@ export default function ReportScreen({ navigation }) {
         setProgress(0);
         const apiUrl = 'https://myrapidtrack.com/final_acc/_apps/diag_mobile/submitData';
         const token = tokenReceived ? tokenReceived : '9259af73-c1da-4786-aa6b-c4a788525889';
+        // const token = '9259af73-c1da-4786-aa6b-c4a788ff525889';
         const platform = 'linux';
         const appVersion = appConfig.version;
         const inventoryId = '202406162653';

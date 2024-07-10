@@ -12,8 +12,8 @@ import Video from 'react-native-video';
 import sendWsMessage from '../../utils/wsSendMsg'
 import AnimatedIcon from '../../utils/AnimatedIcon'
 
-const BackCameraVideoTest = () => {
-  const { testStep, setTestStep, testSteps, setTestsSteps, elapsedTime, setElapsedTime, wsSocket, receivedUuid } = useContext(DataContext);
+const BackCameraVideoTest = ({ navigation }) => {
+  const { testStep, setTestStep, testSteps, setTestsSteps, elapsedTime, setElapsedTime, wsSocket, receivedUuid, isSingleTest, isFinishedTests } = useContext(DataContext);
   const [videoUri, setVideoUri] = useState(null);
   const cameraRef = useRef(null);
   const [permissionsGranted, setPermissionsGranted] = useState(false);
@@ -26,13 +26,23 @@ const BackCameraVideoTest = () => {
 
 
   useEffect(() => {
-    sendWsMessage(wsSocket, {
-      uuid: receivedUuid,
-      type: 'progress',
-      status: 'step',
-      step: testStep + '/' + testSteps.length,
-      currentStep: testSteps[testStep - 1].title
-    });
+    if (isSingleTest) {
+      sendWsMessage(wsSocket, {
+        uuid: receivedUuid,
+        type: 'progress',
+        status: 'step',
+        step: 'singleTest',
+        currentStep: testSteps[testStep - 1].title
+      });
+    } else {
+      sendWsMessage(wsSocket, {
+        uuid: receivedUuid,
+        type: 'progress',
+        status: 'step',
+        step: testStep + '/' + testSteps.length,
+        currentStep: testSteps[testStep - 1].title
+      });
+    }
     const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
     requestCameraPermission();
     return () => {
@@ -107,8 +117,17 @@ const BackCameraVideoTest = () => {
       updatedTestSteps[testStep - 1].filePath = videoPath;
     }
     setTestsSteps(updatedTestSteps);
-    setTestStep((prevStep) => prevStep + 1);
-  }, [testStep, testSteps, videoPath, setTestStep, setTestsSteps]);
+    if (isSingleTest && isFinishedTests) {
+      sendWsMessage(wsSocket, {
+        uuid: receivedUuid,
+        type: 'progress',
+        status: 'readyToSubmit'
+      });
+      navigation.navigate('Report');
+    } else {
+      setTestStep((prevStep) => prevStep + 1);
+    }
+  }, [testStep, testSteps, videoPath, setTestStep, setTestsSteps, isFinishedTests, isSingleTest]);
 
 
 
@@ -134,7 +153,7 @@ const BackCameraVideoTest = () => {
       {isTimerVisible &&
         <Timer />}
       <View style={styles.container}>
-      <AnimatedIcon />
+        <AnimatedIcon />
 
         {videoUri ? (
           <>

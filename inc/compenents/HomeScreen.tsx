@@ -9,6 +9,7 @@ import {
   SafeAreaProvider,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
+import sendWsMessage from '../utils/wsSendMsg'
 import { DataContext } from '../../App';
 import { TimerContext } from '../../App';
 
@@ -18,7 +19,7 @@ const Stack = createNativeStackNavigator();
 function HomeScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
 
-  const { isInternetConnected, websocketConnected, wsSocket, receivedSerialNumber, deviceDetails, testStep, setTestStep, isDiagStart, setIsDiagStart, setIsSubmitResult, isSubmitResult, setTestsSteps, setStartContinue, startContinue, isFinishedTests, setIsFinishedTests } = useContext(DataContext);
+  const { isInternetConnected, websocketConnected, wsSocket, receivedSerialNumber, receivedUuid, deviceDetails, testStep, setTestStep, isDiagStart, setIsDiagStart, setIsSubmitResult, isSubmitResult, setTestsSteps, setStartContinue, startContinue, isFinishedTests, setIsFinishedTests, isSingleTest, setIsSingleTest } = useContext(DataContext);
   const { startTime, setStartTime, elapsedTimeRef } = useContext(TimerContext);
 
   const checklistItems = [
@@ -90,8 +91,9 @@ function HomeScreen({ navigation, route }) {
 
   const handleStartDiagBtn = async () => {
     if (isSwitchDiag) {
-      if (!websocketConnected) {
+      if (websocketConnected) {
         setIsLoading(true);
+        setIsSingleTest(false);
         if (isDiagStart) {
           toggleReTestModal();
           setIsLoading(false);
@@ -114,6 +116,7 @@ function HomeScreen({ navigation, route }) {
 
   const handleReTestDiag = async () => {
     setIsLoading(true);
+    setIsSingleTest(false);
     console.log('ReTest Diag')
     await resetSteps();
     elapsedTimeRef.current = 0;
@@ -129,6 +132,7 @@ function HomeScreen({ navigation, route }) {
   }
 
   const handleContinueDiag = () => {
+    setIsSingleTest(false);
     if (startContinue) {
       setStartContinue(!startContinue);
       setStartContinue(!startContinue);
@@ -238,6 +242,15 @@ function HomeScreen({ navigation, route }) {
   //   }
 
   // }, [route.params]);
+
+  useEffect(() => {
+    sendWsMessage(wsSocket, {
+      uuid: receivedUuid,
+      type: 'progress',
+      status: 'backToHome',
+    });
+
+  }, []);
 
 
   useEffect(() => {

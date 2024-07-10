@@ -24,8 +24,8 @@ const testPatterns = [
     { type: 'gradient', value: 'black' },
 ];
 
-const Display = () => {
-    const { testStep, setTestStep, testSteps, setTestsSteps, wsSocket, receivedUuid } = useContext(DataContext);
+const Display = ({ navigation }) => {
+    const { testStep, setTestStep, testSteps, setTestsSteps, wsSocket, receivedUuid, isSingleTest, isFinishedTests } = useContext(DataContext);
     const [isAlertVisible, setAlertVisible] = useState(false);
     const [currentTestIndex, setCurrentTestIndex] = useState(0);
     const [testComplete, setTestComplete] = useState(false);
@@ -36,13 +36,23 @@ const Display = () => {
     const getDuration = useStepTimer();
 
     useEffect(() => {
-        sendWsMessage(wsSocket, {
-            uuid: receivedUuid,
-            type: 'progress',
-            status: 'step',
-            step: testStep + '/' + testSteps.length,
-            currentStep: testSteps[testStep - 1].title
-        });
+        if (isSingleTest) {
+            sendWsMessage(wsSocket, {
+                uuid: receivedUuid,
+                type: 'progress',
+                status: 'step',
+                step: 'singleTest',
+                currentStep: testSteps[testStep - 1].title
+            });
+        } else {
+            sendWsMessage(wsSocket, {
+                uuid: receivedUuid,
+                type: 'progress',
+                status: 'step',
+                step: testStep + '/' + testSteps.length,
+                currentStep: testSteps[testStep - 1].title
+            });
+        }
         hideNavigationBar();
         const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
         // console.log(testSteps);
@@ -71,9 +81,18 @@ const Display = () => {
         updatedTestSteps[testStep - 1].result = result;
         updatedTestSteps[testStep - 1].duration = getDuration();
         setTestsSteps(updatedTestSteps);
-        setTestStep((prevStep) => prevStep + 1);
         setAlertVisible(false);
-    }, [testStep, testSteps, setTestStep, setTestsSteps]);
+        if (isSingleTest && isFinishedTests) {
+            sendWsMessage(wsSocket, {
+                uuid: receivedUuid,
+                type: 'progress',
+                status: 'readyToSubmit'
+            });
+            navigation.navigate('Report');
+        } else {
+            setTestStep((prevStep) => prevStep + 1);
+        }
+    }, [testStep, testSteps, setTestStep, setTestsSteps, isSingleTest, isFinishedTests]);
 
     const toggleAlert = useCallback(() => {
         setAlertVisible(!isAlertVisible);

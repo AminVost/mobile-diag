@@ -11,8 +11,8 @@ import { requestPermissions, openAppSettings } from '../CameraPermission';
 import sendWsMessage from '../../utils/wsSendMsg'
 import AnimatedIcon from '../../utils/AnimatedIcon'
 
-const BackCamera = () => {
-  const { testStep, setTestStep, testSteps, setTestsSteps, wsSocket, receivedUuid } = useContext(DataContext);
+const BackCamera = ({ navigation }) => {
+  const { testStep, setTestStep, testSteps, setTestsSteps, wsSocket, receivedUuid, isSingleTest, isFinishedTests } = useContext(DataContext);
   const [photoUri, setPhotoUri] = useState(null);
   const [photoBase64, setPhotoBase64] = useState(null);
   const cameraRef = useRef(null);
@@ -28,13 +28,23 @@ const BackCamera = () => {
   const getDuration = useStepTimer();
 
   useEffect(() => {
-    sendWsMessage(wsSocket, {
-      uuid: receivedUuid,
-      type: 'progress',
-      status: 'step',
-      step: testStep + '/' + testSteps.length,
-      currentStep: testSteps[testStep - 1].title
-    });
+    if (isSingleTest) {
+      sendWsMessage(wsSocket, {
+        uuid: receivedUuid,
+        type: 'progress',
+        status: 'step',
+        step: 'singleTest',
+        currentStep: testSteps[testStep - 1].title
+      });
+    } else {
+      sendWsMessage(wsSocket, {
+        uuid: receivedUuid,
+        type: 'progress',
+        status: 'step',
+        step: testStep + '/' + testSteps.length,
+        currentStep: testSteps[testStep - 1].title
+      });
+    }
     const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
     requestCameraPermission();
     return () => {
@@ -104,7 +114,16 @@ const BackCamera = () => {
     updatedTestSteps[testStep - 1].duration = getDuration();
     // console.log('injaaa' , updatedTestSteps[testStep - 1])
     setTestsSteps(updatedTestSteps);
-    setTestStep((prevStep) => prevStep + 1);
+    if (isSingleTest && isFinishedTests) {
+      sendWsMessage(wsSocket, {
+        uuid: receivedUuid,
+        type: 'progress',
+        status: 'readyToSubmit'
+      });
+      navigation.navigate('Report');
+    } else {
+      setTestStep((prevStep) => prevStep + 1);
+    }
     // console.log(testSteps);
   };
 

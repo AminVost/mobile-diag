@@ -11,8 +11,8 @@ import { requestPermissions, openAppSettings } from '../CameraPermission';
 import sendWsMessage from '../../utils/wsSendMsg'
 import AnimatedIcon from '../../utils/AnimatedIcon'
 
-const MultiCameraTest = () => {
-  const { testStep, setTestStep, testSteps, setTestsSteps, wsSocket, receivedUuid } = useContext(DataContext);
+const MultiCameraTest = ({ navigation }) => {
+  const { testStep, setTestStep, testSteps, setTestsSteps, wsSocket, receivedUuid, isSingleTest, isFinishedTests } = useContext(DataContext);
   const [isCameraActive, setIsCameraActive] = useState(true);
   const [photoUri, setPhotoUri] = useState(null);
   const cameraRef = useRef(null);
@@ -31,13 +31,23 @@ const MultiCameraTest = () => {
   const format = device ? useCameraFormat(device, [{ photoResolution: { width: 640, height: 480 } }]) : null;
 
   useEffect(() => {
-    sendWsMessage(wsSocket, {
-      uuid: receivedUuid,
-      type: 'progress',
-      status: 'step',
-      step: testStep + '/' + testSteps.length,
-      currentStep: testSteps[testStep - 1].title
-    });
+    if (isSingleTest) {
+      sendWsMessage(wsSocket, {
+        uuid: receivedUuid,
+        type: 'progress',
+        status: 'step',
+        step: 'singleTest',
+        currentStep: testSteps[testStep - 1].title
+      });
+    } else {
+      sendWsMessage(wsSocket, {
+        uuid: receivedUuid,
+        type: 'progress',
+        status: 'step',
+        step: testStep + '/' + testSteps.length,
+        currentStep: testSteps[testStep - 1].title
+      });
+    }
     const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackButtonPress);
     requestCameraPermission();
     return () => {
@@ -139,7 +149,16 @@ const MultiCameraTest = () => {
       updatedTestSteps[multiCameraStepIndex].duration = getDuration();
       // console.log('injaaaaa', updatedTestSteps[multiCameraStepIndex].multiCamResult)
       setTestsSteps(updatedTestSteps);
-      setTestStep((prevStep) => prevStep + 1);
+      if (isSingleTest && isFinishedTests) {
+        sendWsMessage(wsSocket, {
+          uuid: receivedUuid,
+          type: 'progress',
+          status: 'readyToSubmit'
+        });
+        navigation.navigate('Report');
+      } else {
+        setTestStep((prevStep) => prevStep + 1);
+      }
     }
   };
 
