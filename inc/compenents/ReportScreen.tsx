@@ -1,16 +1,16 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useContext, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Alert, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { Button, Tooltip, Modal, Portal, ProgressBar, MD3Colors } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import axios from 'axios';
 import { DataContext, TimerContext } from '../../App';
 import { formatTimeHms } from '../utils/formatTimeHms';
 import { appConfig } from '../../config';
-import sendWsMessage from '../utils/wsSendMsg'
+import sendWsMessage from '../utils/wsSendMsg';
 
 export default function ReportScreen({ navigation }) {
-    const { testSteps, deviceDetails, isInternetConnected, isDiagStart, isSubmitResult, setIsSubmitResult, isFinishedTests, wsSocket, receivedUuid, tokenReceived } = useContext(DataContext);
+    const { testSteps, setTestStep, deviceDetails, isInternetConnected, websocketConnected, isDiagStart, isSubmitResult, setIsSubmitResult, isFinishedTests, wsSocket, receivedUuid, tokenReceived } = useContext(DataContext);
     const { elapsedTimeRef } = useContext(TimerContext);
     const [storedDeviceParams, setStoredDeviceParams] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -19,7 +19,6 @@ export default function ReportScreen({ navigation }) {
     const [uploadMessage, setUploadMessage] = useState('');
     const [isSuccess, setIsSuccess] = useState(null);
     const [abortController, setAbortController] = useState(null);
-
 
     useEffect(() => {
         navigation.setOptions({
@@ -52,14 +51,6 @@ export default function ReportScreen({ navigation }) {
         getData();
     }, [wsSocket]);
 
-    // useEffect(() => {
-    //     if (isStartDiag) {
-    //         navigation.navigate('Home', {
-    //             isStartDiag,
-    //         });
-    //     }
-    // }, [isStartDiag]);
-
     useEffect(() => {
         if (wsSocket && wsSocket.readyState === WebSocket.OPEN) {
             wsSocket.onmessage = (event) => {
@@ -68,7 +59,6 @@ export default function ReportScreen({ navigation }) {
                 if (message.type === 'action' && message.action === 'submit') {
                     handleSendResult();
                 } else if (message.type === 'action' && message.action === 'returnToHome') {
-                    // setIsStartDiag(true);
                     navigation.navigate('Home');
                 }
             };
@@ -88,13 +78,20 @@ export default function ReportScreen({ navigation }) {
         }
     };
 
-    const navigateToTest = (testName) => {
-        navigation.navigate(testName);
+    const navigateToTest = (index) => {
+        console.log(`Item at index ${index} pressed`);
+        setTestStep(index + 1);
+        // You can call another function or navigate to another screen here
     };
 
     const handleSendResult = async () => {
+        console.log('in handleSendResult...')
         if (!isInternetConnected) {
             Alert.alert('No Internet Connection', 'Please check your internet connection and try again.');
+            return;
+        }
+        if (!websocketConnected) {
+            Alert.alert('No webSocket Connected', 'Please check your webSocket connection and try again.');
             return;
         }
         if (!isDiagStart) {
@@ -113,8 +110,7 @@ export default function ReportScreen({ navigation }) {
         setModalVisible(true);
         setProgress(0);
         const apiUrl = 'https://myrapidtrack.com/final_acc/_apps/diag_mobile/submitData';
-        // const token = tokenReceived ? tokenReceived : '9259af73-c1da-4786-aa6b-c4a788525889';
-        const token ='9259af74443-c1da-4786-aa6b-c4a788525889';
+        const token = tokenReceived ? tokenReceived : '9259af73-c1da-4786-aa6b-c4a788525889';
         const platform = 'linux';
         const appVersion = appConfig.version;
         const inventoryId = '202406162653';
@@ -158,14 +154,11 @@ export default function ReportScreen({ navigation }) {
                 }))
             }
         };
-        // const payloadString = JSON.stringify(payload);
-        // console.log(`Payload size: ${payloadString.length} bytes`);
 
         const controller = new AbortController();
         setAbortController(controller);
 
         try {
-            // console.log('try To send Result' , payload);
             const response = await axios.post(apiUrl, payload, {
                 headers: {
                     'Content-Type': 'application/json',
@@ -178,7 +171,8 @@ export default function ReportScreen({ navigation }) {
                 sendWsMessage(wsSocket, {
                     uuid: receivedUuid,
                     type: 'progress',
-                    status: 'submitted'
+                    status: 'submitted',
+                    submitRes: response.data.message
                 });
                 setIsSubmitResult(true);
                 setUploadMessage(response.data.message);
@@ -201,17 +195,17 @@ export default function ReportScreen({ navigation }) {
                 sendWsMessage(wsSocket, {
                     uuid: receivedUuid,
                     type: 'progress',
-                    status: 'canceleSubmit'
+                    status: 'canceledSubmit'
                 });
             } else {
                 setUploadMessage(error.message);
+                sendWsMessage(wsSocket, {
+                    uuid: receivedUuid,
+                    type: 'progress',
+                    status: 'failedToSubmit',
+                    error: error.message
+                });
             }
-            sendWsMessage(wsSocket, {
-                uuid: receivedUuid,
-                type: 'progress',
-                status: 'failedToSubmit',
-                error: error.message
-            });
             setIsSuccess(false);
         } finally {
             setLoading(false);
@@ -241,29 +235,31 @@ export default function ReportScreen({ navigation }) {
         <View style={styles.container}>
             <ScrollView contentContainerStyle={styles.scrollView}>
                 {testSteps.map((step, index) => (
-                    <View key={index} style={[styles.stepContainer, getResultColor(step.result)]} onPress={() => navigateToTest(step.screenName)}>
-                        <Icon name={step.icon} size={30} style={styles.icon} />
-                        <View style={styles.textContainer}>
-                            <Text style={styles.title}>{step.title}</Text>
-                            <View style={styles.subTitle}>
-                                <Text style={styles.stepInfo}>Priority: {step.priority}</Text>
-                                {step.duration &&
-                                    <Text style={styles.stepInfo}>Duration: {step.duration}s</Text>
+                    <TouchableOpacity key={index} onPress={() => navigateToTest(index)}>
+                        <View style={[styles.stepContainer, getResultColor(step.result)]}>
+                            <Icon name={step.icon} size={30} style={styles.icon} />
+                            <View style={styles.textContainer}>
+                                <Text style={styles.title}>{step.title}</Text>
+                                <View style={styles.subTitle}>
+                                    <Text style={styles.stepInfo}>Priority: {step.priority}</Text>
+                                    {step.duration &&
+                                        <Text style={styles.stepInfo}>Duration: {step.duration}s</Text>
+                                    }
+                                </View>
+                            </View>
+                            <View style={styles.resultContainer}>
+                                {step.result === 'Pass' &&
+                                    <Icon name='check-circle' size={30} style={[styles.iconPass]} />
+                                }
+                                {step.result === 'Skip' &&
+                                    <Icon name='skip-next-circle' size={30} style={styles.iconSkip} />
+                                }
+                                {step.result === 'Fail' &&
+                                    <Icon name='close-circle' size={30} style={styles.iconFail} />
                                 }
                             </View>
                         </View>
-                        <View style={styles.resultContainer}>
-                            {step.result === 'Pass' &&
-                                <Icon name='check-circle' size={30} style={[styles.iconPass]} />
-                            }
-                            {step.result === 'Skip' &&
-                                <Icon name='skip-next-circle' size={30} style={styles.iconSkip} />
-                            }
-                            {step.result === 'Fail' &&
-                                <Icon name='close-circle' size={30} style={styles.iconFail} />
-                            }
-                        </View>
-                    </View>
+                    </TouchableOpacity>
                 ))}
             </ScrollView>
             <View style={styles.btnContainer}>
@@ -275,7 +271,7 @@ export default function ReportScreen({ navigation }) {
                     labelStyle={styles.btnLabel}
                     icon={() => <Icon name="export-variant" size={20} color="white" />}
                     onPress={handleSendResult}
-                    style={[styles.button, { backgroundColor: !isInternetConnected || !isDiagStart || isSubmitResult || !isFinishedTests ? '#d3d3d3' : '#2980b9' }]}
+                    style={[styles.button, { backgroundColor: !isInternetConnected || !websocketConnected || !isDiagStart || isSubmitResult || !isFinishedTests ? '#d3d3d3' : '#2980b9' }]}
                 >
                     Send Result
                 </Button>
@@ -311,6 +307,8 @@ export default function ReportScreen({ navigation }) {
         </View>
     );
 }
+
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,

@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useRef } from 'react';
 import { Provider as PaperProvider } from 'react-native-paper';
-import { View, Text, TextInput, StyleSheet, TouchableHighlight, Alert, ActivityIndicator, SafeAreaView, useWindowDimensions, ScrollView, TouchableOpacity, Platform, Image, Modal, Pressable, Linking, StatusBar } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, Platform, Image,ToastAndroid,BackHandler  } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createDrawerNavigator, DrawerContentScrollView, DrawerItemList, DrawerItem } from '@react-navigation/drawer';
 import NetInfo from '@react-native-community/netinfo';
@@ -13,6 +13,7 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import { storeData } from './storageUtils';
+// import { locationPermission, openAppSettings } from './inc/utils/locationPermission';
 import { storageTestSteps } from './storageTestSteps';
 import HomeScreen from './inc/compenents/HomeScreen';
 import DeviceInfoScreen from './inc/compenents/DeviceInfoScreen';
@@ -251,6 +252,19 @@ export default function App() {
       duration: null,
       priority: 3,
     },
+    {
+      title: 'Brightness',
+      text: '',
+      icon: 'brightness-6',
+      showInfoBar: true,
+      showTimer: true,
+      showStepTitle: true,
+      showProgress: true,
+      result: null,
+      error: null,
+      duration: null,
+      priority: 4,
+    },
   ]);
 
 
@@ -264,11 +278,33 @@ export default function App() {
   const paramss = LaunchArguments.value<MyExpectedArgs>();
   // const paramsTest = { "wsIp": "192.168.1.22", "serialNumber": "R58M42HXCZW", "token": "9259af73-c1da-4786-aa6b-c4a788525889" };//TODO
 
+
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener((state) => {
       setIsNetConnected(state.isConnected);
     })
-    return () => unsubscribe();
+
+    let backPressCount = 0;
+    const backAction = () => {
+      backPressCount++;
+      if (backPressCount < 2) {
+        ToastAndroid.show("Press back again to exit", ToastAndroid.SHORT);
+        setTimeout(() => {
+          backPressCount = 0;
+        }, 2000);
+        return true;
+      } else {
+        BackHandler.exitApp();
+        return false;
+      }
+    };
+
+    const backHandler = BackHandler.addEventListener("hardwareBackPress", backAction);
+
+    return () => {
+      backHandler.remove()
+      unsubscribe();
+    }
   }, []);
 
 
@@ -503,10 +539,32 @@ export default function App() {
     );
   }
 
+  // useEffect(() => {
+  //   if (wsSocket) {
+  //     const handleWebSocketMessage = (event) => {
+  //       if (event) {
+  //         console.log('Received event.data in HomeScreen:', event.data);
+  //         const message = JSON.parse(event.data);
+  //         console.log('Received message in HomeScreen:', message);
+  //         if (message.type === 'action' && message.action === 'startDiag') {
+  //           // handleStartDiagBtn();
+  //         }
+  //       };
+  //     };
+
+  //     wsSocket.addEventListener('message', handleWebSocketMessage);
+  //     return () => {
+  //       console.log('disabled addEventListener')
+  //       wsSocket.removeEventListener('message', handleWebSocketMessage);
+  //     };
+  //   }
+  // }, [wsSocket]);
+
+
   return (
 
     <PaperProvider>
-      <DataContext.Provider value={{ isInternetConnected, setIsNetConnected, wsSocket, tokenReceived, receivedUuid, websocketConnected, setWebsocketConnected, receivedSerialNumber, testStep, setTestStep, testSteps, setTestsSteps, deviceDetails, setDeviceDetails, isDiagStart, setIsDiagStart, isSubmitResult, setIsSubmitResult, startContinue, setStartContinue, isFinishedTests, setIsFinishedTests}}>
+      <DataContext.Provider value={{ isInternetConnected, setIsNetConnected, wsSocket, tokenReceived, receivedUuid, websocketConnected, setWebsocketConnected, receivedSerialNumber, testStep, setTestStep, testSteps, setTestsSteps, deviceDetails, setDeviceDetails, isDiagStart, setIsDiagStart, isSubmitResult, setIsSubmitResult, startContinue, setStartContinue, isFinishedTests, setIsFinishedTests }}>
         <TimerContext.Provider value={{ startTime, setStartTime, elapsedTimeRef }}>
           <SafeAreaProvider>
             <NavigationContainer>

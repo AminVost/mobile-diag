@@ -23,8 +23,6 @@ const Timer = memo(({ }) => {
     useEffect(() => {
         if (!currentStep) return;
         console.log('mount Timer=> ', elapsedTimeRef.current)
-        // console.log('startTime=> ', startTime)
-        // console.log('elapsedTimeRef=> ', elapsedTimeRef);
         if (elapsedTimeRef.current == 0) {
             interval = setInterval(() => {
                 elapsedTimeRef.current = Math.floor((Date.now() - startTime) / 1000);
@@ -44,8 +42,6 @@ const Timer = memo(({ }) => {
             if (intervalContinue) {
                 clearInterval(intervalContinue);
             }
-            // console.log('currentStep=> ' ,currentStep)
-            // console.log('testSteps.length=> ' ,testSteps.length)
             if (testStep < testSteps.length) {                
                 console.log('sendWsMessage To Pause ')
                 sendWsMessage(wsSocket, {
@@ -55,7 +51,6 @@ const Timer = memo(({ }) => {
                     currentStep: testSteps[testStep - 1].title
                 });
             }
-            // console.log(elapsedTimeRef.current)
         };
     }, []);
 

@@ -1,21 +1,25 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useContext, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { Button, Tooltip, Modal, Portal, ProgressBar, MD3Colors } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import axios from 'axios';
 import { DataContext, TimerContext } from '../../App';
 import { formatTimeHms } from '../utils/formatTimeHms';
 import { appConfig } from '../../config';
+import sendWsMessage from '../utils/wsSendMsg'
 
 export default function ReportScreen({ navigation }) {
-    const { testSteps, deviceDetails } = useContext(DataContext);
+    const { testSteps, deviceDetails, isInternetConnected, websocketConnected, isDiagStart, isSubmitResult, setIsSubmitResult, isFinishedTests, wsSocket, receivedUuid, tokenReceived } = useContext(DataContext);
     const { elapsedTimeRef } = useContext(TimerContext);
-
+    const [storedDeviceParams, setStoredDeviceParams] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [response, setResponse] = useState(null);
     const [progress, setProgress] = useState(0);
     const [isModalVisible, setModalVisible] = useState(false);
     const [uploadMessage, setUploadMessage] = useState('');
+    const [isSuccess, setIsSuccess] = useState(null);
+    const [abortController, setAbortController] = useState(null);
+
 
     useEffect(() => {
         navigation.setOptions({
@@ -28,7 +32,47 @@ export default function ReportScreen({ navigation }) {
                 </Tooltip>
             ),
         });
+        return () => {
+            console.log('unmount report Screnn....')
+            handleCloseModal();
+        };
     }, [navigation, elapsedTimeRef.current]);
+
+    useEffect(() => {
+        const getData = async () => {
+            try {
+                const jsonValue = await AsyncStorage.getItem('deviceparams');
+                if (jsonValue != null) {
+                    setStoredDeviceParams(JSON.parse(jsonValue));
+                }
+            } catch (error) {
+                console.log('Error reading data:', error);
+            }
+        };
+        getData();
+    }, [wsSocket]);
+
+    // useEffect(() => {
+    //     if (isStartDiag) {
+    //         navigation.navigate('Home', {
+    //             isStartDiag,
+    //         });
+    //     }
+    // }, [isStartDiag]);
+
+    useEffect(() => {
+        if (wsSocket && wsSocket.readyState === WebSocket.OPEN) {
+            wsSocket.onmessage = (event) => {
+                console.log('Received message ReportScreen:', event.data);
+                const message = JSON.parse(event.data);
+                if (message.type === 'action' && message.action === 'submit') {
+                    handleSendResult();
+                } else if (message.type === 'action' && message.action === 'returnToHome') {
+                    navigation.navigate('Home');
+                }
+            };
+        }
+    }, [wsSocket]);
 
     const getResultColor = (result) => {
         switch (result) {
@@ -48,48 +92,153 @@ export default function ReportScreen({ navigation }) {
     };
 
     const handleSendResult = async () => {
+        console.log('in handleSendResult...')
+        if (!isInternetConnected) {
+            Alert.alert('No Internet Connection', 'Please check your internet connection and try again.');
+            return;
+        }
+        if (!websocketConnected) {
+            Alert.alert('No webSocket Connected', 'Please check your webSocket connection and try again.');
+            return;
+        }
+        if (!isDiagStart) {
+            Alert.alert('No test has been done yet', 'Please complete the test steps first to send information.');
+            return;
+        }
+        if (isSubmitResult) {
+            Alert.alert('It is not possible to resend the test result', 'Please repeat the test steps to resend the test results.');
+            return;
+        }
+        if (!isFinishedTests) {
+            Alert.alert('Complete the test steps', 'Please complete the test steps to send the result.');
+            return;
+        }
         setLoading(true);
         setModalVisible(true);
         setProgress(0);
-        const token = 'ccae4581-0a34-11ec-a792-fa163e6a962cY'; // Replace with the actual inventory_id
+        const apiUrl = 'https://myrapidtrack.com/final_acc/_apps/diag_mobile/submitData';
+        const token = tokenReceived ? tokenReceived : '9259af73-c1da-4786-aa6b-c4a788525889';
+        // const token = '9259af74443-c1da-4786-aa6b-c4a788525889';
         const platform = 'linux';
         const appVersion = appConfig.version;
-        const inventoryId = 202406162653;
-        try {
-            const formData = new FormData();
-            formData.append('token', JSON.stringify(token));
-            formData.append('platform', JSON.stringify(platform));
-            formData.append('appVersion', JSON.stringify(appVersion));
-            formData.append('duration', JSON.stringify(elapsedTimeRef.current));
-            formData.append('system_info', JSON.stringify(deviceDetails));
-            formData.append('steps', JSON.stringify(testSteps));
+        const inventoryId = '202406162653';
 
-            console.log('deviceDetails= ', deviceDetails)
-            const response = await axios.post(`https://source-code.ir/testapi/api.php?inventory_id=${inventoryId}`, formData, {
+        const payload = {
+            token,
+            platform,
+            appVersion,
+            inventoryId,
+            fileData: {
+                duration: elapsedTimeRef.current,
+                system_info: {
+                    brand: deviceDetails.brand,
+                    deviceName: deviceDetails.deviceName,
+                    hardWare: deviceDetails.hardWare,
+                    imei: deviceDetails.imei,
+                    manufacturer: deviceDetails.manufacturer,
+                    meid: deviceDetails.meid,
+                    model: deviceDetails.model,
+                    os: deviceDetails.os,
+                    osVersion: deviceDetails.osVersion,
+                    serialNumber: deviceDetails.serialNumber,
+                    storage_layouts: deviceDetails.storage_layouts,
+                    memory_layouts: deviceDetails.memory_layouts,
+                    cpu: deviceDetails.cpu
+                },
+                steps: testSteps.map(step => ({
+                    duration: step.duration || null,
+                    error: step.error || null,
+                    ...(step.fileItem && { fileItem: step.fileItem }),
+                    priority: step.priority,
+                    result: step.result,
+                    showInfoBar: step.showInfoBar,
+                    showProgress: step.showProgress,
+                    showStepTitle: step.showStepTitle,
+                    showTimer: step.showTimer,
+                    text: step.text,
+                    title: step.title,
+                    ...(step.multiCamResult && { multiCamResult: step.multiCamResult }),
+                    ...(step.devicesInfo && { devicesInfo: step.devicesInfo })
+                }))
+            }
+        };
+        // const payloadString = JSON.stringify(payload);
+        // console.log(`Payload size: ${payloadString.length} bytes`);
+
+        const controller = new AbortController();
+        setAbortController(controller);
+
+        try {
+            // console.log('try To send Result' , payload);
+            const response = await axios.post(apiUrl, payload, {
                 headers: {
-                    'Content-Type': 'multipart/form-data',
+                    'Content-Type': 'application/json',
                 },
-                onUploadProgress: (progressEvent) => {
-                    const percentage = (progressEvent.loaded / progressEvent.total);
-                    setProgress(percentage);
-                },
+                signal: controller.signal,
             });
 
-            // Check if the response status is success
             if (response.data.status === 'success') {
-                console.log('Data saved successfully:', response.data);
-                setUploadMessage('Data saved successfully.');
+                console.log('success send Result= ', response.data.message)
+                sendWsMessage(wsSocket, {
+                    uuid: receivedUuid,
+                    type: 'progress',
+                    status: 'submitted',
+                    submitRes: response.data.message
+                });
+                setIsSubmitResult(true);
+                setUploadMessage(response.data.message);
+                setIsSuccess(true);
             } else {
-                console.error('Error response from server:', response.data);
-                setUploadMessage(`Error: ${response.data.message}`);
+                console.log('error else send Result= ', response.data.message)
+                setUploadMessage(response.data.message);
+                setIsSuccess(false);
+                sendWsMessage(wsSocket, {
+                    uuid: receivedUuid,
+                    type: 'progress',
+                    status: 'failedToSubmit',
+                    error: response.data.message ? response.data.message : 'unKnown'
+                });
             }
         } catch (error) {
-            console.error('Error sending result:', error);
-            setUploadMessage('Error sending result. Please try again.');
+            console.log('catch send Result= ', error.message)
+            if (axios.isCancel(error)) {
+                setUploadMessage('Upload canceled by user');
+                sendWsMessage(wsSocket, {
+                    uuid: receivedUuid,
+                    type: 'progress',
+                    status: 'canceledSubmit'
+                });
+            } else {
+                setUploadMessage(error.message);
+                sendWsMessage(wsSocket, {
+                    uuid: receivedUuid,
+                    type: 'progress',
+                    status: 'failedToSubmit',
+                    error: error.message
+                });
+            }
+            setIsSuccess(false);
         } finally {
             setLoading(false);
-            setModalVisible(false);
-            Alert.alert('Upload Status', uploadMessage);
+            setModalVisible(true);
+        }
+    };
+
+    const handleModalButtonPress = () => {
+        if (isSuccess) {
+            setModalVisible(false); // Close modal on success
+        } else {
+            handleSendResult(); // Retry on failure
+        }
+    };
+
+    const handleCloseModal = () => {
+        setModalVisible(false);
+    };
+
+    const handleCancelUpload = () => {
+        if (abortController) {
+            abortController.abort();
         }
     };
 
@@ -104,7 +253,7 @@ export default function ReportScreen({ navigation }) {
                             <View style={styles.subTitle}>
                                 <Text style={styles.stepInfo}>Priority: {step.priority}</Text>
                                 {step.duration &&
-                                    <Text style={styles.stepInfo}>Duration: {step.duration}</Text>
+                                    <Text style={styles.stepInfo}>Duration: {step.duration}s</Text>
                                 }
                             </View>
                         </View>
@@ -113,7 +262,7 @@ export default function ReportScreen({ navigation }) {
                                 <Icon name='check-circle' size={30} style={[styles.iconPass]} />
                             }
                             {step.result === 'Skip' &&
-                                <Icon name='reload' size={30} style={styles.iconSkip} />
+                                <Icon name='skip-next-circle' size={30} style={styles.iconSkip} />
                             }
                             {step.result === 'Fail' &&
                                 <Icon name='close-circle' size={30} style={styles.iconFail} />
@@ -126,26 +275,47 @@ export default function ReportScreen({ navigation }) {
                 <Button mode="contained" labelStyle={styles.btnLabel} icon={() => <Icon name="home-import-outline" size={20} color="white" />} onPress={() => navigation.goBack()} style={[styles.button, { backgroundColor: '#4908b0' }]}>
                     Go back home
                 </Button>
-                <Button mode="contained" labelStyle={styles.btnLabel} icon={() => <Icon name="export-variant" size={20} color="white" />} onPress={handleSendResult} style={[styles.button, { backgroundColor: '#2980b9' }]}>
+                <Button
+                    mode="contained"
+                    labelStyle={styles.btnLabel}
+                    icon={() => <Icon name="export-variant" size={20} color="white" />}
+                    onPress={handleSendResult}
+                    style={[styles.button, { backgroundColor: !isInternetConnected || !websocketConnected || !isDiagStart || isSubmitResult || !isFinishedTests ? '#d3d3d3' : '#2980b9' }]}
+                >
                     Send Result
                 </Button>
             </View>
             <Portal>
-                <Modal visible={isModalVisible} onDismiss={() => setModalVisible(false)} contentContainerStyle={styles.modalContainer}>
-                    <Text style={styles.modalTitle}>Uploading Results...</Text>
-                    <ProgressBar progress={0.5} color={MD3Colors.primary50} style={styles.progressBar} />
-                    <Text style={styles.progressText}>{(progress * 100).toFixed(2)}%</Text>
+                <Modal visible={isModalVisible} contentContainerStyle={styles.modalContainer} dismissable={false}>
+                    <Text style={styles.modalTitle}>{loading ? 'Uploading Results...' : 'Upload Status'}</Text>
+                    {loading ? (
+                        <>
+                            <ActivityIndicator size="large" color="#4908b0" />
+                            <Button mode="contained" onPress={handleCancelUpload} style={styles.modalButton}>
+                                Cancel Upload
+                            </Button>
+                        </>
+                    ) : (
+                        <>
+                            <Icon name={isSuccess ? 'check-circle' : 'alert-circle'} size={70} style={isSuccess ? styles.iconSuccess : styles.iconFail} />
+                            <Text style={styles.uploadMessage}>{uploadMessage}</Text>
+                            <View style={styles.modalButtonContainer}>
+                                <Button mode="contained" onPress={handleModalButtonPress} icon={isSuccess ? null : 'refresh'} style={[styles.modalButton]}>
+                                    {isSuccess ? 'OK' : 'Try Again'}
+                                </Button>
+                                {!isSuccess && (
+                                    <Button mode="contained" onPress={handleCloseModal} style={[styles.modalButton, { backgroundColor: '#e74c3c' }]}>
+                                        Close
+                                    </Button>
+                                )}
+                            </View>
+                        </>
+                    )}
                 </Modal>
             </Portal>
-            {response && (
-                <View style={styles.responseContainer}>
-                    <Text style={styles.responseText}>{response}</Text>
-                </View>
-            )}
         </View>
     );
 }
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -275,10 +445,14 @@ const styles = StyleSheet.create({
         padding: 20,
         borderRadius: 10,
         alignItems: 'center',
+        marginRight: 10,
+        marginLeft: 10
     },
     modalTitle: {
         fontSize: 18,
         marginBottom: 20,
+        fontFamily: 'Quicksand-Bold',
+        color: 'black'
     },
     progressBar: {
         width: '100%',
@@ -289,5 +463,26 @@ const styles = StyleSheet.create({
         marginTop: 10,
         fontSize: 16,
     },
+    uploadMessage: {
+        fontSize: 16,
+        textAlign: 'center',
+        marginTop: 10,
+        fontFamily: 'Quicksand-SemiBold',
+        lineHeight: 30
+    },
+    iconSuccess: {
+        color: '#27ae60',
+        marginBottom: 10,
+    },
+    modalButton: {
+        marginTop: 20,
+        // width: '100%'
+        flexGrow: 1
+    },
+    modalButtonContainer: {
+        display: 'flex',
+        flexDirection: 'row',
+        columnGap: 7
+    }
 });
 

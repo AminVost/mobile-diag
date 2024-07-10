@@ -1,5 +1,6 @@
+// AnimatedIcon.js
 import React, { useEffect, useRef, useState, useContext } from 'react';
-import { Animated, Dimensions, StyleSheet, View, Text, TouchableWithoutFeedback } from 'react-native';
+import { Animated, Dimensions, StyleSheet, View, Text } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { DataContext } from '../../App';
 
@@ -9,6 +10,11 @@ const AnimatedIcon = () => {
 
     const iconPosition = useRef(new Animated.Value(0)).current;
     const [visible, setVisible] = useState(true);
+
+    // useEffect(() => {
+    //     setVisible(true);
+    //     animateIcon();
+    // }, []);
 
     useEffect(() => {
         if (testStep === 1) {
@@ -30,32 +36,30 @@ const AnimatedIcon = () => {
         });
     };
 
-    const handlePress = () => {
-        setVisible(false);
-        iconPosition.stopAnimation(); // Stop the animation
-    };
-
     if (!visible) {
         return null;
     }
 
     return (
-        <TouchableWithoutFeedback onPress={handlePress}>
-            <View style={[styles.bgAnimted, { width: width }, { height: height }]}>
-                <View style={styles.container}>
-                    <Text style={styles.fixedText}>Swipe Right To Open The Menu</Text>
-                    <Animated.View style={[styles.iconContainer, { transform: [{ translateX: iconPosition }] }]}>
-                        <Icon name="hand-pointing-up" size={60} color="white" style={styles.icon} />
-                    </Animated.View>
-                </View>
+        <View style={[styles.bgAnimted, { width: width }, { height: height }]}>
+            <View style={styles.container}>
+                <Text style={styles.fixedText}>Swipe Right To Open The Menu</Text>
+                <Animated.View style={[styles.iconContainer, { transform: [{ translateX: iconPosition }] }]}>
+                    <Icon name="hand-pointing-up" size={60} color="white" style={styles.icon} />
+                </Animated.View>
             </View>
-        </TouchableWithoutFeedback>
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
     bgAnimted: {
         position: 'absolute',
+        // top: 0,
+        // bottom: 0,
+        // left: 0,
+        // width: '100%',
+        // height: '100%',
         zIndex: 9,
         backgroundColor: '#00000085'
     },

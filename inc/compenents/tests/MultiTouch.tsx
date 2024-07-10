@@ -84,21 +84,20 @@ const MultiTouchTest = ({ navigation }) => {
             <StatusBar hidden={false} translucent={false} backgroundColor="transparent" barStyle="default" />
             {isTimerVisible && <Timer />}
             <View style={styles.container}>
+                <AnimatedIcon />
+                <View
+                    style={[styles.touchArea, { width: screenWidth, height: screenHeight }]}
+                    {...panResponder.panHandlers}
+                >
+                    {touches.map((touch) => (
+                        <View
+                            key={touch.id}
+                            style={[styles.touchCircle, { left: touch.x - 25, top: touch.y - 25 }]} />
+                    ))}
+                    <Text style={styles.touchCount}>Touch Points: {touches.length}</Text>
+                    <Text style={styles.maxTouchCount}>Max Touch Points: {maxTouches}</Text>
+                </View>
                 <View style={[styles.btnContainer]}>
-                    <View
-                        style={[styles.touchArea, { width: screenWidth, height: screenHeight }]}
-                        {...panResponder.panHandlers}
-                    >
-                        {touches.map((touch) => (
-                            <View
-                                key={touch.id}
-                                style={[styles.touchCircle, { left: touch.x - 25, top: touch.y - 25 }]} />
-                        ))}
-                        <Text style={styles.touchCount}>Touch Points: {touches.length}</Text>
-                        <Text style={styles.maxTouchCount}>Max Touch Points: {maxTouches}</Text>
-                    </View>
-                    <AnimatedIcon />
-
                     <Button
                         mode="elevated"
                         buttonColor="#e84118"

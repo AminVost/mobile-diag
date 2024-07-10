@@ -4,7 +4,7 @@ import { DataContext } from '../../App';
 import sendWsMessage from '../utils/wsSendMsg'
 
 const TestsScreens = ({ navigation, route }) => {
-  const { testStep, testSteps, setTestsSteps, startContinue, wsSocket, receivedUuid,setIsFinishedTests } = useContext(DataContext);
+  const { testStep, testSteps, setTestsSteps, startContinue, wsSocket, receivedUuid, setIsFinishedTests } = useContext(DataContext);
   const hasSortedRef = useRef(false);
 
   const performTestStep = async () => {
@@ -101,6 +101,28 @@ const TestsScreens = ({ navigation, route }) => {
 
     };
   }, [testStep, startContinue]);
+
+  useEffect(() => {
+    if (wsSocket) {
+      const handleWebSocketMessage = (event) => {
+        if (event) {
+          console.log('Received event.data in TestsScreen:', event.data);
+          const message = JSON.parse(event.data);
+          if (message.type === 'action' && message.action === 'submit') {
+            navigation.navigate('Report')
+          } else if (message.type === 'action' && message.action === 'handleContinueDiag') {
+            navigation.navigate('Home', { isContinue: true })
+          }
+        };
+      };
+
+      wsSocket.addEventListener('message', handleWebSocketMessage);
+      return () => {
+        console.log('disabled addEventListener testScreen')
+        wsSocket.removeEventListener('message', handleWebSocketMessage);
+      };
+    }
+  }, [wsSocket]);
 
   return (
     <View style={styles.container}>

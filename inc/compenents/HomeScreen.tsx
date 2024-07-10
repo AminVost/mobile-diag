@@ -1,12 +1,8 @@
 import React, { createContext, useState, useEffect, useRef, useContext } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableHighlight, Alert, ActivityIndicator, Dimensions, SafeAreaView, StatusBar, ScrollView, TouchableOpacity, Platform, Image, Modal, Pressable, Linking, PermissionsAndroid } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { RNCamera } from 'react-native-camera';
 import { Button, Switch, Portal } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import DeviceInfo from 'react-native-device-info';
 import { appConfig } from '../../config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
@@ -15,7 +11,7 @@ import {
 } from 'react-native-safe-area-context';
 import { DataContext } from '../../App';
 import { TimerContext } from '../../App';
-import { ColorProperties } from 'react-native-reanimated/lib/typescript/reanimated2/Colors';
+
 
 const Stack = createNativeStackNavigator();
 
@@ -94,18 +90,23 @@ function HomeScreen({ navigation, route }) {
 
   const handleStartDiagBtn = async () => {
     if (isSwitchDiag) {
-      setIsLoading(true);
-      if (isDiagStart) {
-        toggleReTestModal();
+      if (!websocketConnected) {
+        setIsLoading(true);
+        if (isDiagStart) {
+          toggleReTestModal();
+          setIsLoading(false);
+          return;
+        };
+        setStartTime(Date.now());
+        setIsDiagStart(true)
+        setIsSubmitResult(false);
+        setIsFinishedTests(false);//TODO
+        setTestStep(1);
+        navigation.navigate('TestsScreen');
         setIsLoading(false);
-        return;
-      };
-      setStartTime(Date.now());
-      setIsDiagStart(true)
-      setIsSubmitResult(false);
-      setTestStep(1);
-      navigation.navigate('TestsScreen');
-      setIsLoading(false);
+      } else {
+        Alert.alert('The device is not connected to the PC WebSocket server!');
+      }
     } else {
       Alert.alert('Rapid Mobile Wipe Coming Soon...');
     }
@@ -119,6 +120,7 @@ function HomeScreen({ navigation, route }) {
     setStartTime(Date.now());
     setIsDiagStart(true);
     setIsSubmitResult(false);
+    setIsFinishedTests(false);//TODO
     console.log('setIsSubmitResult', isSubmitResult)
     setTestStep(null);
     setTestStep(1);
@@ -239,12 +241,12 @@ function HomeScreen({ navigation, route }) {
 
 
   useEffect(() => {
-    if (wsSocket) {
+    // if (wsSocket) {
+    if (wsSocket && wsSocket.readyState === WebSocket.OPEN) {
       const handleWebSocketMessage = (event) => {
         if (event) {
           console.log('Received event.data in HomeScreen:', event.data);
           const message = JSON.parse(event.data);
-          console.log('Received message in HomeScreen:', message);
           if (message.type === 'action' && message.action === 'startDiag') {
             handleStartDiagBtn();
           } else if (message.type === 'action' && message.action === 'handleRetestDiag') {
@@ -257,7 +259,7 @@ function HomeScreen({ navigation, route }) {
 
       wsSocket.addEventListener('message', handleWebSocketMessage);
       return () => {
-        console.log('disabled addEventListener')
+        console.log('disabled addEventListener HomeScreen');
         wsSocket.removeEventListener('message', handleWebSocketMessage);
       };
     }
