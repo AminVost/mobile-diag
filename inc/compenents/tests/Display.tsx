@@ -10,6 +10,7 @@ import Timer from '../Timer';
 import useStepTimer from '../useStepTimer';
 import sendWsMessage from '../../utils/wsSendMsg'
 import AnimatedIcon from '../../utils/AnimatedIcon'
+import categorizeTestSteps from '../../utils/categorizeTestSteps'
 
 
 const { width, height } = Dimensions.get('screen');
@@ -83,10 +84,12 @@ const Display = ({ navigation }) => {
         setTestsSteps(updatedTestSteps);
         setAlertVisible(false);
         if (isSingleTest && isFinishedTests) {
+            const categorizedResults = categorizeTestSteps(testSteps);
             sendWsMessage(wsSocket, {
                 uuid: receivedUuid,
                 type: 'progress',
-                status: 'readyToSubmit'
+                status: 'readyToSubmit',
+                result: categorizedResults
             });
             navigation.navigate('Report');
         } else {

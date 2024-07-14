@@ -2,6 +2,7 @@ import React, { createContext, useState, useEffect, useRef, useContext } from 'r
 import { View, ActivityIndicator, StyleSheet, Text } from 'react-native';
 import { DataContext } from '../../App';
 import sendWsMessage from '../utils/wsSendMsg'
+import categorizeTestSteps from '../utils/categorizeTestSteps'
 
 const TestsScreens = ({ navigation, route }) => {
   const { testStep, testSteps, setTestsSteps, startContinue, wsSocket, receivedUuid, setIsFinishedTests } = useContext(DataContext);
@@ -84,14 +85,17 @@ const TestsScreens = ({ navigation, route }) => {
     if (testStep <= testSteps.length) {
       performTestStep();
     } else {
-      console.log('finished test');
-      // setIsDiagStart(false);
       setIsFinishedTests(true);
+      console.log('finished test');
+      const categorizedResults = categorizeTestSteps(testSteps);
+
+      console.log('categorizedResults:', categorizedResults);
 
       sendWsMessage(wsSocket, {
         uuid: receivedUuid,
         type: 'progress',
-        status: 'readyToSubmit'
+        status: 'readyToSubmit',
+        result: categorizedResults
       });
       navigation.navigate('Report');
     }

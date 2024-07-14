@@ -10,6 +10,8 @@ import RNFS from 'react-native-fs';
 import { requestPermissions, openAppSettings } from '../CameraPermission';
 import sendWsMessage from '../../utils/wsSendMsg'
 import AnimatedIcon from '../../utils/AnimatedIcon'
+import categorizeTestSteps from '../../utils/categorizeTestSteps'
+
 
 const BackCamera = ({ navigation }) => {
   const { testStep, setTestStep, testSteps, setTestsSteps, wsSocket, receivedUuid, isSingleTest, isFinishedTests } = useContext(DataContext);
@@ -115,10 +117,12 @@ const BackCamera = ({ navigation }) => {
     // console.log('injaaa' , updatedTestSteps[testStep - 1])
     setTestsSteps(updatedTestSteps);
     if (isSingleTest && isFinishedTests) {
+      const categorizedResults = categorizeTestSteps(testSteps);
       sendWsMessage(wsSocket, {
         uuid: receivedUuid,
         type: 'progress',
-        status: 'readyToSubmit'
+        status: 'readyToSubmit',
+        result: categorizedResults
       });
       navigation.navigate('Report');
     } else {

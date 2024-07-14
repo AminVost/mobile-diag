@@ -11,6 +11,7 @@ import { requestPermissions, openAppSettings } from '../CameraPermission';
 import Video from 'react-native-video';
 import sendWsMessage from '../../utils/wsSendMsg'
 import AnimatedIcon from '../../utils/AnimatedIcon'
+import categorizeTestSteps from '../../utils/categorizeTestSteps'
 
 const BackCameraVideoTest = ({ navigation }) => {
   const { testStep, setTestStep, testSteps, setTestsSteps, elapsedTime, setElapsedTime, wsSocket, receivedUuid, isSingleTest, isFinishedTests } = useContext(DataContext);
@@ -118,10 +119,12 @@ const BackCameraVideoTest = ({ navigation }) => {
     }
     setTestsSteps(updatedTestSteps);
     if (isSingleTest && isFinishedTests) {
+      const categorizedResults = categorizeTestSteps(testSteps);
       sendWsMessage(wsSocket, {
-        uuid: receivedUuid,
-        type: 'progress',
-        status: 'readyToSubmit'
+          uuid: receivedUuid,
+          type: 'progress',
+          status: 'readyToSubmit',
+          result: categorizedResults
       });
       navigation.navigate('Report');
     } else {

@@ -8,6 +8,7 @@ import Timer from '../Timer';
 import useStepTimer from '../useStepTimer';
 import sendWsMessage from '../../utils/wsSendMsg'
 import AnimatedIcon from '../../utils/AnimatedIcon'
+import categorizeTestSteps from '../../utils/categorizeTestSteps'
 
 
 const NativeCameraVideo = ({ navigation }) => {
@@ -85,10 +86,12 @@ const NativeCameraVideo = ({ navigation }) => {
       updatedTestSteps[nativeCameraStepIndex].duration = getDuration();
       setTestsSteps(updatedTestSteps);
       if (isSingleTest && isFinishedTests) {
+        const categorizedResults = categorizeTestSteps(testSteps);
         sendWsMessage(wsSocket, {
-          uuid: receivedUuid,
-          type: 'progress',
-          status: 'readyToSubmit'
+            uuid: receivedUuid,
+            type: 'progress',
+            status: 'readyToSubmit',
+            result: categorizedResults
         });
         navigation.navigate('Report');
       } else {

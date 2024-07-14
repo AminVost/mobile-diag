@@ -349,7 +349,7 @@ const styles = StyleSheet.create({
     },
     iconSkip: {
         marginRight: 10,
-        color: '#2c3e50',
+        color: '#f1c40e',
     },
     iconFail: {
         marginRight: 10,
@@ -373,15 +373,15 @@ const styles = StyleSheet.create({
         fontFamily: 'Quicksand-Regular',
     },
     pass: {
-        backgroundColor: '#d4edda',
+        backgroundColor: '#a5d9b1',
         borderColor: '#0000004f',
     },
     fail: {
-        backgroundColor: '#f8d7da',
+        backgroundColor: '#f0a8ad',
         borderColor: '#0000004f',
     },
     skip: {
-        backgroundColor: '#e2e3e5',
+        backgroundColor: '#faedb7',
         borderColor: '#0000004f',
     },
     notStarted: {

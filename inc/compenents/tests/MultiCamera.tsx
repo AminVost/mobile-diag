@@ -10,6 +10,7 @@ import useStepTimer from '../useStepTimer';
 import { requestPermissions, openAppSettings } from '../CameraPermission';
 import sendWsMessage from '../../utils/wsSendMsg'
 import AnimatedIcon from '../../utils/AnimatedIcon'
+import categorizeTestSteps from '../../utils/categorizeTestSteps'
 
 const MultiCameraTest = ({ navigation }) => {
   const { testStep, setTestStep, testSteps, setTestsSteps, wsSocket, receivedUuid, isSingleTest, isFinishedTests } = useContext(DataContext);
@@ -150,10 +151,12 @@ const MultiCameraTest = ({ navigation }) => {
       // console.log('injaaaaa', updatedTestSteps[multiCameraStepIndex].multiCamResult)
       setTestsSteps(updatedTestSteps);
       if (isSingleTest && isFinishedTests) {
+        const categorizedResults = categorizeTestSteps(testSteps);
         sendWsMessage(wsSocket, {
-          uuid: receivedUuid,
-          type: 'progress',
-          status: 'readyToSubmit'
+            uuid: receivedUuid,
+            type: 'progress',
+            status: 'readyToSubmit',
+            result: categorizedResults
         });
         navigation.navigate('Report');
       } else {

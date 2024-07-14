@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useRef, useContext } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableHighlight, Alert, ActivityIndicator, Dimensions, SafeAreaView, StatusBar, ScrollView, TouchableOpacity, Platform, Image, Modal, Pressable, Linking, PermissionsAndroid } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableHighlight, Alert, ActivityIndicator, Dimensions, SafeAreaView, StatusBar, ScrollView, TouchableOpacity, Platform, Image, Modal, Pressable, Linking, PermissionsAndroid, Animated, Easing } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Button, Switch, Portal } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -65,6 +65,43 @@ function HomeScreen({ navigation, route }) {
 
   const onToggleSwitch = () => setisSwitchDiag(!isSwitchDiag);
 
+  // Animated value for rotation
+  const rotation = useRef(new Animated.Value(0)).current;
+  const rotateAnim = useRef(null);
+
+  const startRotation = () => {
+    rotation.setValue(0);
+    rotateAnim.current = Animated.loop(
+      Animated.timing(rotation, {
+        toValue: 1,
+        duration: 10000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    );
+    rotateAnim.current.start();
+  };
+
+  const stopRotation = () => {
+    if (rotateAnim.current) {
+      rotateAnim.current.stop();
+    }
+  };
+
+  useEffect(() => {
+    startRotation();
+    return () => stopRotation(); // Cleanup on unmount
+  }, []);
+
+  // Interpolating rotation value to degrees
+  const rotateInterpolate = rotation.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+
+  const animatedStyle = {
+    transform: [{ rotate: rotateInterpolate }],
+  };
 
   const toggleAlert = () => {
     setAlertVisible(!isAlertVisible);
@@ -255,6 +292,7 @@ function HomeScreen({ navigation, route }) {
 
   useEffect(() => {
     // if (wsSocket) {
+    console.log('try to connect WS HomeScreen')
     if (wsSocket && wsSocket.readyState === WebSocket.OPEN) {
       const handleWebSocketMessage = (event) => {
         if (event) {
@@ -326,19 +364,35 @@ function HomeScreen({ navigation, route }) {
               <Icon name="wifi-check" size={40} style={[isInternetConnected]} color="#44bd32" />}
         </TouchableOpacity>
         <View style={styles.upperPart}>
-          <TouchableOpacity style={isSwitchDiag ? styles.startButtonDiag : styles.startButtonWipe} onPress={handleStartDiagBtn}>
+          {/* <TouchableOpacity style={isSwitchDiag ? styles.startButtonDiag : styles.startButtonWipe} onPress={handleStartDiagBtn}>
             {isSwitchDiag ?
-              <Icon name={'cog-play-outline'} style={styles.startIconDiag} />
+              <Icon name={'cog-outline'} style={styles.startIconDiag} />
               :
               <Icon name={'cellphone-remove'} style={styles.startIconWipe} />}
             {isSwitchDiag ?
               <Text style={styles.startButtonTextDiag}>
-                Click To Diag
+                Click To Start
               </Text>
               :
               <Text style={styles.startButtonTextWipe}>
                 Click To Wipe
               </Text>}
+          </TouchableOpacity> */}
+          <TouchableOpacity
+            style={isSwitchDiag ? styles.startButtonDiag : styles.startButtonWipe}
+            onPress={handleStartDiagBtn}
+            onPressIn={stopRotation}
+            onPressOut={startRotation}
+          >
+            <Animated.View style={animatedStyle}>
+              <Icon
+                name={isSwitchDiag ? 'cog-outline' : 'cellphone-remove'}
+                style={isSwitchDiag ? styles.startIconDiag : styles.startIconWipe}
+              />
+            </Animated.View>
+            <Text style={isSwitchDiag ? styles.startButtonTextDiag : styles.startButtonTextWipe}>
+              {isSwitchDiag ? 'Click To Start' : 'Click To Wipe'}
+            </Text>
           </TouchableOpacity>
           <View style={styles.switchContainer}>
             <Text style={[styles.switchText]}>
@@ -548,9 +602,14 @@ const styles = StyleSheet.create({
     width: 200,
     height: 200,
     display: 'flex',
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: '#40079a4a',
     backgroundColor: 'white',
+    elevation: 8, // Android shadow
+    shadowColor: '#000', // iOS shadow
+    shadowOffset: { width: 0, height: 2 }, // iOS shadow
+    shadowOpacity: 0.8, // iOS shadow
+    shadowRadius: 2, // iOS shadow
   },
   startButtonWipe: {
     justifyContent: 'center',
@@ -560,9 +619,14 @@ const styles = StyleSheet.create({
     width: 200,
     height: 200,
     display: 'flex',
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: '#cf433566',
     backgroundColor: 'white',
+    elevation: 8, // Android shadow
+    shadowColor: '#000', // iOS shadow
+    shadowOffset: { width: 0, height: 2 }, // iOS shadow
+    shadowOpacity: 0.8, // iOS shadow
+    shadowRadius: 2, // iOS shadow
   },
   startIconDiag: {
     color: '#4908b0',

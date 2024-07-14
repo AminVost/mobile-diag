@@ -9,6 +9,7 @@ import Timer from '../Timer';
 import useStepTimer from '../useStepTimer';
 import sendWsMessage from '../../utils/wsSendMsg'
 import AnimatedIcon from '../../utils/AnimatedIcon'
+import categorizeTestSteps from '../../utils/categorizeTestSteps'
 
 const NativeCameraPhoto = ({ navigation }) => {
   const { testStep, setTestStep, testSteps, setTestsSteps, wsSocket, receivedUuid, isSingleTest, isFinishedTests } = useContext(DataContext);
@@ -138,10 +139,12 @@ const NativeCameraPhoto = ({ navigation }) => {
       // console.log('injaaaa', updatedTestSteps[nativeCameraStepIndex])
       setTestsSteps(updatedTestSteps);
       if (isSingleTest && isFinishedTests) {
+        const categorizedResults = categorizeTestSteps(testSteps);
         sendWsMessage(wsSocket, {
-          uuid: receivedUuid,
-          type: 'progress',
-          status: 'readyToSubmit'
+            uuid: receivedUuid,
+            type: 'progress',
+            status: 'readyToSubmit',
+            result: categorizedResults
         });
         navigation.navigate('Report');
       } else {

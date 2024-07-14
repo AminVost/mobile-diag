@@ -1,28 +1,26 @@
 import React, { createContext, useState, useEffect, useRef, useContext } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableHighlight, Alert, Dimensions, SafeAreaView, StatusBar, ScrollView, TouchableOpacity, Platform, Image, Modal, Pressable, Linking, PermissionsAndroid } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import { createDrawerNavigator } from '@react-navigation/drawer';
+import { View, Text, TextInput, StyleSheet, TouchableHighlight, Alert, ActivityIndicator, Dimensions, SafeAreaView, StatusBar, ScrollView, TouchableOpacity, Platform, Image, Modal, Pressable, Linking, PermissionsAndroid } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { RNCamera } from 'react-native-camera';
-import { Button, PaperProvider, Switch, Tooltip } from 'react-native-paper';
+import { Button, Switch, Portal } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import DeviceInfo from 'react-native-device-info';
 import { appConfig } from '../../config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   SafeAreaProvider,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
+import sendWsMessage from '../utils/wsSendMsg'
 import { DataContext } from '../../App';
 import { TimerContext } from '../../App';
+
 
 const Stack = createNativeStackNavigator();
 
 function HomeScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
 
-  const { isInternetConnected, websocketConnected, receivedSerialNumber, deviceDetails, testStep, setTestStep, isDiagStart, setIsDiagStart, setIsSubmitResult, setTestsSteps } = useContext(DataContext);
-  const { startTime, setStartTime } = useContext(TimerContext);
+  const { isInternetConnected, websocketConnected, wsSocket, receivedSerialNumber, receivedUuid, deviceDetails, testStep, setTestStep, isDiagStart, setIsDiagStart, setIsSubmitResult, isSubmitResult, setTestsSteps, setStartContinue, startContinue, isFinishedTests, setIsFinishedTests, isSingleTest, setIsSingleTest } = useContext(DataContext);
+  const { startTime, setStartTime, elapsedTimeRef } = useContext(TimerContext);
 
   const checklistItems = [
     "Any Bluetooth Device",
@@ -55,9 +53,13 @@ function HomeScreen({ navigation, route }) {
     "OTG Connector",
   ];
 
+  const [isLoading, setIsLoading] = useState(false);
+
   const [isSwitchDiag, setisSwitchDiag] = useState(true);
 
   const [modalVisible, setModalVisible] = useState(false);
+
+  const [modalRetestVisible, setModalRetestVisible] = useState(false);
 
   const [isAlertVisible, setAlertVisible] = useState(false);
 
@@ -68,22 +70,77 @@ function HomeScreen({ navigation, route }) {
     setAlertVisible(!isAlertVisible);
   };
 
+  const toggleReTestModal = () => {
+    setModalRetestVisible(!modalRetestVisible);
+  };
+
   const resetSteps = async () => {
     try {
-      console.log('reset Step Tests');
       const jsonValue = await AsyncStorage.getItem('refTestSteps');
       if (jsonValue !== null) {
         const data = JSON.parse(jsonValue);
         setTestsSteps(data);
+        console.log('reset Step Tests');
       } else {
         console.log('No data found for refTestSteps');
-        setTestsSteps([]); // Optionally set an empty array if no data is found
       }
     } catch (error) {
       console.log('Error retrieving refTestSteps:', error);
     }
   };
 
+  const handleStartDiagBtn = async () => {
+    if (isSwitchDiag) {
+      if (websocketConnected) {
+        setIsLoading(true);
+        setIsSingleTest(false);
+        if (isDiagStart) {
+          toggleReTestModal();
+          setIsLoading(false);
+          return;
+        };
+        setStartTime(Date.now());
+        setIsDiagStart(true)
+        setIsSubmitResult(false);
+        setIsFinishedTests(false);//TODO
+        setTestStep(1);
+        navigation.navigate('TestsScreen');
+        setIsLoading(false);
+      } else {
+        Alert.alert('The device is not connected to the PC WebSocket server!');
+      }
+    } else {
+      Alert.alert('Rapid Mobile Wipe Coming Soon...');
+    }
+  }
+
+  const handleReTestDiag = async () => {
+    setIsLoading(true);
+    setIsSingleTest(false);
+    console.log('ReTest Diag')
+    await resetSteps();
+    elapsedTimeRef.current = 0;
+    setStartTime(Date.now());
+    setIsDiagStart(true);
+    setIsSubmitResult(false);
+    setIsFinishedTests(false);//TODO
+    console.log('setIsSubmitResult', isSubmitResult)
+    setTestStep(null);
+    setTestStep(1);
+    toggleReTestModal();
+    setIsLoading(false);
+  }
+
+  const handleContinueDiag = () => {
+    setIsSingleTest(false);
+    if (startContinue) {
+      setStartContinue(!startContinue);
+      setStartContinue(!startContinue);
+    } else {
+      setStartContinue(!startContinue);
+    }
+    toggleReTestModal();
+  }
 
   const CustomAlert = () => {
     return (
@@ -122,21 +179,117 @@ function HomeScreen({ navigation, route }) {
     );
   };
 
-  const handleStartDiagBtn = async () => {
-    if (isSwitchDiag) {
-      if (isDiagStart) {
-        resetSteps();
-        setTestStep(1);
-      };
-      setStartTime(Date.now());
-      setIsDiagStart(true)
-      setIsSubmitResult(false);
-      navigation.navigate('TestsScreen')
-    } else {
-      Alert.alert('Rapid Mobile Wipe Coming Soon...');
-    }
-  }
+  const RetestAlert = () => {
+    return (
+      <Modal
+        visible={modalRetestVisible}
+        transparent={true}
+        animationType="slide"
+        hardwareAccelerated={true}
+        onRequestClose={() => {
+          setModalRetestVisible(!modalRetestVisible);
+        }}
+      >
+        <View style={styles.modalBackground}>
+          <View style={styles.customModalContent}>
+            <TouchableOpacity
+              style={styles.closeIconContainer}
+              onPress={() => setModalRetestVisible(!modalRetestVisible)}
+            >
+              <Icon name="close" size={24} color="black" />
+            </TouchableOpacity>
+            <Text style={styles.reTesatModalTitle}>
+              {isDiagStart && !isFinishedTests &&
+                'First, complete the current test'
+              }
+              {isDiagStart && isFinishedTests &&
+                'Do you want to do the test again?'
+              }
+            </Text>
+            <Text style={styles.reTestModalText}>
+              {isDiagStart && !isFinishedTests &&
+                'There is currently an unfinished test, do you want to proceed from the previous test or do you want to start a new test?'
+              }
+              {isDiagStart && isFinishedTests &&
+                'You have completed the tests once, do you want to start from the beginning?'
+              }
+            </Text>
+            <View style={styles.modalButtonContainer}>
+              <Button mode="contained" icon={'refresh'} onPress={handleReTestDiag} style={[styles.modalButton, { backgroundColor: '#e74c3c' }]}>
+                StartOver
+              </Button>
+              {
+                isDiagStart && !isFinishedTests &&
+                <Button mode="contained" icon={'redo'} onPress={handleContinueDiag} style={[styles.modalButton]}>
+                  Continue
+                </Button>
+              }
 
+            </View>
+          </View>
+        </View>
+      </Modal>
+    );
+  };
+
+  // useEffect(() => {
+  //   if (route.params) {
+  //     console.log('route.params=>> ', route.params)
+  //     if (route.params.isStartDiag == true) {
+  //       // handleStartDiagBtn()
+  //       handleReTestDiag();
+  //     }
+  //   }
+
+  // }, [route.params]);
+
+  useEffect(() => {
+    sendWsMessage(wsSocket, {
+      uuid: receivedUuid,
+      type: 'progress',
+      status: 'backToHome',
+    });
+
+  }, []);
+
+
+  useEffect(() => {
+    // if (wsSocket) {
+      console.log('try to connect WS HomeScreen')
+    if (wsSocket && wsSocket.readyState === WebSocket.OPEN) {
+      const handleWebSocketMessage = (event) => {
+        if (event) {
+          console.log('Received event.data in HomeScreen:', event.data);
+          const message = JSON.parse(event.data);
+          if (message.type === 'action' && message.action === 'startDiag') {
+            handleStartDiagBtn();
+          } else if (message.type === 'action' && message.action === 'handleRetestDiag') {
+            handleReTestDiag();
+          } else if (message.type === 'action' && message.action === 'handleContinueDiag') {
+            handleContinueDiag();
+          }
+        };
+      };
+
+      wsSocket.addEventListener('message', handleWebSocketMessage);
+      return () => {
+        console.log('disabled addEventListener HomeScreen');
+        wsSocket.removeEventListener('message', handleWebSocketMessage);
+      };
+    }
+  }, [wsSocket]);
+
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="white" />
+        <Text style={styles.loaderText}>
+          Please Wait...
+        </Text>
+      </View>
+    );
+  }
   return (
     <>
       <StatusBar backgroundColor="#ECF0F1" barStyle="dark-content" />
@@ -149,6 +302,7 @@ function HomeScreen({ navigation, route }) {
         paddingRight: insets.right,
       }}>
         <CustomAlert visible={isAlertVisible} onClose={toggleAlert} />
+        <RetestAlert visible={modalRetestVisible} onClose={toggleReTestModal} />
         <TouchableOpacity onPress={() => navigation.openDrawer()} style={{
           marginLeft: 10,
           marginTop: 10,
@@ -285,7 +439,16 @@ function HomeScreen({ navigation, route }) {
             </Pressable>
           </View>
         </Modal>
-      </View></>
+      </View>
+      {/* {isLoading &&
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size={60} color="white" />
+          <Text style={styles.loaderText}>
+            Please Wait...
+          </Text>
+        </View>
+      } */}
+    </>
   );
 }
 
@@ -618,10 +781,10 @@ const styles = StyleSheet.create({
   customModalContent: {
     backgroundColor: 'white',
     padding: 20,
-    paddingTop: 15,
     borderRadius: 10,
     display: 'flex',
     flexDirection: 'column',
+    width: '95%'
   },
   customModalTitle: {
     width: 'auto',
@@ -644,6 +807,10 @@ const styles = StyleSheet.create({
   customModalText: {
     fontSize: 13,
   },
+  reTestModalText: {
+    fontSize: 15,
+    lineHeight: 21,
+  },
   closeButton: {
     color: 'blue',
     marginTop: 20,
@@ -653,5 +820,59 @@ const styles = StyleSheet.create({
     display: 'flex',
     alignContent: 'center',
     alignItems: 'center',
+  },
+  modalContainer: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginRight: 10,
+    marginLeft: 10
+  },
+  modalTitle: {
+    fontSize: 18,
+    marginBottom: 20,
+    fontFamily: 'Quicksand-Bold',
+    color: 'black'
+  },
+  reTesatModalTitle: {
+    fontSize: 19,
+    marginBottom: 20,
+    fontFamily: 'Quicksand-Bold',
+    color: 'black',
+    marginTop: 10
+  },
+  modalButton: {
+    marginTop: 20,
+    // width: '100%'
+    flexGrow: 1
+  },
+  modalButtonContainer: {
+    display: 'flex',
+    flexDirection: 'row',
+    columnGap: 7
+  },
+  closeIconContainer: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+  },
+  loadingContainer: {
+    backgroundColor: '#00000080',
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    width: '100%',
+    height: '100%',
+    flex: 1,
+    display: 'flex',
+    alignContent: 'center',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  loaderText: {
+    color: 'white',
+    marginTop: 10,
+    fontFamily: 'Quicksand-Medium'
   }
 });

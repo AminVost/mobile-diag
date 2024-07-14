@@ -7,6 +7,7 @@ import Timer from '../Timer';
 import useStepTimer from '../useStepTimer';
 import sendWsMessage from '../../utils/wsSendMsg'
 import AnimatedIcon from '../../utils/AnimatedIcon'
+import categorizeTestSteps from '../../utils/categorizeTestSteps'
 
 
 
@@ -56,10 +57,12 @@ const MultiTouchTest = ({ navigation }) => {
         updatedTestSteps[testStep - 1].duration = getDuration();
         setTestsSteps(updatedTestSteps);
         if (isSingleTest && isFinishedTests) {
+            const categorizedResults = categorizeTestSteps(testSteps);
             sendWsMessage(wsSocket, {
                 uuid: receivedUuid,
                 type: 'progress',
-                status: 'readyToSubmit'
+                status: 'readyToSubmit',
+                result: categorizedResults
             });
             navigation.navigate('Report');
         } else {
