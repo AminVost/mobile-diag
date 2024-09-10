@@ -3,7 +3,7 @@ import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { View, Image, ActivityIndicator, StyleSheet } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
 import { LaunchArguments } from "react-native-launch-arguments";
-import { storeData } from './storageUtils';
+import { storeData } from './inc/utils/storageUtils';
 
 interface DataContextType {
   isInternetConnected: boolean;
